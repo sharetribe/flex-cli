@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test": "shadow-cljs compile test-once && node target/test-once.js",
+    "test-autorun": "shadow-cljs watch test-autorun"
+  },
   "devDependencies": {
     "shadow-cljs": "^2.8.37"
   }

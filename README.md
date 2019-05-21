@@ -32,3 +32,25 @@ To get rid of the annoying questions when running
 ```
 > cp .dir-locals.el.tmpl .dir-locals.el
 ```
+
+## Running tests
+
+### Run tests once
+
+```bash
+yarn test
+```
+
+Return 0 or 1 exit code based on the result.
+
+### Autorun tests
+
+*in Emacs*
+
+```
+yarn test-autorun
+```
+
+The autorun will keep running the tests when you change any file. See the REPL for test output.
+
+Unfortunately, running CLJS tests using Cider `C-c C-t t` is [not supported](https://github.com/clojure-emacs/cider/issues/1268#issuecomment-492379163)
