@@ -1,0 +1,13 @@
+# Shadow CLJS
+.shadow-cljs
+
+# Yarn and JavaScript
+yarn-error.log
+node_modules/
+
+# Build
+target/
+
+# Emacs
+.dir-locals.el
+.nrepl-port

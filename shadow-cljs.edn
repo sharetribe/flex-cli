@@ -1,0 +1,9 @@
+;; shadow-cljs configuration
+{:source-paths ["src"]
+
+ :deps true
+
+ :builds
+ {:flex-cli {:target :node-script
+             :output-to "target/main.js"
+             :main sharetribe.flex-cli.core/main}}}
