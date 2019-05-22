@@ -13,8 +13,10 @@
 
 (deftest subcommands
   (let [cmd {:sub-cmds [{:name "process"
+                         :handler ::process
                          :sub-cmds [{:name "list"
                                      :handler ::process-list}]}]}]
+    (is (= ::process (:handler (parse/parse ["process"] cmd []))))
     (is (= ::process-list (:handler (parse/parse ["process" "list"] cmd []))))))
 
 (deftest subcommands+opts
