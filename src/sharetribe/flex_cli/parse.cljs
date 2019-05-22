@@ -1,6 +1,7 @@
 (ns sharetribe.flex-cli.parse
   (:require [clojure.spec.alpha :as s]
-            [clojure.tools.cli :as tools.cli]))
+            [clojure.tools.cli :as tools.cli]
+            [sharetribe.flex-cli.commands :as commands]))
 
 (defn- find-sub [sub-cmds name]
   (some #(when (= (:name %) name) %) sub-cmds))
@@ -45,31 +46,7 @@
 
 (s/def ::args coll?)
 
-(s/def ::id keyword?)
-(s/def ::desc string?)
-(s/def ::long-opt string?)
-(s/def ::short-opt string?)
-(s/def ::required string?)
-(s/def ::opt (s/keys :req-un [::id
-                              ::long-opt]
-                     :opt-un [::short-opt
-                              ::desc
-                              ::required]))
-(s/def ::opts (s/coll-of ::opt))
-(s/def ::sub-cmds (s/coll-of ::sub-cmd))
-(s/def ::handler any?)
-(s/def ::sub-cmd (s/keys :req-un [::name]
-                         :opt-un [::desc
-                                  ::handler
-                                  ::opts
-                                  ::sub-cmds]))
-(s/def ::root-cmd (s/keys :opt-un [::desc
-                                   ::handler
-                                   ::opts
-                                   ::sub-cmds]))
-(s/def ::global-opts ::opts)
-
 (s/fdef parse
   :args (s/cat :args ::args
-               :cmd ::root-cmd
-               :global-opts ::global-opts))
+               :cmd ::commands/root-cmd
+               :global-opts ::commands/global-opts))
