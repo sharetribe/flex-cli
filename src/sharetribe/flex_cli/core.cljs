@@ -1,31 +1,45 @@
 (ns sharetribe.flex-cli.core
-  (:require [readline]
-            [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [sharetribe.flex-cli.parse :as parse]
+            [sharetribe.flex-cli.commands :as commands]))
+
+(defn done [status]
+  (when-let [status (:exit-status status)]
+    (.exit js/process status)))
+
+(defn done-dev [status]
+  (println "")
+  (println "[dev] Done.")
+  (when-let [status (:exit-status status)]
+    (println "[dev] Exit status:" status)))
+
+(defn main* [cli-args done-fn]
+  (-> cli-args
+      (parse/parse commands/commands [])
+      (commands/handle done-fn)))
 
 (defn main
   "Main entrypoint for the CLI"
   [& cli-args]
-  (println "Welcome to Flex CLI")
-  (println "CLI args: " cli-args))
+  (main* cli-args done))
 
-(defonce waiting-answer? (atom false))
+(defn main-dev
+  [& cli-args]
+  (main* cli-args done-dev))
 
-(defn create-readline! []
-  (doto (.createInterface readline #js {:output js/process.stdout
-                                        :input js/process.stdin})
-    (.setPrompt "flex> ")
-    (.on "line" #(when @waiting-answer?
-                   (let [cli-args (str/split % " ")]
-                     (apply main cli-args)
-                     (reset! waiting-answer? false))))))
-
-(defonce rl (create-readline!))
+(defn main-dev-str
+  [cli-args-str]
+  (apply main-dev (str/split cli-args-str " ")))
 
 (defn ^:dev/after-load after-load
   "Callback function that is run after code hot loading. Prompts
   command-line args and will call the main function with given args."
   []
   (println "")
-  (println (str "[" (.toISOString (js/Date.)) "] Code reloaded"))
-  (.prompt rl)
-  (reset! waiting-answer? true))
+  (println (str "[" (.toISOString (js/Date.)) "] Code reloaded")))
+
+(comment
+  ;; Evaluate main-dev-str to run the CLI with arguments
+  (main-dev-str "process -m bike-soil")
+
+  )

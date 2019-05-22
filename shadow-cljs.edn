@@ -2,10 +2,13 @@
 {:deps true
 
  :builds
- {:flex-cli {:target :node-script
-             :output-to "target/main.js"
-             :main sharetribe.flex-cli.core/main
-             :devtools {:autoload true}}
+ {:dev {:target :node-script
+        :output-to "target/dev.js"
+        :main sharetribe.flex-cli.core/main-dev
+        :devtools {:autoload true}}
+  :min {:target :node-script
+        :output-to "target/min.js"
+        :main sharetribe.flex-cli.core/main}
   :test-once {:target    :node-test
               :output-to "target/test-once.js"}
   :test-autorun {:target    :node-test
