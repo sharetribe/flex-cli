@@ -15,7 +15,7 @@
 
 (defn main* [cli-args done-fn]
   (-> cli-args
-      (parse/parse commands/commands [])
+      (parse/parse commands/commands commands/global-opts)
       (commands/handle done-fn)))
 
 (defn main
@@ -28,8 +28,11 @@
   (main* cli-args done-dev))
 
 (defn main-dev-str
-  [cli-args-str]
-  (apply main-dev (str/split cli-args-str " ")))
+  ([] (main-dev-str nil))
+  ([cli-args-str]
+   (if cli-args-str
+     (apply main-dev (str/split cli-args-str " "))
+     (main-dev))))
 
 (defn ^:dev/after-load after-load
   "Callback function that is run after code hot loading. Prompts
