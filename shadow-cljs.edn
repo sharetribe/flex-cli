@@ -4,7 +4,8 @@
  :builds
  {:flex-cli {:target :node-script
              :output-to "target/main.js"
-             :main sharetribe.flex-cli.core/main}
+             :main sharetribe.flex-cli.core/main
+             :devtools {:autoload true}}
   :test-once {:target    :node-test
               :output-to "target/test-once.js"}
   :test-autorun {:target    :node-test
