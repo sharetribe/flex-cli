@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "dev": "node target/dev.js",
     "test": "shadow-cljs compile test-once && node target/test-once.js",
     "test-autorun": "shadow-cljs watch test-autorun"
   },

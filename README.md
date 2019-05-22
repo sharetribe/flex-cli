@@ -17,7 +17,7 @@
 
     ```
     > yarn install
-    > node target/dev.js
+    > node target/dev.js (or yarn run dev, which does take same thing)
     ```
 
 Now your dev environment is up an running! You can evaluate code in
