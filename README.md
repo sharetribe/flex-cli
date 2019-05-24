@@ -9,7 +9,7 @@
     ```
     > cider-jack-in-cljs
     > Select ClojureScript REPL type: shadow
-    > Select shadow-cljs build: flex-cli
+    > Select shadow-cljs build: dev
     > Open browser? what ever
     ```
 
@@ -17,12 +17,17 @@
 
     ```
     > yarn install
-    > node target/main.js
+    > node target/dev.js (or yarn run dev, which does take same thing)
     ```
 
 Now your dev environment is up an running! You can evaluate code in
 Emacs and Cider is connected to the running application.
 
+To run the CLI with command-line arguments, evaluate in REPL:
+
+``` clojure
+(sharetribe.flex-cli.core/main-dev-str "process list -m bike-soil")
+```
 
 **Pro tip:**
 
@@ -31,6 +36,19 @@ To get rid of the annoying questions when running
 
 ```
 > cp .dir-locals.el.tmpl .dir-locals.el
+```
+
+### Hot loading
+
+The `dev` build is configured to do hot code loading.
+
+When you run `node target/dev.js`, the process is left running for hot
+loading purposes. You will see a log message when new code is loaded.
+
+To run the CLI with new code, evaluate:
+
+``` clojure
+(sharetribe.flex-cli.core/main-dev-str "process list -m bike-soil")
 ```
 
 ## Running tests
