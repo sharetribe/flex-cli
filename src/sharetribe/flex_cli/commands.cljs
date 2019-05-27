@@ -84,6 +84,7 @@
 (s/def ::sub-cmds (s/coll-of ::sub-cmd))
 (s/def ::handler any?)
 (s/def ::no-marketplace? boolean?)
+(s/def ::name string?)
 (s/def ::sub-cmd (s/keys :req-un [::name]
                          :opt-un [::desc
                                   ::handler
