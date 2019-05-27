@@ -29,7 +29,7 @@
   "
   [args cmd global-opts]
   (let [with-global-opts (concat (:opts cmd) global-opts)
-        parse-result (tools.cli/parse-opts args with-global-opts :in-order true)
+        parse-result (tools.cli/parse-opts args with-global-opts :in-order true :strict true)
         {:keys [options arguments summary errors]} parse-result]
 
     (cond

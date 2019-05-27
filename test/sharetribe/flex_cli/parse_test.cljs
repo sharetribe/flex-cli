@@ -76,3 +76,19 @@
       (let [parse-result (parse/parse ["--number=123"] cmd {})]
         (is (= nil (:error parse-result)))
         (is (= nil (-> parse-result :data :errors)))))))
+
+(deftest strict-mode
+  (let [global-opts [{:id :marketplace
+                      :long-opt "--marketplace"
+                      :short-opt "-m"
+                      :required "MARKETPLACE"}]
+        cmd {:sub-cmds [{:name "process"
+                         :sub-cmds [{:name "list"
+                                     :handler ::process-list
+                                     :opts [{:id :process-name
+                                             :long-opt "--process"
+                                             :short-opt "-p"
+                                             :required "PROCESS NAME"}]}]}]}
+        parse-result (parse/parse ["process" "list" "-m" "-p" "nightly-booking"] cmd global-opts)]
+    (is (= :parse-error (:error parse-result)))
+    (is (= ["Missing required argument for \"-m MARKETPLACE\""] (-> parse-result :data :errors)))))
