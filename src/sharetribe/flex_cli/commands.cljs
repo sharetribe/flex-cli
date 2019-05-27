@@ -99,11 +99,13 @@
 
 (defn parse-error [parse-result]
   (doseq [e (-> parse-result :data :errors)]
-    (println e))
+    (binding [*print-fn* *print-err-fn*]
+      (println e)))
   {:exit-status 1})
 
 (defn command-not-found [parse-result]
-  (println "Command not found:" (-> parse-result :data :arguments first))
+  (binding [*print-fn* *print-err-fn*]
+    (println "Command not found:" (-> parse-result :data :arguments first)))
   {:exit-status 1})
 
 (defn error [parse-result]
