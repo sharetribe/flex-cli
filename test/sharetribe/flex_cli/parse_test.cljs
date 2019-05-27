@@ -1,6 +1,6 @@
 (ns sharetribe.flex-cli.parse-test
   (:require [sharetribe.flex-cli.parse :as parse]
-            [cljs.test :as t :refer-macros [deftest is]]))
+            [cljs.test :as t :refer-macros [deftest is testing]]))
 
 (deftest main
   (let [cmd {:handler ::main-handler
@@ -46,3 +46,33 @@
     (is (= {:process-name "nightly-booking"
             :marketplace "bike-soil"} (:options parse-result)))))
 
+(deftest params-coercion+validation
+  (let [cmd {:opts [{:id :number
+                     :short-opt "-n"
+                     :long-opt "--number"
+                     :parse-fn #(js/parseInt %)
+                     :validate-fn #(< 0 % 1000)
+                     :validate-msg "Must be a number between 0 and 1000"
+                     :required "NUMBER"
+                     :missing "Missing number"}]}]
+    (testing "missing"
+      (let [parse-result (parse/parse [""] cmd {})]
+        (is (= :parse-error (:error parse-result)))
+        (is (= ["Missing number"] (-> parse-result :data :errors)))))
+
+    (testing "not a number"
+      (let [parse-result (parse/parse ["--number=abc"] cmd {})]
+        (is (= :parse-error (:error parse-result)))
+        (is (= ["Failed to validate \"--number abc\": Must be a number between 0 and 1000" "Missing number"]
+               (-> parse-result :data :errors)))))
+
+    (testing "too big number"
+      (let [parse-result (parse/parse ["--number=12345"] cmd {})]
+        (is (= :parse-error (:error parse-result)))
+        (is (= ["Failed to validate \"--number 12345\": Must be a number between 0 and 1000" "Missing number"]
+               (-> parse-result :data :errors)))))
+
+    (testing "success"
+      (let [parse-result (parse/parse ["--number=123"] cmd {})]
+        (is (= nil (:error parse-result)))
+        (is (= nil (-> parse-result :data :errors)))))))
