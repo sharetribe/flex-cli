@@ -26,7 +26,13 @@
     {:name "version"
      :handler version/version}
     {:name "login"
-     :handler auth/login}
+     :handler auth/login
+     :opts [
+            ;; TODO Remove this! This is temporary, just for
+            ;; testing. Prompt the API key instead.
+            {:id :api-key
+             :long-opt "--api-key"
+             :required "API KEY"}]}
     {:name "logout"
      :handler auth/logout}
     {:name "marketplace"
