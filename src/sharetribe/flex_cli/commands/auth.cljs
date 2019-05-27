@@ -1,11 +1,7 @@
 (ns sharetribe.flex-cli.commands.auth
-  (:require [sharetribe.flex-cli.credential-store :as credential-store])
-  )
+  (:require [sharetribe.flex-cli.credential-store :as credential-store]))
 
 (defn login [opts]
-  ;; TODO Build generic parameter validation
-  (assert (:api-key opts) "Missing mandatory option: api-key")
-
   ;; TODO Validate API key (by doing a request to API)?
 
   (credential-store/set-api-key
@@ -24,8 +20,7 @@
     if you are using an environment where a credential manager is not
     available, e.g. a headless environment without desktop
     capabilities.") ;; TODO Add note about possiblity to use API_KEY environment variable, once it's implemented.
-    })
-  )
+    }))
 
 (comment
   (with-out-str

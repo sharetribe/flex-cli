@@ -32,7 +32,8 @@
             ;; testing. Prompt the API key instead.
             {:id :api-key
              :long-opt "--api-key"
-             :required "API KEY"}]}
+             :required "API KEY"
+             :missing "--api-key is required"}]}
     {:name "logout"
      :handler auth/logout}
     {:name "marketplace"
