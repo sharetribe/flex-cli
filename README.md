@@ -56,7 +56,7 @@ To run the CLI with new code, evaluate:
 ### Run tests once
 
 ```bash
-yarn test
+yarn run test
 ```
 
 Return 0 or 1 exit code based on the result.
@@ -66,7 +66,7 @@ Return 0 or 1 exit code based on the result.
 *in Emacs*
 
 ```
-yarn test-autorun
+yarn run test-autorun
 ```
 
 The autorun will keep running the tests when you change any file. See the REPL for test output.
