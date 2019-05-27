@@ -1,4 +1,9 @@
-(ns sharetribe.flex-cli.parse
+(ns sharetribe.flex-cli.args-parse
+  "Namespace for CLI argument parsing helpers.
+
+  This namespace is unaware of the global command specifications. It
+  expects that command-specs are passed as an argument.
+  "
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :as tools.cli]
             [sharetribe.flex-cli.commands :as commands]))

@@ -116,14 +116,9 @@
 (defn main [parse-result]
   (let [{:keys [options]} parse-result]
     (cond
-      (:help options) (help/help (dissoc options :help)) ;; dissoc :help
-                                                         ;; option
-                                                         ;; because
-                                                         ;; this is
-                                                         ;; how
-                                                         ;; the "help"
-                                                         ;; command is
-                                                         ;; invoked
+      ;; dissoc :help option because this is how the "help" command is
+      ;; invoked
+      (:help options) (help/help (dissoc options :help))
       (:version options) (version/version (dissoc options :version)) ;; Same
 
       :else (help/help {}) ;; show help as a default
@@ -131,9 +126,10 @@
       )))
 
 (defn handle [parse-result done]
-  (let [result
+  (let [{:keys [handler options]} parse-result
+        result
         (cond
           (:error parse-result) (error parse-result)
-          (= ::main (:handler parse-result)) (main parse-result)
-          (:handler parse-result) ((:handler parse-result) (:options parse-result)))]
+          (= ::main handler) (main parse-result)
+          handler (handler options))]
     (done result)))

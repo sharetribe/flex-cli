@@ -1,6 +1,6 @@
 (ns sharetribe.flex-cli.core
   (:require [clojure.string :as str]
-            [sharetribe.flex-cli.parse :as parse]
+            [sharetribe.flex-cli.args-parse :as args-parse]
             [sharetribe.flex-cli.commands :as commands]))
 
 (defn done [status]
@@ -15,7 +15,7 @@
 
 (defn main* [cli-args done-fn]
   (-> cli-args
-      (parse/parse commands/commands)
+      (args-parse/parse commands/commands)
       (commands/handle done-fn)))
 
 (defn main
@@ -34,10 +34,7 @@
      (apply main-dev (str/split cli-args-str " "))
      (main-dev))))
 
-(defn ^:dev/after-load after-load
-  "Callback function that is run after code hot loading. Prompts
-  command-line args and will call the main function with given args."
-  []
+(defn ^:dev/after-load after-load []
   (println "")
   (println (str "[" (.toISOString (js/Date.)) "] Code reloaded")))
 
