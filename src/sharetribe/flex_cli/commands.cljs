@@ -84,6 +84,7 @@
 (s/def ::sub-cmds (s/coll-of ::sub-cmd))
 (s/def ::handler any?)
 (s/def ::no-marketplace? boolean?)
+(s/def ::name string?)
 (s/def ::sub-cmd (s/keys :req-un [::name]
                          :opt-un [::desc
                                   ::handler
@@ -98,11 +99,13 @@
 
 (defn parse-error [parse-result]
   (doseq [e (-> parse-result :data :errors)]
-    (println e))
+    (binding [*print-fn* *print-err-fn*]
+      (println e)))
   {:exit-status 1})
 
 (defn command-not-found [parse-result]
-  (println "Command not found:" (-> parse-result :data :arguments first))
+  (binding [*print-fn* *print-err-fn*]
+    (println "Command not found:" (-> parse-result :data :arguments first)))
   {:exit-status 1})
 
 (defn error [parse-result]
@@ -113,14 +116,9 @@
 (defn main [parse-result]
   (let [{:keys [options]} parse-result]
     (cond
-      (:help options) (help/help (dissoc options :help)) ;; dissoc :help
-                                                         ;; option
-                                                         ;; because
-                                                         ;; this is
-                                                         ;; how
-                                                         ;; the "help"
-                                                         ;; command is
-                                                         ;; invoked
+      ;; dissoc :help option because this is how the "help" command is
+      ;; invoked
+      (:help options) (help/help (dissoc options :help))
       (:version options) (version/version (dissoc options :version)) ;; Same
 
       :else (help/help {}) ;; show help as a default
@@ -128,9 +126,10 @@
       )))
 
 (defn handle [parse-result done]
-  (let [result
+  (let [{:keys [handler options]} parse-result
+        result
         (cond
           (:error parse-result) (error parse-result)
-          (= ::main (:handler parse-result)) (main parse-result)
-          (:handler parse-result) ((:handler parse-result) (:options parse-result)))]
+          (= ::main handler) (main parse-result)
+          handler (handler options))]
     (done result)))

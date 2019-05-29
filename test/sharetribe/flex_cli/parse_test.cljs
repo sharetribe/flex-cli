@@ -1,5 +1,5 @@
 (ns sharetribe.flex-cli.parse-test
-  (:require [sharetribe.flex-cli.parse :as parse]
+  (:require [sharetribe.flex-cli.args-parse :as parse]
             [cljs.test :as t :refer-macros [deftest is testing]]))
 
 (deftest main
