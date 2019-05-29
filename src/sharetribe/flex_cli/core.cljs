@@ -15,7 +15,7 @@
 
 (defn main* [cli-args done-fn]
   (-> cli-args
-      (parse/parse commands/commands commands/global-opts)
+      (parse/parse commands/commands)
       (commands/handle done-fn)))
 
 (defn main
