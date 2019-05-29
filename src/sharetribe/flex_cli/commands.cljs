@@ -6,13 +6,13 @@
             [sharetribe.flex-cli.commands.process :as process]
             [sharetribe.flex-cli.commands.version :as version]))
 
-(def global-opts
-  [{:id :marketplace
-    :long-opt "--marketplace"
-    :short-opt "-m"
-    :required "MARKETPLACE IDENT"}])
+(def marketplace-opt
+  {:id :marketplace
+   :long-opt "--marketplace"
+   :short-opt "-m"
+   :required "MARKETPLACE IDENT"})
 
-(def commands
+(def command-definitions
   {:handler ::main
    :opts [{:id :help
            :long-opt "--help"
@@ -58,6 +58,18 @@
              :long-opt "--transition"
              :required "[WIP] TRANSITION NAME"}]}]})
 
+(defn- with-marketplace-opt [cmd]
+  (if (:no-marketplace? cmd)
+    cmd
+    (update cmd :opts conj marketplace-opt)))
+
+(defn format-command-def [command-def]
+  (cond-> command-def
+    true with-marketplace-opt
+    (seq (:sub-cmds command-def)) (update :sub-cmds #(map format-command-def %))))
+
+(def commands (format-command-def command-definitions))
+
 (s/def ::id keyword?)
 (s/def ::desc string?)
 (s/def ::long-opt string?)
@@ -71,16 +83,18 @@
 (s/def ::opts (s/coll-of ::opt))
 (s/def ::sub-cmds (s/coll-of ::sub-cmd))
 (s/def ::handler any?)
+(s/def ::no-marketplace? boolean?)
 (s/def ::sub-cmd (s/keys :req-un [::name]
                          :opt-un [::desc
                                   ::handler
                                   ::opts
+                                  ::no-marketplace?
                                   ::sub-cmds]))
 (s/def ::root-cmd (s/keys :opt-un [::desc
                                    ::handler
                                    ::opts
+                                   ::no-marketplace?
                                    ::sub-cmds]))
-(s/def ::global-opts ::opts)
 
 (defn parse-error [parse-result]
   (doseq [e (-> parse-result :data :errors)]
