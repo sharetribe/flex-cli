@@ -1,4 +1,5 @@
 {:paths ["src" "test"]
 
  :deps
- {org.clojure/tools.cli {:mvn/version "0.4.2"}}}
+ {org.clojure/tools.cli {:mvn/version "0.4.2"}
+  cljs-node-io {:mvn/version "1.1.2"}}}

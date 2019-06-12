@@ -41,23 +41,7 @@
      :sub-cmds
      [{:name "list"
        :handler marketplace/list}]}
-    {:name "process"
-     :handler process/process
-     :opts [{:id :path
-             :long-opt "--path"
-             :required "[WIP] LOCAL PROCESS DIR"}
-            {:id :process-name
-             :long-opt "--process"
-             :required "[WIP] PROCESS NAME"}
-            {:id :version
-             :long-opt "--version"
-             :required "[WIP] VERSION NUM"}
-            {:id :alias
-             :long-opt "--alias"
-             :required "[WIP] PROCESS ALIAS"}
-            {:id :transition-name
-             :long-opt "--transition"
-             :required "[WIP] TRANSITION NAME"}]}]})
+    process/cmd]})
 
 (defn- with-marketplace-opt [cmd]
   (if (:no-marketplace? cmd)
