@@ -42,4 +42,7 @@
   ;; Evaluate main-dev-str to run the CLI with arguments
   (main-dev-str "process -m bike-soil")
 
+  (main-dev-str "process --path test-process")
+  (main-dev-str "process --path test-process --transition transition/request")
+  (main-dev-str "process --path test-process --transition transition/accept")
   )
