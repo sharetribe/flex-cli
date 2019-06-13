@@ -62,9 +62,7 @@
       (update :name io-util/namespaced-str)
       (update :from io-util/namespaced-str)
       (update :to io-util/namespaced-str)
-      (update :actions io-util/format-code)
-      (update :at io-util/format-code)
-      (update :params io-util/format-code)))
+      (update :at io-util/format-code)))
 
 (defn print-transitions [transitions]
   (println (io-util/section-title "Transitions"))
@@ -91,17 +89,49 @@
   (print-transitions (tx-process/transitions tx-process))
   (print-notifications (tx-process/notifications tx-process)))
 
+(defn- describe-transition [tx-process tr-name]
+  (if-let [transition (tx-process/transition tx-process tr-name)]
+    (let [formatted-tr (format-transition transition)
+          formatted-nts (->> (tx-process/notifications-after-transition
+                              tx-process
+                              tr-name)
+                             (map format-notification))]
+      (println (io-util/section-title "Transition") "\n")
+      (println
+       (io-util/definition-list [:name :from :to :actor :at] formatted-tr))
+
+      (println (io-util/section-title "Transition actions"))
+      (io-util/print-table [:name :config] (:actions formatted-tr))
+      (println)
+
+      (println (io-util/section-title "Notifications") "\n")
+      (if (seq formatted-nts)
+        (println (apply str
+                        (interpose
+                         "\n--\n\n"
+                         (map #(io-util/definition-list
+                                 [:name :on :to :template :at] %)
+                              formatted-nts))))
+        (println "-"))
+      (println))
+
+    ;; TODO Extract error return with msg to io-util
+    (do (println "No transition for name" tr-name "found.")
+        {:exit-status 1})))
 
 (defn describe-process
-  "Describe a process or a process transition.
+  "Describe a process or a process transition if --transition is
+  given.
 
   The process is loaded either from disk (when --path is given) or
-  from a live backend (with coordinates --process-name (--version ||
+  from a live backend (with coordinates --process (--version ||
   --alias) and --marketplace)."
-  [{:keys [path process-name version alias marketplace]}]
+  [{:keys [path process-name version alias marketplace transition-name] :as opts}]
   (if (empty? path)
     (do (println "Currently only --path is supported and must be specified.")
         {:exit-status 1})
     (let [tx-process (load-tx-process-from-path path)]
-      (describe-full-process tx-process))))
+      (if (seq transition-name)
+        (describe-transition tx-process (keyword transition-name))
+        (describe-full-process tx-process)))))
 
