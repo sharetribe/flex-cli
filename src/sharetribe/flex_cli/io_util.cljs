@@ -9,12 +9,19 @@
             #_[cljs-time.coerce :refer [to-date-time]]
             [chalk]
             #_[sharetribe.util.money :as util.money]
+            [sharetribe.flex-cli.exception :as exception]
             ))
+
+(defmethod exception/format-exception :file-not-found [_ _ {:keys [path]}]
+  (str "File not found: " path))
 
 (defn load-file
   "Load file as str from given file path."
   [path]
-  (io/slurp path))
+  (try
+    (io/slurp path)
+    (catch js/Error e
+      (exception/throw! :file-not-found {:path path}))))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes

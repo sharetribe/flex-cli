@@ -110,11 +110,9 @@
 
       )))
 
-(defn handle [parse-result done]
-  (let [{:keys [handler options]} parse-result
-        result
-        (cond
-          (:error parse-result) (error parse-result)
-          (= ::main handler) (main parse-result)
-          handler (handler options))]
-    (done result)))
+(defn handle [parse-result]
+  (let [{:keys [handler options]} parse-result]
+    (cond
+      (:error parse-result) (error parse-result)
+      (= ::main handler) (main parse-result)
+      :else (handler options))))
