@@ -9,10 +9,10 @@
             [sharetribe.flex-cli.commands :as commands]
             [sharetribe.flex-cli.exception :as exception]))
 
-(defmethod exception/format-exception :parse-error [_ _ {:keys [errors]}]
+(defmethod exception/format-exception :command/parse-error [_ _ {:keys [errors]}]
   (str "Could not parse arguments:\n" (apply str (interpose "\n" errors))))
 
-(defmethod exception/format-exception :command-not-found [_ _ {:keys [arguments]}]
+(defmethod exception/format-exception :command/not-found [_ _ {:keys [arguments]}]
   (str "Command not found: " (first arguments)))
 
 (defn- find-sub [sub-cmds name]
@@ -43,14 +43,14 @@
         {:keys [options arguments summary errors]} parse-result]
 
     (when errors
-      (exception/throw! :parse-error {:errors errors}))
+      (exception/throw! :command/parse-error {:errors errors}))
 
     (if (empty? arguments)
       {:handler (:handler cmd)
        :options options}
       (if-let [sub-cmd (find-sub (:sub-cmds cmd) (first arguments))]
         (recur (rest arguments) sub-cmd)
-        (exception/throw! :command-not-found {:arguments arguments})))))
+        (exception/throw! :command/not-found {:arguments arguments})))))
 
 (s/def ::args coll?)
 

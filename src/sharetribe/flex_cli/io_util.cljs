@@ -12,7 +12,7 @@
             [sharetribe.flex-cli.exception :as exception]
             ))
 
-(defmethod exception/format-exception :file-not-found [_ _ {:keys [path]}]
+(defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
 
 (defn load-file
@@ -21,7 +21,7 @@
   (try
     (io/slurp path)
     (catch js/Error e
-      (exception/throw! :file-not-found {:path path}))))
+      (exception/throw! :io/file-not-found {:path path}))))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
