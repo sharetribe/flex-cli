@@ -6,7 +6,14 @@
   "
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :as tools.cli]
-            [sharetribe.flex-cli.commands :as commands]))
+            [sharetribe.flex-cli.commands :as commands]
+            [sharetribe.flex-cli.exception :as exception]))
+
+(defmethod exception/format-exception :parse-error [_ _ {:keys [errors]}]
+  (str "Could not parse arguments:\n" (apply str (interpose "\n" errors))))
+
+(defmethod exception/format-exception :command-not-found [_ _ {:keys [arguments]}]
+  (str "Command not found: " (first arguments)))
 
 (defn- find-sub [sub-cmds name]
   (some #(when (= (:name %) name) %) sub-cmds))
@@ -35,17 +42,15 @@
   (let [parse-result (tools.cli/parse-opts args (:opts cmd) :in-order true :strict true)
         {:keys [options arguments summary errors]} parse-result]
 
-    (cond
-      (seq errors) {:error :parse-error
-                    :data {:errors errors}}
+    (when errors
+      (exception/throw! :parse-error {:errors errors}))
 
-      (empty? arguments) {:handler (:handler cmd)
-                          :options options}
-
-      :else (if-let [sub-cmd (find-sub (:sub-cmds cmd) (first arguments))]
-              (recur (rest arguments) sub-cmd)
-              {:error :command-not-found
-               :data {:arguments arguments}}))))
+    (if (empty? arguments)
+      {:handler (:handler cmd)
+       :options options}
+      (if-let [sub-cmd (find-sub (:sub-cmds cmd) (first arguments))]
+        (recur (rest arguments) sub-cmd)
+        (exception/throw! :command-not-found {:arguments arguments})))))
 
 (s/def ::args coll?)
 

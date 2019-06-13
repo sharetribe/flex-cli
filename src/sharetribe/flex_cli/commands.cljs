@@ -82,22 +82,6 @@
                                    ::no-marketplace?
                                    ::sub-cmds]))
 
-(defn parse-error [parse-result]
-  (doseq [e (-> parse-result :data :errors)]
-    (binding [*print-fn* *print-err-fn*]
-      (println e)))
-  {:exit-status 1})
-
-(defn command-not-found [parse-result]
-  (binding [*print-fn* *print-err-fn*]
-    (println "Command not found:" (-> parse-result :data :arguments first)))
-  {:exit-status 1})
-
-(defn error [parse-result]
-  (case (:error parse-result)
-    :parse-error (parse-error parse-result)
-    :command-not-found (command-not-found parse-result)))
-
 (defn main [parse-result]
   (let [{:keys [options]} parse-result]
     (cond
@@ -112,7 +96,6 @@
 
 (defn handle [parse-result]
   (let [{:keys [handler options]} parse-result]
-    (cond
-      (:error parse-result) (error parse-result)
-      (= ::main handler) (main parse-result)
-      :else (handler options))))
+    (if (= ::main handler)
+      (main parse-result)
+      (handler options))))
