@@ -81,8 +81,7 @@
 (defn print-notifications [notifications]
   (println (io-util/section-title "Notifications"))
   (let [ks [:name :on :to :template]]
-    (io-util/print-table ks (map format-notification notifications)))
-  (println) (println))
+    (io-util/print-table ks (map format-notification notifications))))
 
 (defn- describe-full-process [tx-process]
   (print-states (tx-process/states tx-process))
@@ -96,11 +95,10 @@
                               tx-process
                               tr-name)
                              (map format-notification))]
-      (println (io-util/section-title "Transition") "\n")
       (println
        (io-util/definition-list [:name :from :to :actor :at] formatted-tr))
 
-      (println (io-util/section-title "Transition actions"))
+      (println (io-util/section-title "Actions"))
       (io-util/print-table [:name :config] (:actions formatted-tr))
       (println)
 

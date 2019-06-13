@@ -73,7 +73,7 @@
 (defn section-title
   "Format title string as section title."
   [title]
-  (.bold.underline.whiteBright chalk title))
+  (.bold.underline chalk title))
 
 (defn definition-list
   "Format a map as a definition list.
@@ -86,7 +86,7 @@
   ([ks dl]
    (apply str
           (for [[k v] (map vector ks (map #(get dl %) ks))]
-            (let [title (.bold.white chalk (kw->title k))
+            (let [title (.bold chalk (kw->title k))
                   value-lines (str/split-lines v)]
               (apply str
                      title "\n"
