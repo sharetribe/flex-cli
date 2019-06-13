@@ -4,7 +4,12 @@
             [sharetribe.flex-cli.commands.help :as help]
             [sharetribe.flex-cli.commands.marketplace :as marketplace]
             [sharetribe.flex-cli.commands.process :as process]
-            [sharetribe.flex-cli.commands.version :as version]))
+            [sharetribe.flex-cli.commands.version :as version]
+            [sharetribe.flex-cli.exception :as exception]))
+
+(defmethod exception/format-exception :command/invalid-args [_ _ {:keys [command errors]}]
+  (str "Invalid arguments for command " (name command) ":\n"
+       (apply str (interpose "\n" errors))))
 
 (def marketplace-opt
   {:id :marketplace
