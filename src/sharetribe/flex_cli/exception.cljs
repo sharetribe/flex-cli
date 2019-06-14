@@ -23,6 +23,6 @@
 (defmethod format-exception :default [_ message data]
   (str message (if data (str "\n\n" (pr-str data)))))
 
-(defmethod exception/format-exception :command/invalid-args [_ _ {:keys [command errors]}]
+(defmethod format-exception :command/invalid-args [_ _ {:keys [command errors]}]
   (str "Invalid arguments for command " (name command) ":\n"
        (apply str (interpose "\n" errors))))
