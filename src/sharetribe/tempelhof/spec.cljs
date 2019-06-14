@@ -36,7 +36,7 @@
 ;; TODO Port time expression spec
 ;; (s/def :tx-process.transition/at ::tegel.time/expression)
 
-(defn- transition-does-not-have-both-actor-and-at? [transition]
+(defn- transition-has-either-actor-or-at? [transition]
   (or (and (:actor transition) (not (:at transition)))
       (and (not (:actor transition)) (:at transition))))
 
@@ -47,7 +47,7 @@
                           :tx-process.transition/actor
                           :tx-process.transition/at
                           :tx-process.transition/from])
-         transition-does-not-have-both-actor-and-at?))
+         transition-has-either-actor-or-at?))
 
 (s/def :tx-process/transitions
   (s/coll-of :tx-process/transition))
