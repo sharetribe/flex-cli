@@ -13,8 +13,10 @@
    :short-opt "-m"
    :required "MARKETPLACE IDENT"})
 
+(declare main)
+
 (def command-definitions
-  {:handler ::main
+  {:handler main
    :opts [{:id :help
            :long-opt "--help"
            :short-opt "-h"}
@@ -83,20 +85,16 @@
                                    ::no-marketplace?
                                    ::sub-cmds]))
 
-(defn main [parse-result]
-  (let [{:keys [options]} parse-result]
-    (cond
-      ;; dissoc :help option because this is how the "help" command is
-      ;; invoked
-      (:help options) (help/help (dissoc options :help))
-      (:version options) (version/version (dissoc options :version)) ;; Same
+(defn main [options]
+  (cond
+    ;; dissoc :help option because this is how the "help" command is
+    ;; invoked
+    (:help options) (help/help (dissoc options :help))
+    (:version options) (version/version (dissoc options :version)) ;; Same
 
-      :else (help/help {}) ;; show help as a default
-
-      )))
+    :else (help/help {}) ;; show help as a default
+    ))
 
 (defn handle [parse-result]
   (let [{:keys [handler options]} parse-result]
-    (if (= ::main handler)
-      (main parse-result)
-      (handler options))))
+    (handler options)))
