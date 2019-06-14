@@ -1,5 +1,6 @@
 (ns sharetribe.flex-cli.commands.process
   (:require [sharetribe.flex-cli.io-util :as io-util]
+            [sharetribe.flex-cli.exception :as exception]
             [sharetribe.tempelhof.tx-process :as tx-process]))
 
 (declare describe-process)
@@ -113,9 +114,9 @@
         (println "-"))
       (println))
 
-    ;; TODO Extract error return with msg to io-util
-    (do (println "No transition for name" tr-name "found.")
-        {:exit-status 1})))
+    (exception/throw! :command/invalid-args
+                      {:command :process
+                       :errors [(str "No transition for name " (io-util/namespaced-str tr-name) " found.")]})))
 
 (defn describe-process
   "Describe a process or a process transition if --transition is
@@ -126,8 +127,9 @@
   --alias) and --marketplace)."
   [{:keys [path process-name version alias marketplace transition-name] :as opts}]
   (if (empty? path)
-    (do (println "Currently only --path is supported and must be specified.")
-        {:exit-status 1})
+    (exception/throw! :command/invalid-args
+                      {:command :process
+                       :errors ["Currently only --path is supported and must be specified."]})
     (let [tx-process (load-tx-process-from-path path)]
       (if (seq transition-name)
         (describe-transition tx-process (keyword transition-name))
