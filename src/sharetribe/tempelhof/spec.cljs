@@ -4,10 +4,10 @@
 ;; Transaction process spec
 ;;
 
-(s/def :tx-process.transition/actor-role #{:actor.role/customer
-                                           :actor.role/provider
-                                           :actor.role/operator
-                                           :actor.role/system})
+(s/def :tx-process.transition/actor #{:actor.role/customer
+                                      :actor.role/provider
+                                      :actor.role/operator
+                                      :actor.role/system})
 (s/def :tx-process.transition/name keyword?)
 (s/def :tx-process.transition/from keyword?)
 (s/def :tx-process.transition/to keyword?)
@@ -36,6 +36,10 @@
 ;; TODO Port time expression spec
 ;; (s/def :tx-process.transition/at ::tegel.time/expression)
 
+(defn- transition-does-not-have-both-actor-and-at? [transition]
+  (or (and (:actor transition) (not (:at transition)))
+      (and (not (:actor transition)) (:at transition))))
+
 (s/def :tx-process/transition
   (s/and (s/keys :req-un [:tx-process.transition/name
                           :tx-process.transition/to]
@@ -43,8 +47,7 @@
                           :tx-process.transition/actor
                           :tx-process.transition/at
                           :tx-process.transition/from])
-         #(or (and (:actor %) (not (:at %)))
-              (and (not (:actor %)) (:at %)))))
+         transition-does-not-have-both-actor-and-at?))
 
 (s/def :tx-process/transitions
   (s/coll-of :tx-process/transition))

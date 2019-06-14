@@ -4,6 +4,10 @@
             [sharetribe.tempelhof.spec]
             [sharetribe.flex-cli.exception :as exception]))
 
+(expound/defmsg :tx-process.transition/name "Transition name should be a keyword")
+(expound/defmsg :tx-process.transition/to "Transition to should be a keyword")
+(expound/defmsg :tx-process.transition/from "Transition from should be a keyword")
+
 (defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec]}]
   (let [printer (expound/custom-printer {:print-specs? false
                                          :theme :figwheel-theme})
