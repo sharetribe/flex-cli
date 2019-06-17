@@ -29,7 +29,7 @@
 
 (expound/defmsg :tx-process.transition/action "Transition's action should be defined as an action description map. Example: {:name :action/action-name :config {:config-property \"configuration value\"}}")
 
-;; :tx-process.action/name - TODO: add one-of check with known action names
+;; :tx-process.action/name - default message ok
 
 (expound/defmsg :tx-process.action/config ":config should be a map with configuration properties specific to the action. Example: :config {:config-property \"configuration value\"}")
 

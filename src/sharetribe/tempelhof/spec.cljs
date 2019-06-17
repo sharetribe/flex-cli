@@ -25,8 +25,44 @@
 ;;                               :kind set?
 ;;                               :into #{})))
 
+
+(s/def :tx-process.action/name #{:action.initializer/init-listing-tx
+                                 :action/create-booking
+                                 :action/accept-booking
+                                 :action/decline-booking
+                                 :action/cancel-booking
+                                 :action/calculate-tx-total ;; backward compatibility
+                                 :action/calculate-tx-daily-total ;; deprecated
+                                 :action/calculate-tx-nightly-total ;;deprecated
+                                 :action/calculate-tx-daily-total-price
+                                 :action/calculate-tx-nightly-total-price
+                                 :action/calculate-tx-total-daily-booking-exclude-start
+                                 :action/calculate-tx-unit-total-price
+                                 :action/calculate-tx-two-units-total-price
+                                 :action/calculate-tx-provider-commission
+                                 :action/calculate-tx-customer-commission
+                                 :action/calculate-full-refund
+                                 :action/set-line-items-and-total
+                                 :action/set-negotiated-total-price
+                                 :action/post-review-by-customer
+                                 :action/post-review-by-provider
+                                 :action/publish-reviews
+                                 :action/reveal-customer-protected-data
+                                 :action/reveal-provider-protected-data
+                                 :action/stripe-create-charge
+                                 :action/stripe-create-charge-pi
+                                 :action/stripe-create-payment-intent
+                                 :action/stripe-confirm-payment-intent
+                                 :action/stripe-capture-payment-intent
+                                 :action/stripe-capture-charge
+                                 :action/stripe-capture-charge-pi
+                                 :action/stripe-refund-charge
+                                 :action/stripe-refund-payment
+                                 :action/stripe-create-payout
+                                 :action/update-protected-data
+                                 :action/fail})
+
 (s/def :tx-process.action/config map?)
-(s/def :tx-process.action/name keyword?)
 (s/def :tx-process.transition/action (s/keys :req-un [:tx-process.action/name]
                                              :opt-un [:tx-process.action/config]))
 
