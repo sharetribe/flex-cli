@@ -85,9 +85,17 @@
                           :tx-process.transition/from])
          transition-has-either-actor-or-at?))
 
-(s/def :tx-process/transitions
-  (s/coll-of :tx-process/transition))
+(defn unique-transition-names? [transitions]
+  (let [names (map :name transitions)]
+    (= (count names) (count (set names)))))
 
+(s/def :tx-process/transitions
+  (s/and
+   (s/coll-of :tx-process/transition)
+   unique-transition-names?))
+
+;; TODO: What's the point of this? This was copied from tegel/spec,
+;; but the key isn't used anywhere.
 (s/def :tx-process.notification/after-transitions
   (s/every keyword?
            :kind set?
@@ -109,8 +117,14 @@
                    :tx-process.notification/template]
           :opt-un [:tx-process.notification/at]))
 
+(defn unique-notification-names? [notifications]
+  (let [names (map :name notifications)]
+    (= (count names) (count (set names)))))
+
 (s/def :tx-process/notifications
-  (s/coll-of :tx-process/notification))
+  (s/and
+   (s/coll-of :tx-process/notification)
+   unique-notification-names?))
 
 (s/def :tx-process/format #{:v3})
 
@@ -118,4 +132,3 @@
   (s/keys :req-un [:tx-process/format
                    :tx-process/transitions]
           :opt-un [:tx-process/notifications]))
-

@@ -11,8 +11,8 @@
 
 ;; :tx-process/format - default message ok
 
-(expound/defmsg :tx-process/transitions ":transitions should be collection of transitions. Example: :transitions [ ... ]")
-(expound/defmsg :tx-process/notifications ":notifications should be collection of notifications. Example: :notifications [ ... ]")
+(expound/defmsg :tx-process/transitions ":transitions should be collection of transitions with unique names. Example: :transitions [ ... ]")
+(expound/defmsg :tx-process/notifications ":notifications should be collection of notifications with unique names. Example: :notifications [ ... ]")
 
 ;; Transitions
 
