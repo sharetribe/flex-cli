@@ -94,13 +94,6 @@
    (s/coll-of :tx-process/transition)
    unique-transition-names?))
 
-;; TODO: What's the point of this? This was copied from tegel/spec,
-;; but the key isn't used anywhere.
-(s/def :tx-process.notification/after-transitions
-  (s/every keyword?
-           :kind set?
-           :into #{}))
-
 (s/def :tx-process.notification/name keyword?)
 (s/def :tx-process.notification/on keyword?)
 
