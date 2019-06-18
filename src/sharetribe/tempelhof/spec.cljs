@@ -1,6 +1,61 @@
 (ns sharetribe.tempelhof.spec
   (:require [clojure.spec.alpha :as s]))
 
+;; Time expressions
+;;
+
+(s/def :tx-process.time/state-name (s/cat :state-name keyword?))
+(s/def :tx-process.time/transition-name (s/cat :transition-name keyword?))
+
+(s/def :tx-process.time/timepoint-args
+  (s/or :tx-initiated (s/tuple #{:time/tx-initiated})
+        :first-entered-state (s/cat :tx-process.time/timepoint-name #{:time/first-entered-state} :tx-process.time/timepoint-state-name :tx-process.time/state-name)
+        :first-transitioned (s/cat :tx-process.time/timepoint-name #{:time/first-transitioned} :tx-process.time/timepoint-transition-name :tx-process.time/transition-name)
+        :booking-start (s/tuple #{:time/booking-start})
+        :booking-end (s/tuple #{:time/booking-end})
+        :booking-display-start (s/tuple #{:time/booking-display-start})
+        :booking-display-end (s/tuple #{:time/booking-display-end})))
+
+(s/def :tx-process.time/timepoint
+  (s/map-of #{:fn/timepoint}
+            :tx-process.time/timepoint-args
+            :count 1))
+
+(s/def :tx-process.time/period
+  (s/map-of #{:fn/period}
+            (s/tuple string?) ;; period string format not checked
+            :count 1))
+
+(s/def :tx-process.time/timepoints
+  (s/coll-of :tx-process.time/expression
+             :kind vector?
+             :min-count 1))
+
+(s/def :tx-process.time/timepoint+periods
+  (s/cat :timepoint :tx-process.time/expression
+         :periods (s/+ :tx-process.time/period)))
+
+(s/def :tx-process.time/expression
+  (s/or :timepoint  :tx-process.time/timepoint
+
+        :min (s/map-of #{:fn/min}
+                       :tx-process.time/timepoints
+                       :count 1)
+
+        :plus (s/map-of #{:fn/plus}
+                        :tx-process.time/timepoint+periods
+                        :count 1)
+
+        :minus (s/map-of #{:fn/minus}
+                         :tx-process.time/timepoint+periods
+                         :count 1)
+
+        :ignore-if-past (s/map-of #{:fn/ignore-if-past}
+                                  (s/coll-of :tx-process.time/expression
+                                             :kind vector?
+                                             :count 1)
+                                  :count 1)))
+
 ;; Transaction process spec
 ;;
 
@@ -69,8 +124,7 @@
 (s/def :tx-process.transition/actions
   (s/coll-of :tx-process.transition/action))
 
-;; TODO Port time expression spec
-;; (s/def :tx-process.transition/at ::tegel.time/expression)
+(s/def :tx-process.transition/at :tx-process.time/expression)
 
 (defn- transition-has-either-actor-or-at? [transition]
   (or (and (:actor transition) (not (:at transition)))
@@ -102,6 +156,8 @@
 
 (s/def :tx-process.notification/template
   simple-keyword?)
+
+(s/def :tx-process.notification/at :tx-process.time/expression)
 
 (s/def :tx-process/notification
   (s/keys :req-un [:tx-process.notification/name
