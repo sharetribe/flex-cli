@@ -45,6 +45,8 @@
 
 ;; :tx-process.notification/at - TODO: port time expression validation from Tegel
 
+(expound/defmsg :tx-process.notification/on-transition-name "Notification :on should point to an existing transition name.")
+
 
 (defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec]}]
   (let [printer (expound/custom-printer {:print-specs? false
