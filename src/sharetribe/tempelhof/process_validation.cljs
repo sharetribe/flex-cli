@@ -23,7 +23,7 @@
 (expound/defmsg :tx-process.transition/actions ":actions should be collection of actions. Example: :actions [ ... ]")
 
 ;; :tx-process.transition/actor - ok as default
-;; :tx-process.transition/at - TODO: port time expression validation from Tegel
+;; :tx-process.transition/at - default is probably better that anything generic
 
 ;; Actions
 
@@ -43,7 +43,7 @@
 
 (expound/defmsg :tx-process.notification/template ":template should be a keyword that matches the corresponding email template name. Example: :new-booking-request")
 
-;; :tx-process.notification/at - TODO: port time expression validation from Tegel
+;; :tx-process.notification/at - default is probably better that anything generic
 
 (expound/defmsg :tx-process.notification/on-transition-name "Notification :on should point to an existing transition name.")
 
