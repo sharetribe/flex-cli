@@ -18,15 +18,30 @@
   (binding [*print-fn* *print-err-fn*]
     (println (exception/format-msg e))))
 
+(defn error [e done-fn]
+  (print-error e)
+  (done-fn {:exit-status 1}))
+
+(defn set-exception-handlers!
+  "Set global exception handlers for uncaught exceptions and unhandled
+  promise rejections."
+  [callback-fn]
+  (doto js/process
+    (.removeAllListeners "uncaughtException")
+    (.removeAllListeners "unhandledRejection")
+    (.on "uncaughtException" (fn [err _] (callback-fn err)))
+    (.on "unhandledRejection" (fn [reason _] (callback-fn reason)))))
+
 (defn main* [cli-args done-fn]
+  (set-exception-handlers! #(error % done-fn))
+
   (try
     (-> cli-args
         (args-parse/parse commands/commands)
         (commands/handle))
     (done-fn {:exit-status 0})
     (catch js/Error e
-      (print-error e)
-      (done-fn {:exit-status 1}))))
+      (error e done-fn))))
 
 (defn main
   "Main entrypoint for the CLI"
@@ -45,6 +60,8 @@
      (main-dev))))
 
 (defn ^:dev/after-load after-load []
+  (set-exception-handlers! #(error % done-dev))
+
   (println "")
   (println (str "[" (.toISOString (js/Date.)) "] Code reloaded")))
 
