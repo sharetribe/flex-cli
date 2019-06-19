@@ -126,7 +126,7 @@
 
 (s/def :tx-process.transition/at :tx-process.time/expression)
 
-(defn- transition-has-either-actor-or-at? [transition]
+(defn transition-has-either-actor-or-at? [transition]
   (or (and (:actor transition) (not (:at transition)))
       (and (not (:actor transition)) (:at transition))))
 
@@ -139,7 +139,7 @@
                           :tx-process.transition/from])
          transition-has-either-actor-or-at?))
 
-(defn- unique-transition-names? [transitions]
+(defn unique-transition-names? [transitions]
   (let [names (map :name transitions)]
     (= (count names) (count (set names)))))
 
@@ -166,7 +166,7 @@
                    :tx-process.notification/template]
           :opt-un [:tx-process.notification/at]))
 
-(defn- unique-notification-names? [notifications]
+(defn unique-notification-names? [notifications]
   (let [names (map :name notifications)]
     (= (count names) (count (set names)))))
 
@@ -177,7 +177,7 @@
 
 (s/def :tx-process/format #{:v3})
 
-(defn- notification-on-is-valid-transition-name? [process]
+(defn notification-on-is-valid-transition-name? [process]
   (let [names (->> process
                    :transitions
                    (map :name)
