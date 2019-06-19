@@ -35,6 +35,7 @@
   Returns:
 
   {:handler <command handler>
+   :no-api-key? <bool>
    :options {}
   }
   "
@@ -47,6 +48,7 @@
 
     (if (empty? arguments)
       {:handler (:handler cmd)
+       :no-api-key? (:no-api-key? cmd)
        :options options}
       (if-let [sub-cmd (find-sub (:sub-cmds cmd) (first arguments))]
         (recur (rest arguments) sub-cmd)

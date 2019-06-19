@@ -1,5 +1,6 @@
 (ns sharetribe.flex-cli.core
   (:require [clojure.string :as str]
+            [clojure.core.async :as async :refer [go <!]]
             [sharetribe.flex-cli.args-parse :as args-parse]
             [sharetribe.flex-cli.commands :as commands]
             [sharetribe.flex-cli.exception :as exception]))
@@ -35,13 +36,15 @@
 (defn main* [cli-args done-fn]
   (set-exception-handlers! #(error % done-fn))
 
-  (try
-    (-> cli-args
-        (args-parse/parse commands/commands)
-        (commands/handle))
-    (done-fn {:exit-status 0})
-    (catch js/Error e
-      (error e done-fn))))
+  (go
+    (try
+      (<!
+       (-> cli-args
+           (args-parse/parse commands/commands)
+           (commands/handle)))
+      (done-fn {:exit-status 0})
+      (catch js/Error e
+        (error e done-fn)))))
 
 (defn main
   "Main entrypoint for the CLI"

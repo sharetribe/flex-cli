@@ -6,6 +6,7 @@
 (declare describe-process)
 
 (def cmd {:name "process"
+          :no-api-key? true
           :handler #'describe-process
           :opts [{:id :path
                   :long-opt "--path"
@@ -125,7 +126,7 @@
   The process is loaded either from disk (when --path is given) or
   from a live backend (with coordinates --process (--version ||
   --alias) and --marketplace)."
-  [{:keys [path process-name version alias marketplace transition-name] :as opts}]
+  [{:keys [path process-name version alias marketplace transition-name] :as opts} ctx]
   (if (empty? path)
     (exception/throw! :command/invalid-args
                       {:command :process

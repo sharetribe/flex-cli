@@ -1,26 +1,14 @@
 (ns sharetribe.flex-cli.commands.auth
-  (:require [sharetribe.flex-cli.credential-store :as credential-store]))
+  (:require [clojure.core.async :as async :refer [go <!]]
+            [sharetribe.flex-cli.credential-store :as credential-store]))
 
-(defn login [opts]
+(defn login [opts _]
   ;; TODO Validate API key (by doing a request to API)?
 
-  (credential-store/set-api-key
-   (:api-key opts)
-   {:on-success #(println "API stored.")
-    :on-error #(println "Failed to store the API key. This may happen
-    if you are using an environment where a credential manager is not
-    available, e.g. a headless environment without desktop
-    capabilities.") ;; TODO Add note about possiblity to use API_KEY environment variable, once it's implemented.
-    }))
+  (credential-store/set-api-key (:api-key opts)))
 
-(defn logout [opts]
-  (credential-store/delete-api-key
-   {:on-success #(println "API removed.")
-    :on-error #(println "Failed to store the API key. This may happen
-    if you are using an environment where a credential manager is not
-    available, e.g. a headless environment without desktop
-    capabilities.") ;; TODO Add note about possiblity to use API_KEY environment variable, once it's implemented.
-    }))
+(defn logout [opts _]
+  (credential-store/delete-api-key))
 
 (comment
   (with-out-str
