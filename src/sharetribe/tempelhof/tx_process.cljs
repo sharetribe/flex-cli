@@ -1,5 +1,7 @@
 (ns sharetribe.tempelhof.tx-process
-  (:require [cljs.reader :refer [read-string]]))
+  (:require [clojure.spec.alpha :as s]
+            [cljs.reader :refer [read-string]]
+            [sharetribe.tempelhof.process-validation :as process-validation]))
 
 (def ^:const initializer-action {:name :action.initializer/init-listing-tx})
 (def ^:const initial-state :state/initial)
@@ -18,6 +20,7 @@
   "Parse a tx process from an edn string."
   [edn-string]
   (-> (read-string edn-string)
+      (process-validation/validate!)
       (update :transition #(map expanded-transition %))))
 
 (defn transitions
