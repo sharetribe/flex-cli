@@ -10,7 +10,7 @@
 (def ^:const username "api-key")
 
 (defmethod exception/format-exception :credentials/api-key-not-found [_ _ _]
-  "API not found. Please log in first.")
+  "API key not found. Please log in first.")
 
 (def ^:const failed-details
   (str/join
