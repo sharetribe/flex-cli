@@ -1,6 +1,7 @@
 (ns sharetribe.flex-cli.commands.process
   (:require [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.exception :as exception]
+            [sharetribe.flex-cli.commands.process.list :as process.list]
             [sharetribe.tempelhof.tx-process :as tx-process]))
 
 (declare describe-process)
@@ -28,7 +29,8 @@
                  ;; declared per command? Who implements the the logic
                  ;; of pulling marketplace ident from state when it's
                  ;; not explicitly given to the command?
-                 ]})
+                 ]
+          :sub-cmds [process.list/cmd]})
 
 (defn- load-tx-process-from-path
   "Load process from given path (directory). Encapsulates the idea of

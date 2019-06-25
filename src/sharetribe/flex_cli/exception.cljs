@@ -1,10 +1,15 @@
 (ns sharetribe.flex-cli.exception
   "Utility namespace for global exception handling in the CLI.")
 
+(defn exception
+  ([type] (exception type nil))
+  ([type data]
+   (ex-info (str type) {:type type :data data})))
+
 (defn throw!
   ([type] (throw! type nil))
   ([type data]
-   (throw (ex-info (str type) {:type type, :data data}))))
+   (throw (exception type data))))
 
 (defmulti format-exception
   "Multimethod to format a given exception based on its type."

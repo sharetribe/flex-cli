@@ -4,4 +4,7 @@
  {org.clojure/tools.cli {:mvn/version "0.4.2"}
   org.clojure/core.async {:mvn/version "0.4.500"}
   cljs-node-io {:mvn/version "1.1.2"}
-  expound {:mvn/version "0.7.2"}}}
+  expound {:mvn/version "0.7.2"}
+
+  ;; Requires xmlhttprequest from NPM
+  cljs-ajax {:mvn/version "0.7.5"}}}
