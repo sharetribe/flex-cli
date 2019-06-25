@@ -94,7 +94,7 @@ node target/min.js <arguments>
 To install the compiled release build:
 
 ```
-yarn global add <path to local flex repository>
+yarn global add file:$(pwd)
 ```
 
 Run it:
