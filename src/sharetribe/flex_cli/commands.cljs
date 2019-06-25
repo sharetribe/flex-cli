@@ -33,12 +33,15 @@
    :sub-cmds
    [{:name "help"
      :no-api-key? true
+     :no-marketplace? true
      :handler help/help}
     {:name "version"
      :no-api-key? true
+     :no-marketplace? true
      :handler version/version}
     {:name "login"
      :no-api-key? true
+     :no-marketplace? true
      :handler auth/login
      :opts [
             ;; TODO Remove this! This is temporary, just for
@@ -48,11 +51,15 @@
              :required "API KEY"
              :missing "--api-key is required"}]}
     {:name "logout"
+     :no-api-key? true
+     :no-marketplace? true
      :handler auth/logout}
     {:name "marketplace"
+     :no-marketplace? true
      :handler marketplace/marketplace
      :sub-cmds
      [{:name "list"
+       :no-marketplace? true
        :handler marketplace/list}]}
     process/cmd]})
 
