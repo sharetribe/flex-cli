@@ -8,6 +8,7 @@
 
 (def cmd {:name "process"
           :no-api-key? true
+          :no-marketplace? true
           :handler #'describe-process
           :opts [{:id :path
                   :long-opt "--path"
