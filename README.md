@@ -72,3 +72,17 @@ yarn run test-autorun
 The autorun will keep running the tests when you change any file. See the REPL for test output.
 
 Unfortunately, running CLJS tests using Cider `C-c C-t t` is [not supported](https://github.com/clojure-emacs/cider/issues/1268#issuecomment-492379163)
+
+## Release
+
+Compile release build:
+
+```
+yarn run compile
+```
+
+Run it:
+
+```
+node target/min.js <arguments>
+```
