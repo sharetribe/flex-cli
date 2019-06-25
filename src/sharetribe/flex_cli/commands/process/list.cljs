@@ -12,11 +12,10 @@
   (go
     (let [{:keys [api-client marketplace]} ctx
           res (<? (do-get api-client "/processes/query" {:marketplace marketplace}))
-          process-names (->> res
-                             :data
-                             (map #(-> %
-                                       (update :process/name io-util/namespaced-str)
-                                       (dissoc :process/id))))]
+          process-names (map (fn [{:process/keys [name version]}]
+                               {:name (io-util/namespaced-str name)
+                                :latest-version version})
+                             (:data res))]
 
       (io-util/print-table process-names))))
 
