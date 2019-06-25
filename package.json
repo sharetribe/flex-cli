@@ -1,4 +1,8 @@
 {
+  "version": "0.0.1",
+  "bin": {
+    "flex": "target/min.js"
+  },
   "scripts": {
     "dev": "node target/dev.js",
     "compile": "shadow-cljs compile min",
