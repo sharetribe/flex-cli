@@ -15,13 +15,15 @@
   {:id :marketplace
    :long-opt "--marketplace"
    :short-opt "-m"
-   :required "MARKETPLACE IDENT"})
+   :required "MARKETPLACE IDENT"
+   :missing "--marketplace is required"})
 
 (declare main)
 
 (def command-definitions
   {:handler #'main
    :no-api-key? true
+   :no-marketplace? true
    :opts [{:id :help
            :long-opt "--help"
            :short-opt "-h"}
