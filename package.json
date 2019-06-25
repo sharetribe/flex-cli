@@ -1,4 +1,5 @@
 {
+  "name": "flex-cli",
   "version": "0.0.1",
   "bin": {
     "flex": "target/min.js"
