@@ -20,7 +20,7 @@
 (declare main)
 
 (def command-definitions
-  {:handler main
+  {:handler #'main
    :no-api-key? true
    :opts [{:id :help
            :long-opt "--help"
