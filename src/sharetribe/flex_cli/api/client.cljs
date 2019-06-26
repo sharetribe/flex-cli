@@ -1,10 +1,9 @@
 (ns sharetribe.flex-cli.api.client
   (:require [ajax.core :as ajax]
             [clojure.core.async :as async :refer [put! chan <! go]]
+            [sharetribe.flex-cli.config :as config]
             [sharetribe.flex-cli.exception :as exception])
   (:require-macros sharetribe.flex-cli.api.client))
-
-(def ^:const base-url "http://localhost:8089/v1/build-api") ;; TODO Make configurable
 
 (defmethod exception/format-exception :api/error [_ _ {:keys [status status-text response]}]
   (if (= 500 status)
@@ -34,7 +33,7 @@
 (defn do-get [client path query]
   (let [c (chan)]
     (ajax/ajax-request
-     {:uri (str base-url path)
+     {:uri (str (config/value :api-base-url) path)
       :method :get
       :params query
       :headers {"Authorization" (str "Apikey " (::api-key client))}
