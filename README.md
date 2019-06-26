@@ -4,6 +4,12 @@
 
 *These instructions are for Emacs & Cider.*
 
+1. Create .env.end file
+
+    ```bash
+    cp .env.edn.tmpl .env.edn
+    ```
+
 1. In Emacs:
 
     ```
