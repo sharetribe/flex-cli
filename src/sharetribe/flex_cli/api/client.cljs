@@ -1,6 +1,7 @@
 (ns sharetribe.flex-cli.api.client
   (:require [ajax.core :as ajax]
             [clojure.core.async :as async :refer [put! chan <! go]]
+            [com.cognitect.transit.types :as ty]
             [sharetribe.flex-cli.config :as config]
             [sharetribe.flex-cli.exception :as exception])
   (:require-macros sharetribe.flex-cli.api.client))
@@ -29,6 +30,13 @@
   (exception/exception
    :api/error
    (select-keys response [:status :status-text :failure :response])))
+
+(extend-type ty/TaggedValue
+  IPrintWithWriter
+  (-pr-writer [tagged-value writer _]
+    (case (.-tag tagged-value)
+      "f" (-write writer (str (.-rep tagged-value) "M"))
+      (-write writer (.toString tagged-value)))))
 
 (defn do-get [client path query]
   (let [c (chan)]
