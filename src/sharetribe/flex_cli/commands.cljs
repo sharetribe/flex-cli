@@ -32,6 +32,7 @@
            :short-opt "-V"}]
    :sub-cmds
    [{:name "help"
+     :desc "display help for Flex CLI"
      :no-api-key? true
      :no-marketplace? true
      :handler help/help}
@@ -40,6 +41,7 @@
      :no-marketplace? true
      :handler version/version}
     {:name "login"
+     :desc "log in with API key"
      :no-api-key? true
      :no-marketplace? true
      :handler auth/login
@@ -51,6 +53,7 @@
              :required "API KEY"
              :missing "--api-key is required"}]}
     {:name "logout"
+     :desc "logout"
      :no-api-key? true
      :no-marketplace? true
      :handler auth/logout}
@@ -136,7 +139,13 @@
     (let [{:keys [handler no-api-key? options]} parse-result
           api-key (when-not no-api-key?
                     (<! (credential-store/get-api-key)))
-          ctx (cond-> {}
+          ctx (cond->
+                  ;; The help command needs to know about all the
+                  ;; commands, but it can't refer to commands
+                  ;; namespaces because that would create cyclic
+                  ;; dependency. Thus, let's pass commands in the ctx.
+                  {:commands commands}
+
                 (:marketplace options) (assoc :marketplace (:marketplace options))
                 api-key (assoc :api-client (api-client/new-client api-key)))
           options (dissoc options :marketplace)]
