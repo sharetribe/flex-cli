@@ -46,10 +46,12 @@
     (when errors
       (exception/throw! :command/parse-error {:errors errors}))
 
-    (if (empty? arguments)
+    (if (or (empty? arguments)
+            (:catch-all? cmd))
       {:handler (:handler cmd)
        :no-api-key? (:no-api-key? cmd)
-       :options options}
+       :options options
+       :arguments arguments}
       (if-let [sub-cmd (find-sub (:sub-cmds cmd) (first arguments))]
         (recur (rest arguments) sub-cmd)
         (exception/throw! :command/not-found {:arguments arguments})))))

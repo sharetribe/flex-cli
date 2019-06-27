@@ -76,3 +76,13 @@
         parse-result (parse/parse ["process" "list" "-m" "-p" "nightly-booking"] cmd)]
     (is (= :parse-error (:error parse-result)))
     (is (= ["Missing required argument for \"-m MARKETPLACE\""] (-> parse-result :data :errors)))))
+
+(deftest catch-all
+  (let [cmd {:sub-cmds [{:name "help"
+                         :handler ::help
+                         :catch-all? true}
+                        {:name "process"
+                         :sub-cmds [{:name "list"}]}]}]
+    (is (= ::help (:handler (parse/parse ["help" "process" "list"] cmd))))
+    (is (thrown-with-msg? js/Error #":command/not-found"
+                          (parse/parse ["process" "this-command-does-not-exist"] cmd)))))

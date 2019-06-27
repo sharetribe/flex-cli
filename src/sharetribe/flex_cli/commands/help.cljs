@@ -40,3 +40,7 @@
       :line
       "COMMANDS" :line
       [:nest (command-help (:sub-cmds commands))]])))
+
+(comment
+  (sharetribe.flex-cli.core/main-dev-str "help process list")
+  )
