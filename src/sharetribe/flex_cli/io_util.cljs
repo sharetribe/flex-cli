@@ -4,6 +4,7 @@
   (:require [cljs-node-io.core :as io]
             [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
+            [fipp.engine :as fipp]
             [clojure.string :as str]
             #_[cljs-time.format :refer [formatter unparse]]
             #_[cljs-time.coerce :refer [to-date-time]]
@@ -125,3 +126,17 @@
   (if code
     (.green chalk (with-out-str (pprint code)))
     "-"))
+
+(defn ppd
+  "Pretty print Fipp document"
+  ([document] (ppd document {}))
+  ([document options]
+   ;; By default CLJS uses console.log as print-fn. console.log always
+   ;; adds new line when it's called. This is not what Fipp
+   ;; expects. Thus, we need to bind print-fn to directly print to
+   ;; stdout. print-newline needs to be set true so that println adds
+   ;; new line. This is by default false, because console.log does it
+   ;; already.
+   (binding [*print-newline* true
+             *print-fn* #(js/process.stdout.write %)]
+     (fipp/pprint-document document options))))
