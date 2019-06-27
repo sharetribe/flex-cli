@@ -6,7 +6,8 @@
 (declare list-processes)
 
 (def cmd {:name "list"
-          :handler #'list-processes})
+          :handler #'list-processes
+          :desc "list all transaction processes"})
 
 (defn list-processes [_ ctx]
   (go

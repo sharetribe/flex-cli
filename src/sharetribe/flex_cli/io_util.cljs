@@ -4,6 +4,7 @@
   (:require [cljs-node-io.core :as io]
             [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
+            [fipp.engine :as fipp]
             [clojure.string :as str]
             #_[cljs-time.format :refer [formatter unparse]]
             #_[cljs-time.coerce :refer [to-date-time]]
@@ -125,3 +126,51 @@
   (if code
     (.green chalk (with-out-str (pprint code)))
     "-"))
+
+(defn ppd
+  "Pretty print Fipp document"
+  ([document] (ppd document {}))
+  ([document options]
+   ;; By default CLJS uses console.log as print-fn. console.log always
+   ;; adds new line when it's called. This is not what Fipp
+   ;; expects. Thus, we need to bind print-fn to directly print to
+   ;; stdout. print-newline needs to be set true so that println adds
+   ;; new line. This is by default false, because console.log does it
+   ;; already.
+   (binding [*print-newline* true
+             *print-fn* #(js/process.stdout.write %)]
+     (fipp/pprint-document document options))))
+
+(defn transpose
+  ;; https://stackoverflow.com/a/10347404
+  [m]
+  (apply map list m))
+
+(defn right-pad [s length]
+  (str s (apply str (repeat (- length (count s)) " "))))
+
+(defn longest-width
+  "Takes collection of strings `xs` and returns the count of the longest
+  one."
+  [xs]
+  ;; Assumes strings and uses simple count. This could be improved in
+  ;; the future to accept Fipp primitives and correctly
+  ;; count :escaped, :pass, etc.
+  (apply max (map count xs)))
+
+(defn align-cols
+  "Takes 2d collection `rows` and makes the columns equal size.
+
+  Example:
+
+  (align-cols
+   [[\"abc\"\"1\"]
+    [\"d\" \"efghij\"]])
+  =>
+  ((\"abc\" \"1     \")
+   (\"d  \" \"efghij\"))
+  "
+  [rows]
+  (let [cols (transpose rows)
+        col-widths (mapv longest-width cols)]
+    (map #(map right-pad % col-widths) rows)))
