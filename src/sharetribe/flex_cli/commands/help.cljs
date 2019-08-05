@@ -11,8 +11,7 @@
    (mapcat
     (fn [{:keys [name desc sub-cmds]}]
       (concat
-       (when desc
-         [[(str/join " " (conj parent-cmds name)) desc]])
+       [[(str/join " " (conj parent-cmds name)) (or desc "")]]
        (when sub-cmds
          (list-commands sub-cmds (conj parent-cmds name)))))
     cmds)))
