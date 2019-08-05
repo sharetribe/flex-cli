@@ -51,7 +51,8 @@
             ;; testing. Prompt the API key instead.
             {:id :api-key
              :long-opt "--api-key"
-             :required "API KEY"
+             :desc "Your API key"
+             :required "API_KEY"
              :missing "--api-key is required"}]}
     {:name "logout"
      :desc "logout"
