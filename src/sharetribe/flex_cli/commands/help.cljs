@@ -1,5 +1,6 @@
 (ns sharetribe.flex-cli.commands.help
   (:require [sharetribe.flex-cli.io-util :as io-util]
+            [sharetribe.flex-cli.command-util :as command-util]
             [clojure.string :as str]))
 
 (def ^:const bin "flex")
@@ -27,9 +28,6 @@
        (map (fn [[cmd desc]]
               [:span cmd "  " desc :line]))))
 
-(defn subcommand [sub-cmds name]
-  (first (filter #(= name (:name %)) sub-cmds)))
-
 (defn format-opt [opt-spec]
   (let [{:keys [short-opt long-opt desc required]} opt-spec
         opt (cond (and short-opt long-opt) (str short-opt ", " long-opt)
@@ -48,22 +46,8 @@
        (map (fn [[opt+req desc]]
               [:span opt+req "  " desc :line]))))
 
-(defn subcommand-in [commands arguments]
-  ;; Hmm... this functions knows too much about the "commands"
-  ;; structure. Maybe it should be in the commands namespace instead.
-  ;;
-  ;; TODO Move functions that access the "commands" structure to
-  ;; commands namespace. And then, solve the cyclic dependency that
-  ;; will be caused by it.
-  ;;
-  (reduce
-   (fn [cmd name]
-     (subcommand (:sub-cmds cmd) name))
-   commands
-   arguments))
-
 (defn subcommand-help [cmd args]
-  (if-let [sub-cmd (subcommand-in cmd args)]
+  (if-let [sub-cmd (command-util/subcommand-in cmd args)]
     [:span
      (:desc sub-cmd) :line
      :line
@@ -97,7 +81,7 @@
        (main-help commands)))))
 
 (comment
-  (subcommand-in sharetribe.flex-cli.commands/command-definitions ["process" "list"])
+  (command-util/subcommand-in sharetribe.flex-cli.commands/command-definitions ["process" "list"])
 
   (sharetribe.flex-cli.core/main-dev-str "help process")
   )

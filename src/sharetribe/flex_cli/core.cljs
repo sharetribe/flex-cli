@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.core.async :as async :refer [go <!]]
             [sharetribe.flex-cli.args-parse :as args-parse]
-            [sharetribe.flex-cli.commands :as commands]
+            [sharetribe.flex-cli.command-defs :as command-defs]
+            [sharetribe.flex-cli.command-exec :as command-exec]
             [sharetribe.flex-cli.exception :as exception]))
 
 (defn done [status]
@@ -40,8 +41,8 @@
     (try
       (<!
        (-> cli-args
-           (args-parse/parse commands/commands)
-           (commands/handle)))
+           (args-parse/parse command-defs/commands)
+           (command-exec/execute command-defs/commands)))
       (done-fn {:exit-status 0})
       (catch js/Error e
         (error e done-fn)))))
