@@ -41,7 +41,7 @@
   "
   [args cmd]
   (let [parse-result (tools.cli/parse-opts args (:opts cmd) :in-order true :strict true)
-        {:keys [options arguments summary errors]} parse-result]
+        {:keys [options arguments errors]} parse-result]
 
     (when errors
       (exception/throw! :command/parse-error {:errors errors}))
