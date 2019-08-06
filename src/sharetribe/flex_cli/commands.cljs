@@ -35,6 +35,7 @@
      :desc "display help for Flex CLI"
      :no-api-key? true
      :no-marketplace? true
+     :catch-all? true
      :handler help/help}
     {:name "version"
      :no-api-key? true
@@ -50,7 +51,8 @@
             ;; testing. Prompt the API key instead.
             {:id :api-key
              :long-opt "--api-key"
-             :required "API KEY"
+             :desc "Your API key"
+             :required "API_KEY"
              :missing "--api-key is required"}]}
     {:name "logout"
      :desc "logout"
@@ -136,7 +138,7 @@
 
 (defn handle [parse-result]
   (go
-    (let [{:keys [handler no-api-key? options]} parse-result
+    (let [{:keys [handler no-api-key? options arguments]} parse-result
           api-key (when-not no-api-key?
                     (<! (credential-store/get-api-key)))
           ctx (cond->
@@ -144,7 +146,9 @@
                   ;; commands, but it can't refer to commands
                   ;; namespaces because that would create cyclic
                   ;; dependency. Thus, let's pass commands in the ctx.
-                  {:commands commands}
+                  {:commands commands
+                   :options options
+                   :arguments arguments}
 
                 (:marketplace options) (assoc :marketplace (:marketplace options))
                 api-key (assoc :api-client (api-client/new-client api-key)))
