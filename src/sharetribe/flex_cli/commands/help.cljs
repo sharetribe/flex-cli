@@ -27,7 +27,7 @@
   (->> cmd
        list-commands
        (sort-by first)
-       io-util/align-cols
+       view/align-cols
        (map (fn [[cmd desc]]
               [:span cmd "  " desc :line]))))
 
@@ -41,7 +41,7 @@
   (->> opts
        (sort-by (juxt :short-opt :long-opt :desc))
        (map format-opt)
-       (io-util/align-cols)
+       view/align-cols
        (map (fn [[opt+req desc]]
               [:span opt+req "  " desc :line]))))
 
