@@ -14,8 +14,9 @@
     "shadow-cljs": "^2.8.37"
   },
   "dependencies": {
-    "keytar": "^4.7.0",
     "chalk": "^2.4.2",
+    "keytar": "^4.7.0",
+    "mkdirp": "^0.5.1",
     "xmlhttprequest": "^1.8.0"
   }
 }
