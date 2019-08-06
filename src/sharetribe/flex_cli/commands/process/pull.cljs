@@ -11,7 +11,8 @@
           :desc "fetch a process file"
           :opts [{:id :process-name
                   :long-opt "--process"
-                  :required "[WIP] PROCESS_NAME"}
+                  :required "[WIP] PROCESS_NAME"
+                  :missing "--process is required"}
                  {:id :version
                   :long-opt "--version"
                   :required "[WIP] VERSION"}
@@ -20,10 +21,10 @@
                   :required "[WIP] ALIAS"}
                  {:id :path
                   :long-opt "--path"
-                  :required "[WIP] LOCAL_PROCESS_DIR"}
+                  :required "[WIP] LOCAL_PROCESS_DIR"
+                  :missing "--path is required"}
                  {:id :force
-                  :long-opt "--force"}
-                 ]})
+                  :long-opt "--force"}]})
 
 (defn- process-dir? [path]
   (io-util/file? (io-util/join path "process.edn")))
@@ -45,17 +46,9 @@
   (go
     (let [{:keys [api-client marketplace]} ctx
           {:keys [process-name version alias path force]} params
-
-          _ (when-not process-name
-              (exception/throw! :command/invalid-args {:command :pull
-                                                       :errors ["--process is required"]}))
           _ (when-not (or version alias)
               (exception/throw! :command/invalid-args {:command :pull
                                                        :errors ["--version or --alias is required"]}))
-          _ (when-not path
-              (exception/throw! :command/invalid-args {:command :pull
-                                                       :errors ["--path is required"]}))
-
           _ (ensure-process-dir! path force)
 
           query-params (cond-> {:marketplace marketplace
@@ -70,12 +63,3 @@
 
       (io-util/save-file process-file-path (with-out-str (cljs.pprint/pprint process-data)))
       (io-util/log "Saved process to" process-file-path))))
-
-(comment
-  (sharetribe.flex-cli.core/main-dev-str "help")
-  (sharetribe.flex-cli.core/main-dev-str "process list --marketplace=bike-soil")
-  (sharetribe.flex-cli.core/main-dev-str "process pull --marketplace=bike-soil --process=preauth-with-nightly-booking --version=3")
-  (sharetribe.flex-cli.core/main-dev-str "process pull --marketplace=bike-soil --process=preauth-with-nightly-booking --alias=release-1")
-  (sharetribe.flex-cli.core/main-dev-str "process pull --marketplace=bike-soil --process=preauth-with-nightly-booking --alias=release-1 --path=my-process --force")
-  (sharetribe.flex-cli.core/main-dev-str "process --path=my-process")
-  )
