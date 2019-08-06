@@ -5,7 +5,7 @@
             [chalk]
             [clojure.string :as str]))
 
-(def ^:const bin "flex")
+(def ^:const bin "flex-cli")
 (def ^:const version "0.0.1")
 
 (defn list-commands
