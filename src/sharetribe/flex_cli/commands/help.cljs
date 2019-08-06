@@ -2,6 +2,8 @@
   (:require [sharetribe.flex-cli.io-util :as io-util]
             [clojure.string :as str]))
 
+(def ^:const bin "flex")
+
 (defn list-commands
   "Recursively traverse through the list of commands and return a list
   of all commands and their sub-commands in a flat collection of [name
@@ -66,7 +68,7 @@
      (:desc sub-cmd) :line
      :line
      "USAGE" :line
-     [:nest "$ " (str/join " " (concat ["flex"] args))] :line
+     [:nest "$ " (str/join " " (concat [bin] args))] :line
      (when (:opts sub-cmd)
        [:span
         :line
@@ -82,7 +84,7 @@
    [:nest "0.0.1"] :line ;; Don't hardcode version
    :line
    "USAGE" :line
-   [:nest "$ flex-cli [COMMAND]"] :line
+   [:nest (str "$ " bin " [COMMAND]")] :line
    :line
    "COMMANDS" :line [:nest (command-help (:sub-cmds cmd))]]
   )
