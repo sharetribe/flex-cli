@@ -6,7 +6,7 @@
   "
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :as tools.cli]
-            [sharetribe.flex-cli.commands :as commands]
+            [sharetribe.flex-cli.command-spec :as command-spec]
             [sharetribe.flex-cli.exception :as exception]))
 
 (defmethod exception/format-exception :command/parse-error [_ _ {:keys [errors]}]
@@ -60,4 +60,4 @@
 
 (s/fdef parse
   :args (s/cat :args ::args
-               :cmd ::commands/root-cmd))
+               :cmd ::command-spec/root-cmd))
