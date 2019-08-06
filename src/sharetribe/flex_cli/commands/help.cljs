@@ -39,7 +39,6 @@
     [opt+req desc]))
 
 (defn opts-help [cmd]
-  (def cmd cmd)
   (->> (:opts cmd)
        (sort-by (juxt :short-opt :long-opt :desc))
        (map format-opt)
