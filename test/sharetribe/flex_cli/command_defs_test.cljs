@@ -1,6 +1,8 @@
 (ns sharetribe.flex-cli.command-defs-test
-  (:require [sharetribe.flex-cli.command-defs :as command-defs]
-            [cljs.test :as t :refer-macros [deftest is testing]]))
+  (:require [clojure.spec.alpha :as s]
+            [cljs.test :as t :refer-macros [deftest is testing]]
+            [sharetribe.flex-cli.command-defs :as command-defs]
+            [sharetribe.flex-cli.command-spec :as command-spec]))
 
 
 (deftest format-command-defs
@@ -22,3 +24,7 @@
                                               :long-opt "--process"}
                                              command-defs/marketplace-opt]}]}]}
              (command-defs/format-command-def cmd))))))
+
+(deftest spec
+  (testing "is valid"
+    (is (nil? (s/explain-data ::command-spec/root-cmd command-defs/commands)))))
