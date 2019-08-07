@@ -1,9 +1,12 @@
 (ns sharetribe.flex-cli.commands.help
   (:require [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.command-util :as command-util]
+            [sharetribe.flex-cli.view :as view]
+            [chalk]
             [clojure.string :as str]))
 
 (def ^:const bin "flex")
+(def ^:const version "0.0.1")
 
 (defn list-commands
   "Recursively traverse through the list of commands and return a list
@@ -24,54 +27,86 @@
   (->> cmd
        list-commands
        (sort-by first)
-       io-util/align-cols
+       view/align-cols
        (map (fn [[cmd desc]]
               [:span cmd "  " desc :line]))))
 
 (defn format-opt [opt-spec]
   (let [{:keys [short-opt long-opt desc required]} opt-spec
-        opt (cond (and short-opt long-opt) (str short-opt ", " long-opt)
-                  long-opt long-opt
-                  short-opt short-opt)
-        opt+req (if required
-                  (str opt "=" required)
-                  opt)]
+        opt (view/join-some ", " [short-opt long-opt])
+        opt+req (view/join-some "=" [opt required])]
     [opt+req desc]))
 
-(defn opts-help [cmd]
-  (->> (:opts cmd)
+(defn opts-help [opts]
+  (->> opts
        (sort-by (juxt :short-opt :long-opt :desc))
        (map format-opt)
-       (io-util/align-cols)
+       view/align-cols
        (map (fn [[opt+req desc]]
               [:span opt+req "  " desc :line]))))
 
+;; View components
+
+(defn page
+  "Component for a 'page'. Page consists of sections that are separated
+  with line breaks."
+  [& sections]
+  (view/interpose-some :line sections))
+
+(defn title
+  "White bold title."
+  [s]
+  [:span (.bold.white chalk s) :line])
+
+(defn section
+  "Section with title and indented content."
+  [title-str content]
+  [:span
+   (title title-str)
+   [:nest content] :line])
+
+(defn usage
+  "Usage section"
+  ([] (usage ["[COMMAND]"]))
+  ([args]
+   [:span "$ " (str/join " " (concat [bin] args))]))
+
+;; Command handlers
+
 (defn subcommand-help [cmd args]
   (if-let [sub-cmd (command-util/subcommand-in cmd args)]
-    [:span
-     (:desc sub-cmd) :line
-     :line
-     "USAGE" :line
-     [:nest "$ " (str/join " " (concat [bin] args))] :line
-     (when (:opts sub-cmd)
-       [:span
-        :line
-        "OPTIONS" :line
-        [:nest (opts-help sub-cmd)]])]
+    (page
+
+     (when-let [desc (:desc sub-cmd)]
+       [:span desc :line])
+
+     (section
+      "USAGE"
+      (usage args))
+
+     (when-let [opts (:opts sub-cmd)]
+       (section
+        "OPTIONS"
+        (opts-help opts))))
+
     [:span "Command " (str/join " " args) " not found"]))
 
 (defn main-help [cmd]
-  [:span
-   "CLI to interact with Sharetribe Flex" :line
-   :line
-   "VERSION" :line
-   [:nest "0.0.1"] :line ;; Don't hardcode version
-   :line
-   "USAGE" :line
-   [:nest (str "$ " bin " [COMMAND]")] :line
-   :line
-   "COMMANDS" :line [:nest (command-help (:sub-cmds cmd))]]
-  )
+  (page
+
+   [:span "CLI to interact with Sharetribe Flex" :line]
+
+   (section
+    "VERSION"
+    version)
+
+   (section
+    "USAGE"
+    (usage))
+
+   (section
+    "COMMANDS"
+    (command-help (:sub-cmds cmd)))))
 
 (defn help [opts ctx]
   (let [{:keys [commands arguments]} ctx]
