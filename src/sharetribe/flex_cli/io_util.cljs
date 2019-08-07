@@ -7,9 +7,11 @@
             [cljs.pprint :refer [pprint]]
             [fipp.engine :as fipp]
             [clojure.string :as str]
+            [clojure.core.async :as async :refer [go <! chan put! take!]]
             #_[cljs-time.format :refer [formatter unparse]]
             #_[cljs-time.coerce :refer [to-date-time]]
             [chalk]
+            [inquirer]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
             ["mkdirp" :rename {sync mkdirp-sync}]))
@@ -184,3 +186,38 @@
    (binding [*print-newline* true
              *print-fn* #(js/process.stdout.write %)]
      (fipp/pprint-document document options))))
+
+(defn prompt
+  "Thin wrapper around inquirer.
+
+  Takes a list of questions and returns core async channel with answers.
+
+  Outputs to stderr
+
+  The documentation for question object can be found here:
+  https://github.com/SBoudrias/Inquirer.js/#question
+  "
+  [questions]
+  ;; Create a new prompt module and redirect output to stderr.  stderr
+  ;; is used because that's the right place for errors, progress
+  ;; e.g. information. We could have in the future a command that
+  ;; prompts the user which process version to describe and then
+  ;; outputs it to stdout. This output can be piped to file and thus
+  ;; we want to keep the prompt output away from stdout.
+  (let [prompt (.createPromptModule inquirer (clj->js {:output js/process.stderr}))
+        c (chan)]
+    (-> (prompt (clj->js questions))
+        (.then (fn [answers]
+                 (put! c (js->clj answers :keywordize-keys true)))))
+    c))
+
+(comment
+  (go
+    (println "inquirer result:"
+     (<! (prompt [{:type :password
+                   :name :api-key
+                   :message "Copy-paste here your API key from Console"}
+                  {:name :list-test
+                   :choices ["bike-soil" "bike-soil-testing"]
+                   :type :list}]))))
+  )
