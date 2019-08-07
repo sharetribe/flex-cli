@@ -1,5 +1,5 @@
-(ns sharetribe.flex-cli.commands-test
-  (:require [sharetribe.flex-cli.commands :as commands]
+(ns sharetribe.flex-cli.command-defs-test
+  (:require [sharetribe.flex-cli.command-defs :as command-defs]
             [cljs.test :as t :refer-macros [deftest is testing]]))
 
 
@@ -16,9 +16,9 @@
               :opts [{:id :help
                       :long-opt "--help"}]
               :sub-cmds [{:name "process"
-                          :opts [commands/marketplace-opt]
+                          :opts [command-defs/marketplace-opt]
                           :sub-cmds [{:name "list"
                                       :opts [{:id :process-name
                                               :long-opt "--process"}
-                                             commands/marketplace-opt]}]}]}
-             (commands/format-command-def cmd))))))
+                                             command-defs/marketplace-opt]}]}]}
+             (command-defs/format-command-def cmd))))))

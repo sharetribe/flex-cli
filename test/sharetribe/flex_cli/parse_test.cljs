@@ -40,21 +40,27 @@
                      :required "NUMBER"
                      :missing "Missing number"}]}]
     (testing "missing"
-      (let [parse-result (parse/parse [""] cmd)]
-        (is (= :parse-error (:error parse-result)))
-        (is (= ["Missing number"] (-> parse-result :data :errors)))))
+      (let [e (try
+                (parse/parse [""] cmd)
+                (catch js/Error e e))]
+        (is (= (:type (ex-data e)) :command/parse-error))
+        (is (contains? (-> (ex-data e) :data :errors set) "Missing number"))))
 
     (testing "not a number"
-      (let [parse-result (parse/parse ["--number=abc"] cmd)]
-        (is (= :parse-error (:error parse-result)))
-        (is (= ["Failed to validate \"--number abc\": Must be a number between 0 and 1000" "Missing number"]
-               (-> parse-result :data :errors)))))
+      (let [e (try
+                (parse/parse ["--number=abc"] cmd)
+                (catch js/Error e e))]
+        (is (= (:type (ex-data e)) :command/parse-error))
+        (is (every? (-> (ex-data e) :data :errors set)
+                    ["Failed to validate \"--number abc\": Must be a number between 0 and 1000" "Missing number"]))))
 
     (testing "too big number"
-      (let [parse-result (parse/parse ["--number=12345"] cmd)]
-        (is (= :parse-error (:error parse-result)))
-        (is (= ["Failed to validate \"--number 12345\": Must be a number between 0 and 1000" "Missing number"]
-               (-> parse-result :data :errors)))))
+      (let [e (try
+                (parse/parse ["--number=12345"] cmd)
+                (catch js/Error e e))]
+        (is (= (:type (ex-data e)) :command/parse-error))
+        (is (every? (-> (ex-data e) :data :errors set)
+                    ["Failed to validate \"--number 12345\": Must be a number between 0 and 1000" "Missing number"]))))
 
     (testing "success"
       (let [parse-result (parse/parse ["--number=123"] cmd)]
@@ -73,9 +79,11 @@
                                              :long-opt "--process"
                                              :short-opt "-p"
                                              :required "PROCESS NAME"}]}]}]}
-        parse-result (parse/parse ["process" "list" "-m" "-p" "nightly-booking"] cmd)]
-    (is (= :parse-error (:error parse-result)))
-    (is (= ["Missing required argument for \"-m MARKETPLACE\""] (-> parse-result :data :errors)))))
+        e (try
+            (parse/parse ["process" "list" "-m" "-p" "nightly-booking"] cmd)
+            (catch js/Error e e))]
+    (is (= (:type (ex-data e)) :command/parse-error))
+    (is (contains? (-> (ex-data e) :data :errors set) "Missing required argument for \"-m MARKETPLACE\""))))
 
 (deftest catch-all
   (let [cmd {:sub-cmds [{:name "help"
