@@ -26,13 +26,17 @@ jobs:
             - node_modules/
       - restore_cache:
           name: Restore Clojure Package Cache
-          key: m2-cache-{{ checksum "deps.edn" }}-v3
+          keys:
+            - m2-cache-{{ .Branch }}-{{ checksum "deps.edn" }}
+            - m2-cache-{{ .Branch }}
+            - m2-cache-master
+            - m2-cache-
       - run:
           name: Compile
           command: yarn run test-compile
       - save_cache:
           name: Save Clojure Package Cache
-          key: m2-cache-{{ checksum "deps.edn" }}-v3
+          key: m2-cache-{{ .Branch }}-{{ checksum "deps.edn" }}
           paths:
             - ~/.m2
       - run:
