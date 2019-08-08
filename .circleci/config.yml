@@ -1,0 +1,49 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/clojure:tools-deps-node
+    steps:
+      - checkout
+      - run:
+          name: Install deps
+          command: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
+
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - yarn-packages-{{ .Branch }}
+            - yarn-packages-master
+            - yarn-packages-
+      - run:
+          name: Install JavaScript Dependencies
+          command: yarn install
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules/
+      - restore_cache:
+          name: Restore Clojure Package Cache
+          keys:
+            - m2-cache-{{ .Branch }}-{{ checksum "deps.edn" }}
+            - m2-cache-{{ .Branch }}
+            - m2-cache-master
+            - m2-cache-
+      - run:
+          name: Compile
+          command: yarn run test-compile
+      - save_cache:
+          name: Save Clojure Package Cache
+          key: m2-cache-{{ .Branch }}-{{ checksum "deps.edn" }}
+          paths:
+            - ~/.m2
+      - run:
+          name: Run test suite
+          command: yarn run test-run
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test

@@ -8,6 +8,8 @@
     "dev": "node target/dev.js",
     "compile": "shadow-cljs compile min",
     "test": "shadow-cljs compile test-once && node target/test-once.js",
+    "test-compile": "shadow-cljs compile test-once",
+    "test-run": "node target/test-once.js",
     "test-autorun": "shadow-cljs watch test-autorun"
   },
   "devDependencies": {
