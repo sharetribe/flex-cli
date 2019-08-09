@@ -7,7 +7,7 @@
   (go
     (let [{:keys [api-key]} (<! (io-util/prompt [{:name :api-key
                                                   :type :password
-                                                  :message "API key (copy-paste from Console)"}]))]
+                                                  :message "API key"}]))]
 
       ;; TODO Validate API key (by doing a request to API)?
 
