@@ -87,8 +87,24 @@
     c))
 
 (defn do-post [client path query body]
-  ;; TODO
-  )
+  (let [c (chan)]
+    (ajax/ajax-request
+     {:uri (str (config/value :api-base-url) path)
+      :method :post
+      :url-params query
+      :params body
+      :headers {"Authorization" (str "Apikey " (::api-key client))}
+      :handler (fn [[ok? response]]
+                 (put! c
+                       (if ok?
+                         response
+                         (handle-error {:client client
+                                        :path path
+                                        :query query}
+                                       response))))
+      :format (ajax/transit-request-format)
+      :response-format (ajax/transit-response-format)})
+    c))
 
 (defn new-client [api-key]
   {::api-key api-key})
