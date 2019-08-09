@@ -29,7 +29,8 @@
        (sort-by first)
        view/align-cols
        (map (fn [[cmd desc]]
-              [:span cmd "  " desc :line]))))
+              [:span cmd "  " desc]))
+       (view/interpose-some :line)))
 
 (defn format-opt [opt-spec]
   (let [{:keys [short-opt long-opt desc required]} opt-spec
@@ -43,7 +44,8 @@
        (map format-opt)
        view/align-cols
        (map (fn [[opt+req desc]]
-              [:span opt+req "  " desc :line]))))
+              [:span opt+req "  " desc]))
+       (view/interpose-some :line)))
 
 ;; View components
 
@@ -51,7 +53,10 @@
   "Component for a 'page'. Page consists of sections that are separated
   with line breaks."
   [& sections]
-  (view/interpose-some :line sections))
+  [:span
+   (view/interpose-some :line sections)
+   :line ;; add one line break at the end to get some extra space
+   ])
 
 (defn title
   "White bold title."
@@ -106,7 +111,10 @@
 
    (section
     "COMMANDS"
-    (command-help (:sub-cmds cmd)))))
+    (command-help (:sub-cmds cmd)))
+
+   [:span "Subcommand help:"]
+   [:nest "$ " bin " help [COMMAND]"]))
 
 (defn help [opts ctx]
   (let [{:keys [commands arguments]} ctx]

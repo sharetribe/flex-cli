@@ -183,6 +183,10 @@
    ;; stdout. print-newline needs to be set true so that println adds
    ;; new line. This is by default false, because console.log does it
    ;; already.
+
+   ;; Uncomment for debugging
+   ;; (cljs.pprint/pprint document)
+
    (binding [*print-newline* true
              *print-fn* #(js/process.stdout.write %)]
      (fipp/pprint-document document options))))
