@@ -38,15 +38,7 @@
      :desc "log in with API key"
      :no-api-key? true
      :no-marketplace? true
-     :handler auth/login
-     :opts [
-            ;; TODO Remove this! This is temporary, just for
-            ;; testing. Prompt the API key instead.
-            {:id :api-key
-             :long-opt "--api-key"
-             :desc "Your API key"
-             :required "API_KEY"
-             :missing "--api-key is required"}]}
+     :handler auth/login}
     {:name "logout"
      :desc "logout"
      :no-api-key? true
