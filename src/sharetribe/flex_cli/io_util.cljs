@@ -2,6 +2,7 @@
   "I/O utility functions to facilitate common output printing style."
   (:refer-clojure :exclude [load-file])
   (:require [cljs-node-io.core :as io]
+            [cljs-node-io.fs :as fs]
             [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
             [fipp.engine :as fipp]
@@ -11,10 +12,25 @@
             [chalk]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
-            ))
+            ["mkdirp" :rename {sync mkdirp-sync}]))
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
+
+(defmethod exception/format-exception :io/write-failed [_ _ {:keys [path]}]
+  (str "Could not write to file: " path))
+
+(defn log
+  "Log the given message(s)
+
+  Like `println`, but prints to stderr. Can be used for logging
+  messages without messing up non-tty output.
+
+  See:
+  https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46#0bf5"
+  [& args]
+  (binding [*print-fn* *print-err-fn*]
+    (apply println args)))
 
 (defn load-file
   "Load file as str from given file path."
@@ -23,6 +39,34 @@
     (io/slurp path)
     (catch js/Error e
       (exception/throw! :io/file-not-found {:path path}))))
+
+(defn save-file
+  "Save the content to the given file path."
+  [path content]
+  (try
+    (io/spit path content)
+    (catch js/Error e
+      (exception/throw! :io/write-failed {:path path}))))
+
+(defn dir?
+  "Check if the given path is a directory."
+  [path]
+  (fs/dir? path))
+
+(defn file?
+  "Check if the given path is a file."
+  [path]
+  (fs/file? path))
+
+(defn mkdirp
+  "Create a directory and possible subdirectories for the given path."
+  [path]
+  (mkdirp-sync path))
+
+(defn join
+  "Join the given paths"
+  [& parts]
+  (apply fs/path.join parts))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
