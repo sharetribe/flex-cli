@@ -1,5 +1,6 @@
 (ns sharetribe.flex-cli.command-defs
-  (:require [sharetribe.flex-cli.commands.auth :as auth]
+  (:require [sharetribe.flex-cli.commands.login :as login]
+            [sharetribe.flex-cli.commands.logout :as logout]
             [sharetribe.flex-cli.commands.help :as help]
             [sharetribe.flex-cli.commands.main :as main]
             [sharetribe.flex-cli.commands.marketplace :as marketplace]
@@ -38,12 +39,12 @@
      :desc "log in with API key"
      :no-api-key? true
      :no-marketplace? true
-     :handler auth/login}
+     :handler login/login}
     {:name "logout"
      :desc "logout"
      :no-api-key? true
      :no-marketplace? true
-     :handler auth/logout}
+     :handler logout/logout}
     {:name "marketplace"
      :no-marketplace? true
      :handler marketplace/marketplace
