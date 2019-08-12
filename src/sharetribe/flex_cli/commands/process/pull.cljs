@@ -52,7 +52,7 @@
           _ (ensure-process-dir! path force)
 
           query-params (cond-> {:marketplace marketplace
-                                :process process-name}
+                                :name process-name}
                          alias (assoc :alias alias)
                          version (assoc :version version))
 
