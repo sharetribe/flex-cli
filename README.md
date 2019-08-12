@@ -113,3 +113,32 @@ flex
 ran the other [flex command line
 tool](https://github.com/westes/flex). Restart your terminal and try
 again.
+
+## Testing NPM publishing
+
+You can use [Verdaccio](https://verdaccio.org/), a lightweight private
+NPM registry to test the publish/install/update process with real NPM
+registry.
+
+See the [installation
+instructions](https://verdaccio.org/docs/en/installation.html).
+
+After you've installed it and started verdaccio server, you can
+publish flex-cli to it, e.g.:
+
+``` bash
+npm install -g flex-cli --registry http://localhost:4873
+```
+
+**Tip:** In case you want to test installation with other machines in
+your network, do this:
+
+1. Check your IP address in the network (starts with 192.)
+2. Start verdaccio server with `-l` option, e.g:
+
+    ```bash
+    verdaccio -l 192.168.1.91:4873
+    ```
+
+3. In the other machine, use that IP and port as the registry address
+   when running `npm install`.
