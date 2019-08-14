@@ -9,10 +9,10 @@
   [ch]
   `(throw-err (async/<! ~ch)))
 
-#?(:cljs
-   (defmacro go-try [& body]
-     `(async/go
-        (try
-          ~@body
+(defmacro go-try [& body]
+  `(async/go
+     (try
+       ~@body
+       #?(:cljs
           (catch js/Error e#
             e#)))))
