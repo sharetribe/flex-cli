@@ -1,6 +1,7 @@
 (ns sharetribe.flex-cli.commands.process.pull
   (:require [clojure.core.async :as async :refer [go <!]]
-            [sharetribe.flex-cli.api.client :refer [do-get <?]]
+            [sharetribe.flex-cli.api.client :refer [do-get]]
+            [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.exception :as exception]))
 
@@ -43,7 +44,7 @@
                                                              :errors ["--path is already a process directory, use --force to overwrite"]})))
 
 (defn pull-process [params ctx]
-  (go
+  (go-try
     (let [{:keys [api-client marketplace]} ctx
           {:keys [process-name version alias path force]} params
           _ (when-not (or version alias)

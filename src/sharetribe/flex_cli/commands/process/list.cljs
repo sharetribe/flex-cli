@@ -1,6 +1,7 @@
 (ns sharetribe.flex-cli.commands.process.list
   (:require [clojure.core.async :as async :refer [go <!]]
-            [sharetribe.flex-cli.api.client :refer [do-get <?]]
+            [sharetribe.flex-cli.api.client :refer [do-get]]
+            [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]))
 
 (declare list-processes)
@@ -10,7 +11,7 @@
           :desc "list all transaction processes"})
 
 (defn list-processes [_ ctx]
-  (go
+  (go-try
     (let [{:keys [api-client marketplace]} ctx
           res (<? (do-get api-client "/processes/query" {:marketplace marketplace}))
           process-names (map (fn [{:process/keys [name version]}]
