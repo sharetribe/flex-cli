@@ -191,6 +191,16 @@
              *print-fn* #(js/process.stdout.write %)]
      (fipp/pprint-document document options))))
 
+(defn ppd-err
+  "Pretty print Fipp document.
+
+  Output to stderr"
+  ([document] (ppd-err document {}))
+  ([document options]
+   (binding [*print-newline* true
+             *print-fn* #(js/process.stderr.write %)]
+     (fipp/pprint-document document options))))
+
 (defn prompt
   "Thin wrapper around inquirer.
 
