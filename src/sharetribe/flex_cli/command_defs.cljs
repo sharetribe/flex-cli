@@ -33,6 +33,7 @@
     {:name "version"
      :no-api-key? true
      :no-marketplace? true
+     :hidden? true
      :handler version/version}
     {:name "login"
      :desc "log in with API key"

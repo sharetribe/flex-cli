@@ -12,13 +12,14 @@
   desc] tuples."
   ([cmds] (list-commands cmds []))
   ([cmds parent-cmds]
-   (mapcat
-    (fn [{:keys [name desc sub-cmds]}]
-      (concat
-       [[(str/join " " (conj parent-cmds name)) (or desc "")]]
-       (when sub-cmds
-         (list-commands sub-cmds (conj parent-cmds name)))))
-    cmds)))
+   (->> cmds
+        (remove :hidden?)
+        (mapcat
+         (fn [{:keys [name desc sub-cmds]}]
+           (concat
+            [[(str/join " " (conj parent-cmds name)) (or desc "")]]
+            (when sub-cmds
+              (list-commands sub-cmds (conj parent-cmds name)))))))))
 
 (defn command-help
   [cmd]
