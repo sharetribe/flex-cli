@@ -5,7 +5,8 @@
             [sharetribe.flex-cli.async-util :refer [<?]]
             [sharetribe.flex-cli.command-defs :as command-defs]
             [sharetribe.flex-cli.command-exec :as command-exec]
-            [sharetribe.flex-cli.exception :as exception]))
+            [sharetribe.flex-cli.exception :as exception]
+            [sharetribe.flex-cli.io-util :as io-util]))
 
 (defn done [status]
   (when-let [status (:exit-status status)]
@@ -18,8 +19,7 @@
     (println "[dev] Exit status:" status)))
 
 (defn print-error [e]
-  (binding [*print-fn* *print-err-fn*]
-    (println (exception/format-msg e))))
+  (io-util/ppd-err (exception/format-msg e)))
 
 (defn error [e done-fn]
   (print-error e)

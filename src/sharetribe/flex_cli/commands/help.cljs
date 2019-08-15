@@ -1,12 +1,10 @@
 (ns sharetribe.flex-cli.commands.help
   (:require [sharetribe.flex-cli.io-util :as io-util]
+            [sharetribe.flex-cli.cli-info :as cli-info]
             [sharetribe.flex-cli.command-util :as command-util]
             [sharetribe.flex-cli.view :as view]
             [chalk]
             [clojure.string :as str]))
-
-(def ^:const bin "flex-cli")
-(def ^:const version "0.0.1")
 
 (defn list-commands
   "Recursively traverse through the list of commands and return a list
@@ -74,7 +72,7 @@
   "Usage section"
   ([] (usage ["[COMMAND]"]))
   ([args]
-   [:span "$ " (str/join " " (concat [bin] args))]))
+   [:span "$ " (str/join " " (concat [cli-info/bin] args))]))
 
 ;; Command handlers
 
@@ -103,7 +101,7 @@
 
    (section
     "VERSION"
-    version)
+    cli-info/version)
 
    (section
     "USAGE"
@@ -114,7 +112,7 @@
     (command-help (:sub-cmds cmd)))
 
    [:span "Subcommand help:"]
-   [:nest "$ " bin " help [COMMAND]"]))
+   [:nest "$ " cli-info/bin " help [COMMAND]"]))
 
 (defn help [opts ctx]
   (let [{:keys [commands arguments]} ctx]
