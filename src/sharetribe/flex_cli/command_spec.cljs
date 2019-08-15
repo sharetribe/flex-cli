@@ -17,16 +17,19 @@
 (s/def ::no-marketplace? boolean?)
 (s/def ::no-api-key? boolean?)
 (s/def ::name string?)
+(s/def ::hidden? boolean?) ;; whether the command is hidden from the command listing
 (s/def ::sub-cmd (s/keys :req-un [::name]
                          :opt-un [::desc
                                   ::handler
                                   ::opts
                                   ::no-marketplace?
                                   ::no-api-key?
-                                  ::sub-cmds]))
+                                  ::sub-cmds
+                                  ::hidden?]))
 (s/def ::root-cmd (s/keys :opt-un [::desc
                                    ::handler
                                    ::opts
                                    ::no-marketplace?
                                    ::no-api-key?
-                                   ::sub-cmds]))
+                                   ::sub-cmds
+                                   ::hidden?]))

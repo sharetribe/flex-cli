@@ -11,21 +11,25 @@
           :no-api-key? true
           :no-marketplace? true
           :handler #'describe-process
+          :desc "describe a process file"
           :opts [{:id :path
                   :long-opt "--path"
-                  :required "[WIP] LOCAL_PROCESS_DIR"}
-                 {:id :process-name
+                  :required "PROCESS_DIR"}
+
+                 ;; Commented out. These are not yet implemented.
+                 #_{:id :process-name
                   :long-opt "--process"
                   :required "[WIP] PROCESS_NAME"}
-                 {:id :version
+                 #_{:id :version
                   :long-opt "--version"
                   :required "[WIP] VERSION_NUM"}
-                 {:id :alias
+                 #_{:id :alias
                   :long-opt "--alias"
                   :required "[WIP] PROCESS_ALIAS"}
                  {:id :transition-name
                   :long-opt "--transition"
-                  :required "[WIP] TRANSITION_NAME"}
+                  :required "TRANSITION_NAME"}
+
                  ;; TODO I don't know what's the plan for getting the
                  ;; marketplace ident into commands yet. Is it
                  ;; declared per command? Who implements the the logic
