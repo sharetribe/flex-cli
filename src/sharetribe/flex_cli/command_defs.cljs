@@ -3,7 +3,6 @@
             [sharetribe.flex-cli.commands.logout :as logout]
             [sharetribe.flex-cli.commands.help :as help]
             [sharetribe.flex-cli.commands.main :as main]
-            [sharetribe.flex-cli.commands.marketplace :as marketplace]
             [sharetribe.flex-cli.commands.process :as process]
             [sharetribe.flex-cli.commands.version :as version]))
 
@@ -45,13 +44,6 @@
      :no-api-key? true
      :no-marketplace? true
      :handler logout/logout}
-    {:name "marketplace"
-     :no-marketplace? true
-     :handler marketplace/marketplace
-     :sub-cmds
-     [{:name "list"
-       :no-marketplace? true
-       :handler marketplace/list}]}
     process/cmd]})
 
 (defn- with-marketplace-opt [cmd]
