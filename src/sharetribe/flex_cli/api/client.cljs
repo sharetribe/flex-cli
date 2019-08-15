@@ -3,20 +3,12 @@
             [clojure.core.async :as async :refer [put! chan <! go]]
             [com.cognitect.transit.types :as ty]
             [sharetribe.flex-cli.config :as config]
-            [sharetribe.flex-cli.exception :as exception])
-  (:require-macros sharetribe.flex-cli.api.client))
+            [sharetribe.flex-cli.exception :as exception]))
 
 (defmethod exception/format-exception :api/error [_ _ {:keys [status status-text response]}]
   (if (= 500 status)
     (str "API call failed. Reason: Internal server error.")
     (str "API call failed. Reason: " (or (-> response :errors first :title) "Unspecified"))))
-
-(defn throw-err
-  "Throw if e is Error. This fn will be called by the defined macro in
-  client.clj."
-  [e]
-  (when (instance? js/Error e) (throw e))
-  e)
 
 (defn- handle-error
   "Handles error response from API by wrapping it in :api/error

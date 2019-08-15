@@ -1,5 +1,4 @@
-(ns sharetribe.flex-cli.api.client
-  "Macro namespace for API client"
+(ns sharetribe.flex-cli.async-util
   (:require [clojure.core.async :as async]))
 
 (defmacro <?
@@ -9,3 +8,11 @@
   https://martintrojer.github.io/clojure/2014/03/09/working-with-coreasync-exceptions-in-go-blocks"
   [ch]
   `(throw-err (async/<! ~ch)))
+
+(defmacro go-try [& body]
+  `(async/go
+     (try
+       ~@body
+       #?(:cljs
+          (catch js/Error e#
+            e#)))))
