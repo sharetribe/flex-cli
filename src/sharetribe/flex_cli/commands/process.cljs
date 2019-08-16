@@ -3,6 +3,7 @@
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.flex-cli.commands.process.list :as process.list]
             [sharetribe.flex-cli.commands.process.pull :as process.pull]
+            [sharetribe.flex-cli.commands.process.push :as process.push]
             [sharetribe.tempelhof.tx-process :as tx-process]))
 
 (declare describe-process)
@@ -37,7 +38,8 @@
                  ;; not explicitly given to the command?
                  ]
           :sub-cmds [process.list/cmd
-                     process.pull/cmd]})
+                     process.pull/cmd
+                     process.push/cmd]})
 
 (defn- load-tx-process-from-path
   "Load process from given path (directory). Encapsulates the idea of
@@ -46,8 +48,6 @@
   TODO I don't belong to this namespace in the long term."
   [path]
   (let [path-to-process-file (str path "/process.edn")]
-    ;; TODO Handle throwing error if process file not found / not
-    ;; readable as .edn or something similar.
     (-> (io-util/load-file path-to-process-file)
         (tx-process/parse-tx-process-string))))
 
