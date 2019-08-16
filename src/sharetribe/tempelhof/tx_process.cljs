@@ -19,6 +19,7 @@
 (defn parse-tx-process-string
   "Parse a tx process from an edn string."
   [edn-string]
+  ;; TODO: split parsing and validation to separate functions
   (-> (read-string edn-string)
       (process-validation/validate!)
       (update :transition #(map expanded-transition %))))

@@ -12,11 +12,11 @@
           :desc "push a process file to the remote"
           :opts [{:id :process-name
                   :long-opt "--process"
-                  :required "[WIP] PROCESS_NAME"
+                  :required "PROCESS_NAME"
                   :missing "--process is required"}
                  {:id :path
                   :long-opt "--path"
-                  :required "[WIP] LOCAL_PROCESS_DIR"
+                  :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}]})
 
 (defn push-process [params ctx]
