@@ -32,10 +32,11 @@
        (view/interpose-some :line)))
 
 (defn format-opt [opt-spec]
-  (let [{:keys [short-opt long-opt desc required]} opt-spec
+  (let [{:keys [short-opt long-opt desc required missing]} opt-spec
         opt (view/join-some ", " [short-opt long-opt])
-        opt+req (view/join-some "=" [opt required])]
-    [opt+req desc]))
+        opt+req (view/join-some " " [opt required])
+        desc+missing (view/join-some " " [(when missing "(required)") desc])]
+    [opt+req desc+missing]))
 
 (defn opts-help [opts]
   (->> opts
