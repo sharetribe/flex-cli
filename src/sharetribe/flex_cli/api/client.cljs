@@ -33,9 +33,11 @@
       401 (error-page
            [:span "Error: Access denied" :line]
            [:span
-            "Failed to access marketplace "
-            (bold marketplace)
-            " with API key ending with ..."
+            (if marketplace
+              (str "Failed to access marketplace "
+                   (bold marketplace)
+                   " with API key ending with ...")
+              "Failed API call with API key ending with ...")
             (bold
              (->> api-key
                   reverse
