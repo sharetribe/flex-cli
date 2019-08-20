@@ -25,25 +25,35 @@
    ])
 
 (defmethod exception/format-exception :api/error [_ _ {:keys [req res]}]
-  (let [{:keys [status response]} res
+  (let [{:keys [path]} req
+        {:keys [status response]} res
         marketplace (-> req :query :marketplace)
-        api-key (-> req :client ::api-key)]
-    (case status
-      500 (error-page [:span "API call failed. Reason: Internal server error." :line])
-      401 (error-page
-           [:span "Error: Access denied" :line]
-           [:span
-            "Failed to access marketplace "
-            (bold marketplace)
-            " with API key ending with ..."
-            (bold
-             (->> api-key
-                  reverse
-                  (take 4)
-                  reverse
-                  (apply str)))
-            :line]
-           [:span "Use " (bold (str cli-info/bin " login")) " to relogin if needed." :line])
+        api-key-suffix (->> req
+                            :client
+                            ::api-key
+                            reverse
+                            (take 4)
+                            reverse
+                            (apply str))]
+    (cond
+      (= 500 status)
+      (error-page [:span "API call failed. Reason: Internal server error." :line])
+
+      (and (= 401 status) (= "/current_admin/show" path))
+      (error-page
+       [:span "Error: Access denied" :line]
+       [:span "Failed to verify API key ending with ..." (bold api-key-suffix) :line]
+       [:span "Check your API key and use " (bold (str cli-info/bin " login")) " to relogin." :line])
+
+      (= 401 status)
+      (error-page
+       [:span "Error: Access denied" :line]
+       [:span "Failed to access marketplace " (bold marketplace) " with API key ending with ..."
+        (bold api-key-suffix)
+        :line]
+       [:span "Use " (bold (str cli-info/bin " login")) " to relogin if needed." :line])
+
+      :else
       (error-page [:span "API call failed. Status: " (str status) ", reason: " (or (-> response :errors first :title) "Unspecified") :line]))))
 
 (defn- handle-error
