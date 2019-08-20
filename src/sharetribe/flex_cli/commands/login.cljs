@@ -14,6 +14,5 @@
                                                  :message "API key"}]))
          api-client (new-client api-key)
          {:keys [data]} (<? (do-get api-client "/current_admin/show" nil))
-         _ (credential-store/set-api-key api-key)]
+         _ (<? (credential-store/set-api-key api-key))]
      (io-util/ppd [:span "Hello " (:admin/email data) "!"]))))
-
