@@ -10,9 +10,14 @@
   "bin": {
     "flex-cli": "target/min.js"
   },
+  "files": [
+    "target/min.js"
+  ],
   "scripts": {
+    "clean": "rm -rf target/*",
     "dev": "node target/dev.js",
     "compile": "shadow-cljs compile min",
+    "release": "shadow-cljs release min",
     "test": "shadow-cljs compile test-once && node target/test-once.js",
     "test-compile": "shadow-cljs compile test-once",
     "test-run": "node target/test-once.js",
