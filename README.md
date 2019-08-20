@@ -142,3 +142,9 @@ your network, do this:
 
 3. In the other machine, use that IP and port as the registry address
    when running `npm install`.
+
+## License
+
+This project is licensed under the terms of Apache License, Version 2.0.
+
+See the [LICENSE](LICENSE) file.
