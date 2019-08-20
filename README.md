@@ -143,6 +143,75 @@ your network, do this:
 3. In the other machine, use that IP and port as the registry address
    when running `npm install`.
 
+## Release to NPM
+
+1. Change package `version` in `package.json`
+2. Go to the repo root dir
+3. Clean the build dir:
+
+    ```bash
+    yarn run clean
+    ```
+
+   The `target/` directory should be empty now.
+
+4. Make a release build:
+
+    ```bash
+    yarn run release
+    ```
+
+5. Optional: verify the release bundle:
+
+    ```bash
+    npm pack
+    ```
+
+    This creates a `flex-cli-VERSION.tgz` file where `VERSION` should
+    match what you changed in `package.json`. Unzip the file:
+
+    ```bash
+    tar xzf flex-cli-VERSION.tgz
+    ```
+
+    and check the `package` directory:
+
+    ```bash
+    > tree package
+    package
+    ├── LICENSE
+    ├── README.md
+    ├── package.json
+    └── target
+        └── min.js
+
+    1 directory, 4 files
+    ```
+
+    Only the above files should be included in the release. The
+    whitelist of included files can be changed in the `files` key in
+    `package.json`.
+
+6. Login
+
+    ```bash
+    npm login
+    ```
+
+    Login as `sharetribe`, check the credentials from the company
+    password manager.
+
+7. Tag the version
+
+    Commit the changed `version` in `package.json`, tag the commit
+    with the version and push to the upstream.
+
+8. Publish to NPM
+
+    ```bash
+    npm publish
+    ```
+
 ## License
 
 This project is licensed under the terms of Apache License, Version 2.0.
