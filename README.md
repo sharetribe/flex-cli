@@ -106,7 +106,7 @@ yarn global add file:$(pwd)
 Run it:
 
 ```
-flex
+flex-cli
 ```
 
 **Troubleshooting:** If nothing happens, press Ctrl+C. You probably
