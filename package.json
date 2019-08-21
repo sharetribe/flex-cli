@@ -1,12 +1,23 @@
 {
   "name": "flex-cli",
-  "version": "0.0.1",
+  "description": "Sharetribe Flex CLI",
+  "version": "0.1.0",
+  "license": "Apache License, Version 2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sharetribe/flex-cli"
+  },
   "bin": {
     "flex-cli": "target/min.js"
   },
+  "files": [
+    "target/min.js"
+  ],
   "scripts": {
+    "clean": "rm -rf target/*",
     "dev": "node target/dev.js",
     "compile": "shadow-cljs compile min",
+    "release": "shadow-cljs release min",
     "test": "shadow-cljs compile test-once && node target/test-once.js",
     "test-compile": "shadow-cljs compile test-once",
     "test-run": "node target/test-once.js",
