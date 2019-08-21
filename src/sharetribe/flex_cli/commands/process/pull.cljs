@@ -27,9 +27,6 @@
                  {:id :force
                   :long-opt "--force"}]})
 
-(defn- process-dir? [path]
-  (io-util/file? (io-util/join path "process.edn")))
-
 (defn- ensure-process-dir! [path force]
   (cond
     (io-util/file? path) (exception/throw! :command/invalid-args
@@ -39,7 +36,7 @@
     (not (io-util/dir? path)) (do (io-util/log "Creating a new directory:" path)
                                   (io-util/mkdirp path))
 
-    (and (process-dir? path) (not force)) (exception/throw! :command/invalid-args
+    (and (io-util/process-dir? path) (not force)) (exception/throw! :command/invalid-args
                                                             {:command :pull
                                                              :errors ["--path is already a process directory, use --force to overwrite"]})))
 

@@ -16,6 +16,8 @@
             [sharetribe.flex-cli.exception :as exception]
             ["mkdirp" :rename {sync mkdirp-sync}]))
 
+(def ^:const process-filename "process.edn")
+
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
 
@@ -69,6 +71,12 @@
   "Join the given paths"
   [& parts]
   (apply fs/path.join parts))
+
+(defn process-file-path [path]
+  (join path process-filename))
+
+(defn process-dir? [path]
+  (file? (process-file-path path)))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
