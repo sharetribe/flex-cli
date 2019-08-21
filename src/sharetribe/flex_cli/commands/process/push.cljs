@@ -3,6 +3,7 @@
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.api.client :refer [do-post]]
+            [sharetribe.flex-cli.exception :as exception]
             [sharetribe.tempelhof.tx-process :as tx-process]))
 
 (declare push-process)
@@ -19,12 +20,20 @@
                   :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}]})
 
+(defn- ensure-process-dir! [path]
+  (when-not (io-util/process-dir? path)
+    (exception/throw! :command/invalid-args
+                      {:command :push
+                       :errors ["--path should be a process directory"]})))
+
 (defn push-process [params ctx]
   (go-try
     (let [{:keys [api-client marketplace]} ctx
           {:keys [process-name path]} params
 
-          process-str (io-util/load-file path)
+          _ (ensure-process-dir! path)
+
+          process-str (io-util/load-file (io-util/process-file-path path))
 
           ;; NOTE: this is used for validation, ignoring the parsed process
           _ (tx-process/parse-tx-process-string process-str)
