@@ -145,7 +145,8 @@ your network, do this:
 
 ## Release to NPM
 
-1. Change package `version` in `package.json`
+1. Change package `version` in `package.json` and in
+   `src/sharetribe/flex_cli/cli_info.cljs`
 2. Go to the repo root dir
 3. Clean the build dir:
 
