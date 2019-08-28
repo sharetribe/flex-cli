@@ -28,7 +28,10 @@
          {:keys [process-name version alias]} params
          query-params {:marketplace marketplace}
          body-params {:name (keyword process-name)
+
+                      ;; TODO: Use spec or tools-cli for parameter validation and coercion
                       :version (js/parseInt version)
+
                       :alias (keyword alias)}
          res (<? (do-post api-client "/aliases/create-alias" query-params body-params))]
      (io-util/ppd [:span
