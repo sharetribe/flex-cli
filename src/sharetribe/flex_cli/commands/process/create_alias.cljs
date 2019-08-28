@@ -15,10 +15,12 @@
                   :missing "--process is required"}
                  {:id :version
                   :long-opt "--version"
-                  :required "VERSION"}
+                  :required "VERSION"
+                  :missing "--version is required"}
                  {:id :alias
                   :long-opt "--alias"
-                  :required "ALIAS"}]})
+                  :required "ALIAS"
+                  :missing "--alias is required"}]})
 
 (defn create-alias [params ctx]
   (go-try
