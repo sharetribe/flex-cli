@@ -187,12 +187,9 @@
                  (map :on))]
     (every? #(names %) ons)))
 
-(s/def :tx-process.notification/on-transition-name
-  notification-on-is-valid-transition-name?)
-
 (s/def :tempelhof/tx-process
   (s/and
    (s/keys :req-un [:tx-process/format
                     :tx-process/transitions]
            :opt-un [:tx-process/notifications])
-   :tx-process.notification/on-transition-name))
+   notification-on-is-valid-transition-name?))

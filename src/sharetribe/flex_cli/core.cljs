@@ -77,4 +77,7 @@
   (main-dev-str "process --path test-process")
   (main-dev-str "process --path test-process --transition transition/request")
   (main-dev-str "process --path test-process --transition transition/accept")
+
+
+  (main-dev-str "process --path processes/error")
   )

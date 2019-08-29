@@ -1,6 +1,7 @@
 (ns sharetribe.tempelhof.tx-process
   (:require [clojure.spec.alpha :as s]
-            [cljs.reader :refer [read-string]]
+            ;; [cljs.reader :refer [read-string]]
+            [edamame.core :as edamame]
             [sharetribe.tempelhof.process-validation :as process-validation]))
 
 (def ^:const initializer-action {:name :action.initializer/init-listing-tx})
@@ -20,7 +21,7 @@
   "Parse a tx process from an edn string."
   [edn-string]
   ;; TODO: split parsing and validation to separate functions
-  (-> (read-string edn-string)
+  (-> (edamame/parse-string edn-string)
       (process-validation/validate!)
       (update :transition #(map expanded-transition %))))
 

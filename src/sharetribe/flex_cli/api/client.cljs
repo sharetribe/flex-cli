@@ -11,7 +11,7 @@
 (defn bold [str]
   (.bold chalk str))
 
-(def error-arrow (.red chalk "\u203A"))
+(def error-arrow (.bold.red chalk "\u203A"))
 
 (defn error-page
   "Component for a 'error-page'. Page consists of sections that are separated

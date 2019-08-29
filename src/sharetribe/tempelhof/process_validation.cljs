@@ -1,8 +1,11 @@
 (ns sharetribe.tempelhof.process-validation
   (:require [clojure.spec.alpha :as s]
             [expound.alpha :as expound]
+            [phrase.alpha :as phrase :refer [defphraser]]
+            [chalk]
             [sharetribe.tempelhof.spec]
-            [sharetribe.flex-cli.exception :as exception]))
+            [sharetribe.flex-cli.exception :as exception]
+            [sharetribe.tempelhof.spec :as tempelhof.spec]))
 
 ;; Message formatting for specific key specs
 ;;
@@ -48,13 +51,144 @@
 (expound/defmsg :tx-process.notification/on-transition-name "Notification :on should point to an existing transition name.")
 
 
-(defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec]}]
+#_(defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec]}]
   (let [printer (expound/custom-printer {:print-specs? false
                                          :theme :figwheel-theme})
         explain-data (s/explain-data spec tx-process)
         validation-errors (with-out-str (printer explain-data))]
     (str "The process description is not valid\n\n"
          validation-errors)))
+
+(defn- expound-error-str [tx-process spec]
+  (let [printer (expound/custom-printer {:print-specs? false
+                                         :theme :none})
+        explain-data (s/explain-data spec tx-process)
+        validation-errors (with-out-str (printer explain-data))]
+    validation-errors))
+
+
+(defn- location [part]
+  (meta part))
+
+(defphraser :default
+  [{:keys [tx-process spec]} problem]
+  {:msg "Unspecified process error. :("
+   :loc (location tx-process)})
+
+;; Process
+;;
+
+(defphraser #{:v3}
+  [{:keys [tx-process]} {:keys [val]}]
+  {:msg (str "The process :format must be :v3 instead of " (pr-str val) ".")
+   :loc nil})
+
+;; Fallback phraser for missing mandatory keys. Seeing output from
+;; this means we have a missing phraser.
+(defphraser #(contains? % missing-key)
+  [_ {:keys [val]} missing-key]
+  {:msg (str "Missing mandatory key " missing-key ".")
+   :loc (location val)})
+
+(defphraser #(contains? % missing-key)
+  {:via [:tempelhof/tx-process]}
+  [_ {:keys [val]} missing-key]
+  {:msg (str "Missing mandatory key. The process description must specify " missing-key ".")
+   :loc nil})
+
+;; Transitions
+;;
+
+(defphraser #(contains? % missing-key)
+  {:via [:tempelhof/tx-process :tx-process/transitions :tx-process/transition]}
+  [_ {:keys [val]} missing-key]
+  {:msg (str "Missing mandatory key. Transitions must specify " missing-key ".")
+   :loc (location val)})
+
+(defphraser tempelhof.spec/transition-has-either-actor-or-at?
+  [_ {:keys [val]}]
+  {:msg (str "Invalid transition " (:name val)
+             ". You must specify exactly one of :actor or :at.")
+   :loc (location val)})
+
+(defphraser tempelhof.spec/notification-on-is-valid-transition-name?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  ;; TODO call stuff, parse process to print exactly which transition fails.
+  {:msg "Notification's :on refers to a transition that does not exist."
+   :loc (location tx-process) ;; Foo location, just testing
+   })
+
+;; Actions
+;;
+
+(defphraser #(contains? % missing-key)
+  {:via [:tempelhof/tx-process :tx-process/transitions :tx-process/transition :tx-process.transition/actions :tx-process.transition/action]}
+  [_ {:keys [val]} missing-key]
+  {:msg (str "Missing mandatory key. Actions must specify " missing-key ".")
+   :loc (location val)})
+
+;; Notifications
+;;
+
+(defphraser #(contains? % missing-key)
+  {:via [:tempelhof/tx-process :tx-process/notifications :tx-process/notification]}
+  [_ {:keys [val]} missing-key]
+  {:msg (str "Missing mandatory key. Notifications must specify " missing-key ".")
+   :loc (location val)})
+
+
+(defonce d (atom nil))
+
+;; Not sure if this is a good idea?...
+(def error-arrow (.bold.red chalk "\u203A"))
+
+(defn- error-report [total index error]
+  (let [{:keys [loc msg]} error
+        {:keys [row col]} loc
+        header (if loc
+                 (str (inc index) "/" total
+                      " [at line " row ", column " col "]"
+                      ":\n")
+                 (str (inc index) "/" total
+                      ":\n"))]
+    (str "\n" error-arrow " " header msg "\n")))
+
+(defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]
+  (reset! d data)
+  (let [problems (-> (s/explain-data spec tx-process)
+                     :cljs.spec.alpha/problems)
+        errors (map #(phrase/phrase data %) problems)
+        total-errors (count problems)]
+
+    (apply str
+           (str "The process description is not valid. "
+                "Found " total-errors " error(s).\n")
+           (map-indexed (partial error-report total-errors) errors))))
+
+
+(comment
+  @txp
+  @s
+  (keys @d)
+
+  (let [data @d
+        {:keys [tx-process spec]} data]
+    (meta tx-process)
+    #_(meta (first (:transitions tx-process)))
+    (:cljs.spec.alpha/problems (s/explain-data spec tx-process))
+    )
+
+  (def s "
+{:format :v2
+ :transitions []
+ :notifications []}")
+
+  (meta (edamame.core/parse-string s))
+  (meta (-> (edamame.core/parse-string s) :format))
+
+  )
+
+
 
 (defn validate!
   "Validates a v3 process map. Throws an exception if the process is
