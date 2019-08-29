@@ -46,9 +46,11 @@
 
           res (<? (do-post api-client "/processes/create-version-dev" query-params body-params))]
 
-      (io-util/ppd [:span
-                    "Version " (-> res :data :process/version str)
-                    " successfully saved for process " (-> res :data :process/name name)]))))
+      (if (= :no-changes (-> res :meta :result))
+        (io-util/ppd [:span "No changes"])
+        (io-util/ppd [:span
+                      "Version " (-> res :data :process/version str)
+                      " successfully saved for process " (-> res :data :process/name name)])))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "process push -m bike-soil --process preauth-with-nightly-booking --path test-process/process.edn")
