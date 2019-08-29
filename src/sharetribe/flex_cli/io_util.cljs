@@ -17,6 +17,7 @@
             ["mkdirp" :rename {sync mkdirp-sync}]))
 
 (def ^:const process-filename "process.edn")
+(def ^:const template-dir "templates")
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
@@ -75,8 +76,38 @@
 (defn process-file-path [path]
   (join path process-filename))
 
+(defn template-path [path]
+  (join path template-dir))
+
 (defn process-dir? [path]
   (file? (process-file-path path)))
+
+(defn html-file [template-name]
+  (str template-name "-html.html"))
+
+(defn subject-file [template-name]
+  (str template-name "-subject.txt"))
+
+(defn read-templates [process-path]
+  (let [t-path (template-path process-path)]
+    (if-not (fs/dir? t-path)
+      []
+      (->> t-path
+           fs/readdir
+           (into
+            #{}
+            (comp
+             (map (fn [template-name]
+                    {:name (keyword template-name)
+                     :html-file (join t-path template-name (html-file template-name))
+                     :subject-file (join t-path template-name (subject-file template-name))}))
+             (filter (fn [{:keys [html-file subject-file]}]
+                       (and (file? html-file)
+                            (file? subject-file))))
+             (map (fn [{:keys [name html-file subject-file]}]
+                    {:name name
+                     :html (load-file html-file)
+                     :subject (load-file subject-file)}))))))))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes

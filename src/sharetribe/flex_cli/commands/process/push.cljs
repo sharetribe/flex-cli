@@ -34,13 +34,15 @@
           _ (ensure-process-dir! path)
 
           process-str (io-util/load-file (io-util/process-file-path path))
+          templates (io-util/read-templates path)
 
           ;; NOTE: this is used for validation, ignoring the parsed process
           _ (tx-process/parse-tx-process-string process-str)
 
           query-params {:marketplace marketplace}
           body-params {:name (keyword process-name)
-                       :definition process-str}
+                       :definition process-str
+                       :templates templates}
 
           res (<? (do-post api-client "/processes/create-version-dev" query-params body-params))]
 
