@@ -1,5 +1,6 @@
 (ns sharetribe.tempelhof.process-validation
   (:require [clojure.spec.alpha :as s]
+            [clojure.set :as set]
             [expound.alpha :as expound]
             [phrase.alpha :as phrase :refer [defphraser]]
             [chalk]
@@ -111,13 +112,6 @@
              ". You must specify exactly one of :actor or :at.")
    :loc (location val)})
 
-(defphraser tempelhof.spec/notification-on-is-valid-transition-name?
-  [{:keys [tx-process]} {:keys [val] :as problem}]
-  ;; TODO call stuff, parse process to print exactly which transition fails.
-  {:msg "Notification's :on refers to a transition that does not exist."
-   :loc (location tx-process) ;; Foo location, just testing
-   })
-
 ;; Actions
 ;;
 
@@ -136,13 +130,31 @@
   {:msg (str "Missing mandatory key. Notifications must specify " missing-key ".")
    :loc (location val)})
 
+(defphraser tempelhof.spec/notification-on-is-valid-transition-name?
+  [{:keys [tx-process]} _]
+  ;; TODO call stuff, parse process to print exactly which transition fails.
+  (let [tr-names (->> tx-process :transitions (map :name) set)
+        invalid-notifications (remove (fn [n] (contains? tr-names (:on n)))
+                                      (:notifications tx-process))]
 
+    (map (fn [n]
+           {:msg (str "Invalid notification " (:name n) ". "
+                      "The value of :on must point to an existing transition. "
+                      "The process doesn't define transition by name: " (:on n) ".")
+            :loc (location n)})
+         invalid-notifications)))
+
+;; TODO remove me
 (defonce d (atom nil))
 
-;; Not sure if this is a good idea?...
+;; Not sure if this is a good idea?... But if it is it should be moved
+;; to a util lib.
 (def error-arrow (.bold.red chalk "\u203A"))
 
-(defn- error-report [total index error]
+(defn- error-report
+  "Given an error description format is as a error report string (with
+  multiple lines)"
+  [total index error]
   (let [{:keys [loc msg]} error
         {:keys [row col]} loc
         header (if loc
@@ -153,12 +165,23 @@
                       ":\n"))]
     (str "\n" error-arrow " " header msg "\n")))
 
+(defn- phrase-problem
+  "Phrases a spec problem and returns a sequence of error descriptions
+  for the problem."
+  [ctx problem]
+  (let [errors (phrase/phrase ctx problem)]
+    ;; Let's give phrasers the freedom to return either a plain map or
+    ;; a seq of error descriptions because most problems map to
+    ;; exactly one error description.
+    (if (sequential? errors) errors [errors])))
+
 (defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]
+  ;; TODO remove me
   (reset! d data)
   (let [problems (-> (s/explain-data spec tx-process)
                      :cljs.spec.alpha/problems)
-        errors (map #(phrase/phrase data %) problems)
-        total-errors (count problems)]
+        errors (mapcat #(phrase-problem data %) problems)
+        total-errors (count errors)]
 
     (apply str
            (str "The process description is not valid. "
@@ -166,25 +189,15 @@
            (map-indexed (partial error-report total-errors) errors))))
 
 
+;; TODO remove me
 (comment
-  @txp
-  @s
   (keys @d)
 
   (let [data @d
         {:keys [tx-process spec]} data]
     (meta tx-process)
     #_(meta (first (:transitions tx-process)))
-    (:cljs.spec.alpha/problems (s/explain-data spec tx-process))
-    )
-
-  (def s "
-{:format :v2
- :transitions []
- :notifications []}")
-
-  (meta (edamame.core/parse-string s))
-  (meta (-> (edamame.core/parse-string s) :format))
+    (:cljs.spec.alpha/problems (s/explain-data spec tx-process)))
 
   )
 
