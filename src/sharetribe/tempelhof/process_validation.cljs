@@ -112,6 +112,18 @@
              ". You must specify exactly one of :actor or :at.")
    :loc (location val)})
 
+(defphraser tempelhof.spec/unique-transition-names?
+  [{:keys [tx-process]} _]
+  (let [tr-names (->> tx-process :transitions (map :name) frequencies)
+        invalid-trs (filter (fn [{:keys [name]}]
+                              (> (get tr-names name) 1))
+                            (:transitions tx-process))]
+    (map (fn [tr]
+           {:msg (str "Invalid transition " (:name tr) ". "
+                      "Transition names must be unique.")
+            :loc (location tr)})
+         invalid-trs)))
+
 ;; Actions
 ;;
 
@@ -187,7 +199,6 @@
            (str "The process description is not valid. "
                 "Found " total-errors " error(s).\n")
            (map-indexed (partial error-report total-errors) errors))))
-
 
 ;; TODO remove me
 (comment
