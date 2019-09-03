@@ -2,8 +2,7 @@
   (:require [clojure.core.async :as async :refer [go <!]]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.api.client :refer [do-post]]
-            [sharetribe.flex-cli.io-util :as io-util]
-            [sharetribe.flex-cli.commands.process.util :as process.util]))
+            [sharetribe.flex-cli.io-util :as io-util]))
 
 (declare create-alias)
 
@@ -37,7 +36,7 @@
          res (<? (do-post api-client "/aliases/create-alias" query-params body-params))]
      (io-util/ppd [:span
                    "Alias "
-                   (-> res :data :processAlias/alias process.util/keyword->str)
+                   (-> res :data :processAlias/alias io-util/namespaced-str)
                    " successfully created to point to version "
                    (-> res :data :processAlias/version str)
                    "."]))))
