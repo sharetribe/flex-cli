@@ -5,6 +5,7 @@
             [sharetribe.flex-cli.commands.process.pull :as process.pull]
             [sharetribe.flex-cli.commands.process.push :as process.push]
             [sharetribe.flex-cli.commands.process.create-alias :as process.create-alias]
+            [sharetribe.flex-cli.commands.process.update-alias :as process.update-alias]
             [sharetribe.tempelhof.tx-process :as tx-process]))
 
 (declare describe-process)
@@ -41,7 +42,8 @@
           :sub-cmds [process.list/cmd
                      process.pull/cmd
                      process.push/cmd
-                     process.create-alias/cmd]})
+                     process.create-alias/cmd
+                     process.update-alias/cmd]})
 
 (defn- load-tx-process-from-path
   "Load process from given path (directory). Encapsulates the idea of
