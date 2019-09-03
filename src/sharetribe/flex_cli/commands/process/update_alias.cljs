@@ -8,19 +8,22 @@
 
 (def cmd {:name "update-alias"
           :handler #'update-alias
-          :desc "create a new alias"
+          :desc "update an existing alias"
           :opts [{:id :process-name
                   :long-opt "--process"
                   :required "PROCESS_NAME"
-                  :missing "--process is required"}
+                  :missing "--process is required"
+                  :desc "process name, see process list for available names"}
                  {:id :version
                   :long-opt "--version"
                   :required "VERSION"
-                  :missing "--version is required"}
+                  :missing "--version is required"
+                  :desc "process version the alias should point to"}
                  {:id :alias
                   :long-opt "--alias"
                   :required "ALIAS"
-                  :missing "--alias is required"}]})
+                  :missing "--alias is required"
+                  :desc "alias name, e.g. release-1"}]})
 
 (defn update-alias [params ctx]
   (go-try
