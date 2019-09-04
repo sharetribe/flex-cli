@@ -239,6 +239,18 @@
             :loc (location n)})
          invalid-notifications)))
 
+(defphraser tempelhof.spec/unique-notification-names?
+  [{:keys [tx-process]} _]
+  (let [notification-names (->> tx-process :notifications (map :name) frequencies)
+        invalid (filter (fn [{:keys [name]}]
+                          (> (get notification-names name) 1))
+                        (:notifications tx-process))]
+    (map (fn [n]
+           {:msg (str "Invalid notification " (:name n) ". "
+                      "Notification names must be unique.")
+            :loc (location n)})
+         invalid)))
+
 
 ;; Time expressions
 ;;
