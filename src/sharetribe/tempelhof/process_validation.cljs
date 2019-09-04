@@ -1,6 +1,7 @@
 (ns sharetribe.tempelhof.process-validation
   (:require [clojure.spec.alpha :as s]
             [clojure.set :as set]
+            [clojure.string :as str]
             [expound.alpha :as expound]
             [phrase.alpha :as phrase :refer [defphraser]]
             [chalk]
@@ -68,13 +69,82 @@
     validation-errors))
 
 
-(defn- location [part]
-  (meta part))
+(defn- location
+  "Pull out location info for the given form / process description
+  part."
+  [part]
+  (let [loc (select-keys (meta part) [:row :col])]
+    (if (seq loc) loc nil)))
+
+(defn- find-first-loc
+  "Find the most accurate possible location for a problem. Primitive
+  values don't have locations so we must look into parent form
+  instead. This fn is intended for generic error phrasers that don't
+  know which part in the process they are reporting. Use `location`
+  when you know from context what you are reporting against."
+  [tx-process problem]
+  (let [{:keys [in]} problem
+        node (get-in tx-process in)
+        parent (get-in tx-process (drop-last in))]
+    (or (location node)
+        (location parent))))
+
+(defn- config-type
+  "Return a human readable name for the type of config the problem
+  relates to, e.g. transition, notification or action."
+  [problem]
+  (let [{:keys [path]} problem
+        [f s] path]
+    (cond
+      (= [:transitions :actions] [f s]) "action"
+      (= [:transitions] [f]) "transition"
+      (= [:notifications] [f]) "notification"
+      :else "process")))
+
+(defn- invalid-key
+  "Return the key that the problem is about."
+  [problem]
+  (-> problem :path last))
+
+(defn- invalid-val
+  "Return a string version of the invalid primitive value. If the
+  invalid value is a string we add extra \"\" to clearly differentiate
+  from keywords."
+  [val]
+  (if (string? val)
+    (str "\"" val "\"")
+    (str val)))
 
 (defphraser :default
-  [{:keys [tx-process spec]} problem]
-  {:msg "Unspecified process error. :("
-   :loc (location tx-process)})
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg (str "Invalid " (config-type problem)
+             ". Unspecified validation error. :(.\n"
+             "Key: " (invalid-key problem) "\n"
+             "Value: " (invalid-val val))
+   :loc (find-first-loc tx-process problem)})
+
+;; Fallback phraser for missing mandatory keys. Seeing output from
+;; this means we have a missing phraser.
+;; TODO Can we make this handle all?
+(defphraser #(contains? % missing-key)
+  [_ {:keys [val]} missing-key]
+  {:msg (str "Missing mandatory key " missing-key ".")
+   :loc (location val)})
+
+(defphraser keyword?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg (str "Invalid " (config-type problem) ". "
+             (invalid-key problem) " must be a keyword. "
+             "You gave: " (invalid-val val))
+   :loc (find-first-loc tx-process problem)})
+
+(defphraser simple-keyword?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg (str "Invalid " (config-type problem) ". "
+             (invalid-key problem) " must be a plain, unqualified keyword. "
+             "You gave: " (invalid-val val))
+   :loc (find-first-loc tx-process problem)})
+
 
 ;; Process
 ;;
@@ -83,13 +153,6 @@
   [{:keys [tx-process]} {:keys [val]}]
   {:msg (str "The process :format must be :v3 instead of " (pr-str val) ".")
    :loc nil})
-
-;; Fallback phraser for missing mandatory keys. Seeing output from
-;; this means we have a missing phraser.
-(defphraser #(contains? % missing-key)
-  [_ {:keys [val]} missing-key]
-  {:msg (str "Missing mandatory key " missing-key ".")
-   :loc (location val)})
 
 (defphraser #(contains? % missing-key)
   {:via [:tempelhof/tx-process]}
@@ -124,6 +187,13 @@
             :loc (location tr)})
          invalid-trs)))
 
+(defphraser tempelhof.spec/valid-transition-role?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg (str "Transition actor role must be one of: "
+             (str/join ", " tempelhof.spec/transition-roles) ".\n"
+             "You gave: " (invalid-val val) ".")
+   :loc (find-first-loc tx-process problem)})
+
 ;; Actions
 ;;
 
@@ -132,6 +202,9 @@
   [_ {:keys [val]} missing-key]
   {:msg (str "Missing mandatory key. Actions must specify " missing-key ".")
    :loc (location val)})
+
+;; TODO Action :name
+;; TODO Action :config
 
 ;; Notifications
 ;;
@@ -155,6 +228,13 @@
                       "The process doesn't define transition by name: " (:on n) ".")
             :loc (location n)})
          invalid-notifications)))
+
+
+;; Time expressions
+;;
+
+;; TODO!!!
+
 
 ;; TODO remove me
 (defonce d (atom nil))
@@ -204,14 +284,20 @@
 (comment
   (keys @d)
 
+  (-> @d :tx-process meta)
+  (-> @d :tx-process location)
   (let [data @d
-        {:keys [tx-process spec]} data]
-    (meta tx-process)
-    #_(meta (first (:transitions tx-process)))
-    (:cljs.spec.alpha/problems (s/explain-data spec tx-process)))
+        {:keys [tx-process spec]} data
+        problems (:cljs.spec.alpha/problems (s/explain-data spec tx-process))
+        problem (first problems)]
+    #_(find-first-loc tx-process
+                    (first (:cljs.spec.alpha/problems (s/explain-data spec tx-process))))
+    #_(get-in tx-process (:in ))
+    #_(find-first-loc tx-process problem)
+    problems
+    )
 
   )
-
 
 
 (defn validate!
@@ -223,3 +309,4 @@
                       {:tx-process tx-process
                        :spec (s/spec :tempelhof/tx-process)}))
   tx-process)
+

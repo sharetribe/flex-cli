@@ -59,10 +59,14 @@
 ;; Transaction process spec
 ;;
 
-(s/def :tx-process.transition/actor #{:actor.role/customer
-                                      :actor.role/provider
-                                      :actor.role/operator
-                                      :actor.role/system})
+(def transition-roles #{:actor.role/customer
+                        :actor.role/provider
+                        :actor.role/operator})
+
+(defn valid-transition-role? [role]
+  (contains? transition-roles role))
+
+(s/def :tx-process.transition/actor valid-transition-role?)
 (s/def :tx-process.transition/name keyword?)
 (s/def :tx-process.transition/from keyword?)
 (s/def :tx-process.transition/to keyword?)
