@@ -6,7 +6,6 @@
   cljs-node-io {:mvn/version "1.1.2"}
   phrase {:mvn/version "0.3-alpha4"}
   borkdude/edamame {:mvn/version "0.0.1"}
-  expound {:mvn/version "0.7.2"}
   fipp {:mvn/version "0.6.18"}
 
   ;; Requires xmlhttprequest from NPM
