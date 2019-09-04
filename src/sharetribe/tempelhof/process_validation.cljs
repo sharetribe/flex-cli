@@ -196,7 +196,16 @@
 ;; Time expressions
 ;;
 
-;; TODO!!!
+;; TODO This is a bare bones minimum time expression validation that
+;; doesn't offer any insights into why the expression is not valid
+;; (did you misspell fn name? gave it wrong params? Used vector
+;; instead of map?). However, to improve upon this requires to rewrite
+;; the validation itself and/or replicate it here without spec!
+
+(defphraser tempelhof.spec/valid-time-expression?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg "Invalid time expression."
+   :loc (find-first-loc tx-process problem)})
 
 
 ;; TODO remove me
@@ -252,7 +261,8 @@
   (let [data @d
         {:keys [tx-process spec]} data
         problems (:cljs.spec.alpha/problems (s/explain-data spec tx-process))
-        problem (first problems)]
+        problem (first problems)
+        {:keys [val]} problem]
     #_(find-first-loc tx-process
                     (first (:cljs.spec.alpha/problems (s/explain-data spec tx-process))))
     #_(get-in tx-process (:in ))
@@ -272,4 +282,3 @@
                       {:tx-process tx-process
                        :spec (s/spec :tempelhof/tx-process)}))
   tx-process)
-

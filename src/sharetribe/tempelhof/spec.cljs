@@ -56,6 +56,9 @@
                                              :count 1)
                                   :count 1)))
 
+(defn valid-time-expression? [expr]
+  (s/valid? :tx-process.time/expression expr))
+
 ;; Transaction process spec
 ;;
 
@@ -132,7 +135,7 @@
 (s/def :tx-process.transition/actions
   (s/coll-of :tx-process.transition/action))
 
-(s/def :tx-process.transition/at :tx-process.time/expression)
+(s/def :tx-process.transition/at valid-time-expression?)
 
 (defn transition-has-either-actor-or-at? [transition]
   (or (and (:actor transition) (not (:at transition)))
@@ -165,7 +168,7 @@
 (s/def :tx-process.notification/template
   simple-keyword?)
 
-(s/def :tx-process.notification/at :tx-process.time/expression)
+(s/def :tx-process.notification/at valid-time-expression?)
 
 (s/def :tx-process/notification
   (s/keys :req-un [:tx-process.notification/name
