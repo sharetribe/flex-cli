@@ -203,8 +203,19 @@
   {:msg (str "Missing mandatory key. Actions must specify " missing-key ".")
    :loc (location val)})
 
-;; TODO Action :name
-;; TODO Action :config
+(defphraser tempelhof.spec/known-action-name?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg (str "Unknown action name: " (invalid-val val) ". Available actions are:\n"
+             (->> tempelhof.spec/action-names
+                  (map #(str "  " %))   ; Padding
+                  (str/join "\n")))     ; Print one per line
+   :loc (find-first-loc tx-process problem)})
+
+(defphraser map?
+  {:via [:tempelhof/tx-process :tx-process/transitions :tx-process/transition :tx-process.transition/actions :tx-process.transition/action :tx-process.action/config]}
+  [{:keys [tx-process]} problem]
+  {:msg "Invalid action. The value for :config must be a map."
+   :loc (find-first-loc tx-process problem)})
 
 ;; Notifications
 ;;
@@ -221,7 +232,6 @@
   (let [tr-names (->> tx-process :transitions (map :name) set)
         invalid-notifications (remove (fn [n] (contains? tr-names (:on n)))
                                       (:notifications tx-process))]
-
     (map (fn [n]
            {:msg (str "Invalid notification " (:name n) ". "
                       "The value of :on must point to an existing transition. "
