@@ -208,9 +208,6 @@
    :loc (find-first-loc tx-process problem)})
 
 
-;; TODO remove me
-(defonce d (atom nil))
-
 ;; Not sure if this is a good idea?... But if it is it should be moved
 ;; to a util lib.
 (def error-arrow (.bold.red chalk "\u203A"))
@@ -239,9 +236,9 @@
     ;; exactly one error description.
     (if (sequential? errors) errors [errors])))
 
-(defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]
-  ;; TODO remove me
-  (reset! d data)
+(defn- format-exception
+  "Format validation exception as error report string."
+  [{:keys [tx-process spec] :as data}]
   (let [problems (-> (s/explain-data spec tx-process)
                      :cljs.spec.alpha/problems)
         errors (mapcat #(phrase-problem data %) problems)
@@ -252,26 +249,8 @@
                 "Found " total-errors " error(s).\n")
            (map-indexed (partial error-report total-errors) errors))))
 
-;; TODO remove me
-(comment
-  (keys @d)
-
-  (-> @d :tx-process meta)
-  (-> @d :tx-process location)
-  (let [data @d
-        {:keys [tx-process spec]} data
-        problems (:cljs.spec.alpha/problems (s/explain-data spec tx-process))
-        problem (first problems)
-        {:keys [val]} problem]
-    #_(find-first-loc tx-process
-                    (first (:cljs.spec.alpha/problems (s/explain-data spec tx-process))))
-    #_(get-in tx-process (:in ))
-    #_(find-first-loc tx-process problem)
-    problems
-    )
-
-  )
-
+(defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]
+  (format-exception data))
 
 (defn validate!
   "Validates a v3 process map. Throws an exception if the process is
@@ -282,3 +261,21 @@
                       {:tx-process tx-process
                        :spec (s/spec :tempelhof/tx-process)}))
   tx-process)
+
+(comment
+
+  ;; To debug and improve phrasing it's immensely useful to capture
+  ;; the problems as they are. To do that, eval the defmethod below.
+  (def d (atom nil))
+
+  (defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]
+    (reset! d data)
+    (format-exception data))
+
+  (let [data @d
+        {:keys [tx-process spec]} data
+        problems (:cljs.spec.alpha/problems (s/explain-data spec tx-process))
+        problem (first problems)
+        {:keys [val]} problem]
+    problems)
+  )
