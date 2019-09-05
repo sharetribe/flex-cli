@@ -40,7 +40,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system}]}]
+                                  :actor :actor.role/customer}]}]
       (is (nil? (validate process)))))
 
   (testing "minimal valid transition with at"
@@ -85,7 +85,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system
+                                  :actor :actor.role/customer
                                   :actions []}]}]
       (is (nil? (validate process)))))
 
@@ -93,7 +93,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system
+                                  :actor :actor.role/customer
                                   :actions [{:name :action/accept-booking}
                                             {:name :action/decline-booking}
                                             {:name :action/cancel-booking}]}]}]
@@ -103,7 +103,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system
+                                  :actor :actor.role/customer
                                   :actions [{:name :action/accept-booking}
                                             {:name :action/decline-booking}
                                             {:name :action/invalid-action}
@@ -122,7 +122,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system}]
+                                  :actor :actor.role/customer}]
                    :notifications []}]
       (is (nil? (validate process)))))
 
@@ -130,7 +130,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system}]
+                                  :actor :actor.role/customer}]
                    :notifications [{:name :notification/new-booking-request
                                     :on :transition/request
                                     :to :actor.role/provider
@@ -141,7 +141,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system}]
+                                  :actor :actor.role/customer}]
                    :notifications [{:name :notification/new-booking-request
                                     :on :transition/request
                                     :to :actor.role/provider
@@ -156,7 +156,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system}]
+                                  :actor :actor.role/customer}]
                    :notifications [{:name :notification/new-booking-request
                                     :on :transition/request
                                     :to :actor.role/provider
@@ -175,7 +175,7 @@
     (let [process {:format :v3
                    :transitions [{:name :transition/request
                                   :to :state/preauthorized
-                                  :actor :actor.role/system}]
+                                  :actor :actor.role/customer}]
                    :notifications [{:name :notification/new-booking-request
                                     :on :transition/unknown-transition
                                     :to :actor.role/provider
@@ -183,7 +183,6 @@
           problems (validate process)
           p (first problems)]
       (is (= 1 (count problems)))
-      (is (= :tx-process.notification/on-transition-name (-> p :via last)))
       (is (= [] (:in p)))))
 
   )
