@@ -42,7 +42,7 @@
           body-params {:name (keyword process-name)
                        :definition process-str}
 
-          res (<? (do-post api-client "/processes/create-version" query-params body-params))]
+          res (<? (do-post api-client "/processes/create-version-dev" query-params body-params))]
 
       (io-util/ppd [:span
                     "Version " (-> res :data :process/version str)
