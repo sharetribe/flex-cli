@@ -64,13 +64,11 @@
              "Value: " (invalid-val val))
    :loc (find-first-loc tx-process problem)})
 
-;; Fallback phraser for missing mandatory keys. Seeing output from
-;; this means we have a missing phraser.
-;; TODO Can we make this handle all?
 (defphraser #(contains? % missing-key)
-  [_ {:keys [val]} missing-key]
-  {:msg (str "Missing mandatory key " missing-key ".")
-   :loc (location val)})
+  [{:keys [tx-process]} {:keys [val] :as problem} missing-key]
+  {:msg (str "Invalid " (config-type problem) ". "
+             "Missing mandatory key " missing-key ".")
+   :loc (find-first-loc tx-process problem)})
 
 (defphraser keyword?
   [{:keys [tx-process]} {:keys [val] :as problem}]
@@ -95,20 +93,8 @@
   {:msg (str "The process :format must be :v3 instead of " (pr-str val) ".")
    :loc nil})
 
-(defphraser #(contains? % missing-key)
-  {:via [:tempelhof/tx-process]}
-  [_ {:keys [val]} missing-key]
-  {:msg (str "Missing mandatory key. The process description must specify " missing-key ".")
-   :loc nil})
-
 ;; Transitions
 ;;
-
-(defphraser #(contains? % missing-key)
-  {:via [:tempelhof/tx-process :tx-process/transitions :tx-process/transition]}
-  [_ {:keys [val]} missing-key]
-  {:msg (str "Missing mandatory key. Transitions must specify " missing-key ".")
-   :loc (location val)})
 
 (defphraser tempelhof.spec/transition-has-either-actor-or-at?
   [_ {:keys [val]}]
@@ -138,12 +124,6 @@
 ;; Actions
 ;;
 
-(defphraser #(contains? % missing-key)
-  {:via [:tempelhof/tx-process :tx-process/transitions :tx-process/transition :tx-process.transition/actions :tx-process.transition/action]}
-  [_ {:keys [val]} missing-key]
-  {:msg (str "Missing mandatory key. Actions must specify " missing-key ".")
-   :loc (location val)})
-
 (defphraser tempelhof.spec/known-action-name?
   [{:keys [tx-process]} {:keys [val] :as problem}]
   {:msg (str "Unknown action name: " (invalid-val val) ". Available actions are:\n"
@@ -161,15 +141,8 @@
 ;; Notifications
 ;;
 
-(defphraser #(contains? % missing-key)
-  {:via [:tempelhof/tx-process :tx-process/notifications :tx-process/notification]}
-  [_ {:keys [val]} missing-key]
-  {:msg (str "Missing mandatory key. Notifications must specify " missing-key ".")
-   :loc (location val)})
-
 (defphraser tempelhof.spec/notification-on-is-valid-transition-name?
   [{:keys [tx-process]} _]
-  ;; TODO call stuff, parse process to print exactly which transition fails.
   (let [tr-names (->> tx-process :transitions (map :name) set)
         invalid-notifications (remove (fn [n] (contains? tr-names (:on n)))
                                       (:notifications tx-process))]
