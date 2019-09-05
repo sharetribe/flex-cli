@@ -1,4 +1,5 @@
 (ns sharetribe.tempelhof.process-validation
+  "User friendly error reporting for process validation errors."
   (:require [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [clojure.string :as str]
@@ -7,8 +8,6 @@
             [sharetribe.tempelhof.spec]
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.tempelhof.spec :as tempelhof.spec]))
-
-;; TODO Error messages for invalid .edn files?
 
 (defn- location
   "Pull out location info for the given form / process description
@@ -180,7 +179,6 @@
   {:msg "Invalid time expression."
    :loc (find-first-loc tx-process problem)})
 
-
 ;; Not sure if this is a good idea?... But if it is it should be moved
 ;; to a util lib.
 (def error-arrow (.bold.red chalk "\u203A"))
@@ -235,10 +233,18 @@
                        :spec (s/spec :tempelhof/tx-process)}))
   tx-process)
 
+;; :tx-process/parse-error is thrown when reading the edn string fails
+;; because of syntax error.
+(defmethod exception/format-exception :tx-process/parse-error [_ _ {:keys [msg loc]}]
+  (str "Failed to parse the process.\n"
+       (error-report 1 0 {:msg msg :loc loc})))
+
+
 (comment
 
   ;; To debug and improve phrasing it's immensely useful to capture
-  ;; the problems as they are. To do that, eval the defmethod below.
+  ;; the problems as they are. To do that, eval the atom and defmethod
+  ;; below.
   (def d (atom nil))
 
   (defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]

@@ -1,7 +1,8 @@
 (ns sharetribe.tempelhof.tx-process
   (:require [clojure.spec.alpha :as s]
-            ;; [cljs.reader :refer [read-string]]
+            [clojure.string :as str]
             [edamame.core :as edamame]
+            [sharetribe.flex-cli.exception :as exception]
             [sharetribe.tempelhof.process-validation :as process-validation]))
 
 (def ^:const initializer-action {:name :action.initializer/init-listing-tx})
@@ -17,11 +18,37 @@
                      actions)]
       (assoc transition* :actions actions*))))
 
+(defn- parse-edn-string
+  "Parse edn string to data structure. Throw :tx-process/parse-error
+  in case of syntax errors."
+  [edn-string]
+  (try
+    (edamame/parse-string edn-string)
+    (catch js/Error e
+      (let [msg (ex-message e)
+            ;; Parse location info from known edamame msg format:
+            ;; "Unmatched delimiter: ] [at line 62, column 63]"
+            ;;                         ^          ^          ^
+            ;;                         s        comma        e
+            s (str/last-index-of msg "[")
+            comma (str/last-index-of msg ",")
+            e (str/last-index-of msg "]")
+            row-str (subs msg (+ s 9) comma)
+            col-str (subs msg (+ comma 9) e)
+            loc (when (and (seq row-str) (seq col-str))
+                  {:row (js/parseInt row-str)
+                   :col (js/parseInt col-str)})]
+        (exception/throw!
+         :tx-process/parse-error
+         {:msg (subs msg 0 s)
+          :loc loc
+          :edn-string edn-string})))))
+
 (defn parse-tx-process-string
   "Parse a tx process from an edn string."
   [edn-string]
-  ;; TODO: split parsing and validation to separate functions
-  (-> (edamame/parse-string edn-string)
+  (-> edn-string
+      parse-edn-string
       (process-validation/validate!)
       (update :transition #(map expanded-transition %))))
 
