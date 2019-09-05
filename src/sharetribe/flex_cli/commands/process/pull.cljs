@@ -54,10 +54,10 @@
                          alias (assoc :alias alias)
                          version (assoc :version version))
 
-          res (<? (do-get api-client "/processes/show" query-params))
+          res (<? (do-get api-client "/processes/show-dev" query-params))
 
           process-data (-> res :data :process/process)
           process-file-path (io-util/join path "process.edn")]
 
-      (io-util/save-file process-file-path (with-out-str (cljs.pprint/pprint process-data)))
+      (io-util/save-file process-file-path process-data)
       (io-util/log "Saved process to" process-file-path))))
