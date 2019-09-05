@@ -17,7 +17,7 @@
             ["mkdirp" :rename {sync mkdirp-sync}]))
 
 (def ^:const process-filename "process.edn")
-(def ^:const template-dir "templates")
+(def ^:const templates-dir "templates")
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
@@ -76,31 +76,34 @@
 (defn process-file-path [path]
   (join path process-filename))
 
-(defn template-path [path]
-  (join path template-dir))
-
 (defn process-dir? [path]
   (file? (process-file-path path)))
 
-(defn html-file [template-name]
-  (str template-name "-html.html"))
+(defn templates-path [path]
+  (join path templates-dir))
 
-(defn subject-file [template-name]
-  (str template-name "-subject.txt"))
+(defn template-path [path template-name]
+  (join (templates-path path) template-name))
 
-(defn read-templates [process-path]
-  (let [t-path (template-path process-path)]
-    (if-not (fs/dir? t-path)
+(defn html-file-path [path template-name]
+  (join (template-path path template-name) (str template-name "-html.html")))
+
+(defn subject-file-path [path template-name]
+  (join (template-path path template-name) (str template-name "-subject.txt")))
+
+(defn read-templates [path]
+  (let [tmpls-path (templates-path path)]
+    (if-not (fs/dir? tmpls-path)
       []
-      (->> t-path
+      (->> tmpls-path
            fs/readdir
            (into
             #{}
             (comp
              (map (fn [template-name]
                     {:name (keyword template-name)
-                     :html-file (join t-path template-name (html-file template-name))
-                     :subject-file (join t-path template-name (subject-file template-name))}))
+                     :html-file (html-file-path path template-name)
+                     :subject-file (subject-file-path path template-name)}))
              (filter (fn [{:keys [html-file subject-file]}]
                        (and (file? html-file)
                             (file? subject-file))))

@@ -57,7 +57,17 @@
           res (<? (do-get api-client "/processes/show-dev" query-params))
 
           process-data (-> res :data :process/process)
+          templates-data (-> res :data :process/emailTemplates)
+
           process-file-path (io-util/join path "process.edn")]
 
       (io-util/save-file process-file-path process-data)
-      (io-util/log "Saved process to" process-file-path))))
+
+      (doseq [tmpl templates-data]
+        (let [{:emailTemplate/keys [name subject html]} tmpl
+              name-str (clojure.core/name name)]
+          (io-util/mkdirp (io-util/template-path path name-str))
+          (io-util/save-file (io-util/html-file-path path name-str) html)
+          (io-util/save-file (io-util/subject-file-path path name-str) subject)))
+
+      (io-util/log "Saved process to" path))))
