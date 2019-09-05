@@ -147,8 +147,8 @@
                                       (:notifications tx-process))]
     (map (fn [n]
            {:msg (str "Invalid notification " (:name n) ". "
-                      "The value of :on must point to an existing transition. "
-                      "The process doesn't define transition by name: " (:on n) ".")
+                      "The value of :on must point to an existing transition.\n"
+                      "The process doesn't define a transition by name: " (:on n) ".")
             :loc (location n)})
          invalid-notifications)))
 
