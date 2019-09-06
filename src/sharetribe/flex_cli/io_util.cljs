@@ -14,9 +14,11 @@
             [inquirer]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
-            ["mkdirp" :rename {sync mkdirp-sync}]))
+            ["mkdirp" :rename {sync mkdirp-sync}]
+            ["rimraf" :rename {sync rmrf-sync}]))
 
 (def ^:const process-filename "process.edn")
+(def ^:const templates-dir "templates")
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
@@ -67,6 +69,12 @@
   [path]
   (mkdirp-sync path))
 
+(defn rmrf
+  "Remove a directory and possible subdirectories for the given
+  path. Same as rm -rf."
+  [path]
+  (rmrf-sync path))
+
 (defn join
   "Join the given paths"
   [& parts]
@@ -77,6 +85,56 @@
 
 (defn process-dir? [path]
   (file? (process-file-path path)))
+
+(defn templates-path [path]
+  (join path templates-dir))
+
+(defn template-path [path template-name]
+  (join (templates-path path) template-name))
+
+(defn html-file-path [path template-name]
+  (join (template-path path template-name) (str template-name "-html.html")))
+
+(defn subject-file-path [path template-name]
+  (join (template-path path template-name) (str template-name "-subject.txt")))
+
+(defn read-templates [path]
+  (let [tmpls-path (templates-path path)]
+    (if-not (fs/dir? tmpls-path)
+      []
+      (->> tmpls-path
+           fs/readdir
+           (into
+            #{}
+            (comp
+             (map (fn [template-name]
+                    {:name (keyword template-name)
+                     :html-file (html-file-path path template-name)
+                     :subject-file (subject-file-path path template-name)}))
+             (filter (fn [{:keys [html-file subject-file]}]
+                       (and (file? html-file)
+                            (file? subject-file))))
+             (map (fn [{:keys [name html-file subject-file]}]
+                    {:name name
+                     :html (load-file html-file)
+                     :subject (load-file subject-file)}))))))))
+
+(defn write-templates [path templates]
+  (doseq [tmpl templates]
+    (let [{:emailTemplate/keys [name subject html]} tmpl
+          name-str (clojure.core/name name)]
+      (when (dir? (templates-path path))
+        (rmrf (templates-path path)))
+      (mkdirp (template-path path name-str))
+      (save-file (html-file-path path name-str) html)
+      (save-file (subject-file-path path name-str) subject))))
+
+(defn write-process-file [path process-data]
+  (save-file (process-file-path path) process-data))
+
+(defn write-process [path process]
+  (write-process-file path (:process/process process))
+  (write-templates path (:process/emailTemplates process)))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes

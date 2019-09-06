@@ -28,9 +28,10 @@
   },
   "dependencies": {
     "chalk": "^2.4.2",
+    "inquirer": "^6.2.2",
     "keytar": "^4.7.0",
     "mkdirp": "^0.5.1",
-    "xmlhttprequest": "^1.8.0",
-    "inquirer": "^6.2.2"
+    "rimraf": "^3.0.0",
+    "xmlhttprequest": "^1.8.0"
   }
 }

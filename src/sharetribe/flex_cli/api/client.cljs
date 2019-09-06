@@ -70,13 +70,6 @@
    {:req req
     :res res}))
 
-(extend-type ty/TaggedValue
-  IPrintWithWriter
-  (-pr-writer [tagged-value writer _]
-    (case (.-tag tagged-value)
-      "f" (-write writer (str (.-rep tagged-value) "M"))
-      (-write writer (.toString tagged-value)))))
-
 (defn do-get [client path query]
   (let [c (chan)]
     (ajax/ajax-request
