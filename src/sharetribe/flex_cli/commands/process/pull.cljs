@@ -57,11 +57,13 @@
           res (<? (do-get api-client "/processes/show-dev" query-params))
 
           process-data (-> res :data :process/process)
-          templates-data (-> res :data :process/emailTemplates)
+          templates-data (-> res :data :process/emailTemplates)]
 
-          process-file-path (io-util/join path "process.edn")]
+      ;; Clean templates dir if it exists
+      (when (io-util/dir? (io-util/templates-path path))
+        (io-util/rmrf (io-util/templates-path path)))
 
-      (io-util/save-file process-file-path process-data)
+      (io-util/save-file (io-util/process-file-path path) process-data)
 
       (doseq [tmpl templates-data]
         (let [{:emailTemplate/keys [name subject html]} tmpl

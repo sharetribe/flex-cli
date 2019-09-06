@@ -14,7 +14,8 @@
             [inquirer]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
-            ["mkdirp" :rename {sync mkdirp-sync}]))
+            ["mkdirp" :rename {sync mkdirp-sync}]
+            ["rimraf" :rename {sync rmrf-sync}]))
 
 (def ^:const process-filename "process.edn")
 (def ^:const templates-dir "templates")
@@ -67,6 +68,12 @@
   "Create a directory and possible subdirectories for the given path."
   [path]
   (mkdirp-sync path))
+
+(defn rmrf
+  "Remove a directory and possible subdirectories for the given
+  path. Same as rm -rf."
+  [path]
+  (rmrf-sync path))
 
 (defn join
   "Join the given paths"
