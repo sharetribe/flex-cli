@@ -24,8 +24,9 @@
    :line ;; add one line break at the end to get some extra space
    ])
 
-(defmethod exception/format-exception :api/error [_ _ {:keys [req res]}]
-  (let [{:keys [path]} req
+(defn default-error-format [data]
+  (let [{:keys [req res]} data
+        {:keys [path]} req
         {:keys [status response]} res
         marketplace (-> req :query :marketplace)
         api-key-suffix (->> req
@@ -56,6 +57,9 @@
       :else
       (error-page [:span "API call failed. Status: " (str status) ", reason: " (or (-> response :errors first :title) "Unspecified") :line]))))
 
+(defmethod exception/format-exception :api/error [_ _ data]
+  (default-error-format data))
+
 (defn- handle-error
   "Handles error response from API by wrapping it in :api/error
   exception and returning the exception.
@@ -69,6 +73,20 @@
    :api/error
    {:req req
     :res res}))
+
+(defn retype-ex
+  "Takes exception `e` and if it is an :api/error, retypes it to a more
+  specific type `new-type`."
+  [e new-type]
+  (if (= :api/error (exception/type e))
+    (exception/exception new-type (exception/data e))
+    e))
+
+(defn api-error
+  "Takes API error exception data `ex-data` and returns an API error
+  from the response map."
+  [ex-data]
+  (-> ex-data :res :response :errors first))
 
 (defn do-get [client path query]
   (let [c (chan)]

@@ -1,10 +1,17 @@
 (ns sharetribe.flex-cli.exception
-  "Utility namespace for global exception handling in the CLI.")
+  "Utility namespace for global exception handling in the CLI."
+  (:refer-clojure :exclude [type]))
 
 (defn exception
   ([type] (exception type nil))
   ([type data]
    (ex-info (str type) {:type type :data data})))
+
+(defn type [e]
+  (:type (ex-data e)))
+
+(defn data [e]
+  (:data (ex-data e)))
 
 (defn throw!
   ([type] (throw! type nil))
