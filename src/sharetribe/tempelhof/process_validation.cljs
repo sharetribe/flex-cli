@@ -103,9 +103,9 @@
 
 (defphraser tempelhof.spec/unique-transition-names?
   [{:keys [tx-process]} _]
-  (let [tr-names (->> tx-process :transitions (map :name) frequencies)
+  (let [tr-name->count (->> tx-process :transitions (map :name) frequencies)
         invalid-trs (filter (fn [{:keys [name]}]
-                              (> (get tr-names name) 1))
+                              (> (get tr-name->count name) 1))
                             (:transitions tx-process))]
     (map (fn [tr]
            {:msg (str "Invalid transition " (:name tr) ". "
@@ -154,9 +154,9 @@
 
 (defphraser tempelhof.spec/unique-notification-names?
   [{:keys [tx-process]} _]
-  (let [notification-names (->> tx-process :notifications (map :name) frequencies)
+  (let [n-name->count (->> tx-process :notifications (map :name) frequencies)
         invalid (filter (fn [{:keys [name]}]
-                          (> (get notification-names name) 1))
+                          (> (get n-name->count name) 1))
                         (:notifications tx-process))]
     (map (fn [n]
            {:msg (str "Invalid notification " (:name n) ". "
