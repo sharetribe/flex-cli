@@ -176,6 +176,28 @@
 ;;   (when inst
 ;;     (unparse (formatter "yyyy-MM-dd HH:mm") (to-date-time inst))))
 
+(defn format-date-and-time
+  "Format given inst as a local date time
+
+  Example:
+
+  > (format-date-and-time (js/Date.))
+  \"2019-09-06 9:22:47 AM\"
+  "
+  [inst]
+  (when inst
+    (let [pad (fn [n]
+                (if (< n 10)
+                  (str "0" n)
+                  (str n)))]
+      (str (.getFullYear inst)
+           "-"
+           (pad (inc (.getMonth inst)))
+           "-"
+           (pad (.getDate inst))
+           " "
+           (.toLocaleTimeString inst "en-US")))))
+
 (defn format-code [code]
   (if code
     (.green chalk (with-out-str (pprint code)))
