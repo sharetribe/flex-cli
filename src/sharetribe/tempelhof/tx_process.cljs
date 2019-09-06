@@ -24,25 +24,19 @@
   [edn-string]
   (try
     (edamame/parse-string edn-string)
-    (catch js/Error e
-      (let [msg (ex-message e)
-            ;; Parse location info from known edamame msg format:
+    (catch js/Error error
+      (let [msg (ex-message error)
+            ;; Strip location info from edamame msg format:
             ;; "Unmatched delimiter: ] [at line 62, column 63]"
-            ;;                         ^          ^          ^
-            ;;                         s        comma        e
-            s (str/last-index-of msg "[")
-            comma (str/last-index-of msg ",")
-            e (str/last-index-of msg "]")
-            row-str (subs msg (+ s 9) comma)
-            col-str (subs msg (+ comma 9) e)
-            loc (when (and (seq row-str) (seq col-str))
-                  {:row (js/parseInt row-str)
-                   :col (js/parseInt col-str)})]
+            ;;                         ^
+            ;;                    loc-info-start
+            loc-info-start (str/last-index-of msg "[")]
         (exception/throw!
          :tx-process/parse-error
-         {:msg (subs msg 0 s)
-          :loc loc
+         {:msg (subs msg 0 loc-info-start)
+          :loc (-> error ex-data (select-keys [:row :col]))
           :edn-string edn-string})))))
+
 
 (defn parse-tx-process-string
   "Parse a tx process from an edn string."
