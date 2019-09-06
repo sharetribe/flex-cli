@@ -56,13 +56,20 @@
                                              :count 1)
                                   :count 1)))
 
+(defn valid-time-expression? [expr]
+  (s/valid? :tx-process.time/expression expr))
+
 ;; Transaction process spec
 ;;
 
-(s/def :tx-process.transition/actor #{:actor.role/customer
-                                      :actor.role/provider
-                                      :actor.role/operator
-                                      :actor.role/system})
+(def transition-roles #{:actor.role/customer
+                        :actor.role/provider
+                        :actor.role/operator})
+
+(defn valid-transition-role? [role]
+  (contains? transition-roles role))
+
+(s/def :tx-process.transition/actor valid-transition-role?)
 (s/def :tx-process.transition/name keyword?)
 (s/def :tx-process.transition/from keyword?)
 (s/def :tx-process.transition/to keyword?)
@@ -81,41 +88,45 @@
 ;;                               :into #{})))
 
 
-(s/def :tx-process.action/name #{:action.initializer/init-listing-tx
-                                 :action/create-booking
-                                 :action/accept-booking
-                                 :action/decline-booking
-                                 :action/cancel-booking
-                                 :action/calculate-tx-total ;; backward compatibility
-                                 :action/calculate-tx-daily-total ;; deprecated
-                                 :action/calculate-tx-nightly-total ;;deprecated
-                                 :action/calculate-tx-daily-total-price
-                                 :action/calculate-tx-nightly-total-price
-                                 :action/calculate-tx-total-daily-booking-exclude-start
-                                 :action/calculate-tx-unit-total-price
-                                 :action/calculate-tx-two-units-total-price
-                                 :action/calculate-tx-provider-commission
-                                 :action/calculate-tx-customer-commission
-                                 :action/calculate-full-refund
-                                 :action/set-line-items-and-total
-                                 :action/set-negotiated-total-price
-                                 :action/post-review-by-customer
-                                 :action/post-review-by-provider
-                                 :action/publish-reviews
-                                 :action/reveal-customer-protected-data
-                                 :action/reveal-provider-protected-data
-                                 :action/stripe-create-charge
-                                 :action/stripe-create-charge-pi
-                                 :action/stripe-create-payment-intent
-                                 :action/stripe-confirm-payment-intent
-                                 :action/stripe-capture-payment-intent
-                                 :action/stripe-capture-charge
-                                 :action/stripe-capture-charge-pi
-                                 :action/stripe-refund-charge
-                                 :action/stripe-refund-payment
-                                 :action/stripe-create-payout
-                                 :action/update-protected-data
-                                 :action/fail})
+(def action-names #{:action.initializer/init-listing-tx
+                    :action/create-booking
+                    :action/accept-booking
+                    :action/decline-booking
+                    :action/cancel-booking
+                    :action/calculate-tx-total ;; backward compatibility
+                    :action/calculate-tx-daily-total ;; deprecated
+                    :action/calculate-tx-nightly-total ;;deprecated
+                    :action/calculate-tx-daily-total-price
+                    :action/calculate-tx-nightly-total-price
+                    :action/calculate-tx-total-daily-booking-exclude-start
+                    :action/calculate-tx-unit-total-price
+                    :action/calculate-tx-two-units-total-price
+                    :action/calculate-tx-provider-commission
+                    :action/calculate-tx-customer-commission
+                    :action/calculate-full-refund
+                    :action/set-line-items-and-total
+                    :action/set-negotiated-total-price
+                    :action/post-review-by-customer
+                    :action/post-review-by-provider
+                    :action/publish-reviews
+                    :action/reveal-customer-protected-data
+                    :action/reveal-provider-protected-data
+                    :action/stripe-create-charge
+                    :action/stripe-create-charge-pi
+                    :action/stripe-create-payment-intent
+                    :action/stripe-confirm-payment-intent
+                    :action/stripe-capture-payment-intent
+                    :action/stripe-capture-charge
+                    :action/stripe-capture-charge-pi
+                    :action/stripe-refund-charge
+                    :action/stripe-refund-payment
+                    :action/stripe-create-payout
+                    :action/update-protected-data
+                    :action/fail})
+
+(defn known-action-name? [name] (contains? action-names name))
+
+(s/def :tx-process.action/name known-action-name?)
 
 (s/def :tx-process.action/config map?)
 (s/def :tx-process.transition/action (s/keys :req-un [:tx-process.action/name]
@@ -124,7 +135,7 @@
 (s/def :tx-process.transition/actions
   (s/coll-of :tx-process.transition/action))
 
-(s/def :tx-process.transition/at :tx-process.time/expression)
+(s/def :tx-process.transition/at valid-time-expression?)
 
 (defn transition-has-either-actor-or-at? [transition]
   (or (and (:actor transition) (not (:at transition)))
@@ -157,7 +168,7 @@
 (s/def :tx-process.notification/template
   simple-keyword?)
 
-(s/def :tx-process.notification/at :tx-process.time/expression)
+(s/def :tx-process.notification/at valid-time-expression?)
 
 (s/def :tx-process/notification
   (s/keys :req-un [:tx-process.notification/name
@@ -187,12 +198,9 @@
                  (map :on))]
     (every? #(names %) ons)))
 
-(s/def :tx-process.notification/on-transition-name
-  notification-on-is-valid-transition-name?)
-
 (s/def :tempelhof/tx-process
   (s/and
    (s/keys :req-un [:tx-process/format
                     :tx-process/transitions]
            :opt-un [:tx-process/notifications])
-   :tx-process.notification/on-transition-name))
+   notification-on-is-valid-transition-name?))
