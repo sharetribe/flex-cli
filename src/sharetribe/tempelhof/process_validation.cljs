@@ -14,7 +14,7 @@
   part."
   [part]
   (let [loc (select-keys (meta part) [:row :col])]
-    (if (seq loc) loc nil)))
+    (when (seq loc) loc)))
 
 (defn- find-first-loc
   "Find the most accurate possible location for a problem. Primitive
@@ -184,8 +184,8 @@
 (def error-arrow (.bold.red chalk "\u203A"))
 
 (defn- error-report
-  "Given an error description format is as a error report string (with
-  multiple lines)"
+  "Given an error description map, format it as an error report string
+  (a multi line string)."
   [total index error]
   (let [{:keys [loc msg]} error
         {:keys [row col]} loc
@@ -217,7 +217,9 @@
 
     (apply str
            (str "The process description is not valid. "
-                "Found " total-errors " error(s).\n")
+                "Found " total-errors (if (= 1 total-errors)
+                                        " error.\n"
+                                        " errors.\n"))
            (map-indexed (partial error-report total-errors) errors))))
 
 (defmethod exception/format-exception :tx-process/invalid-process [_ _ {:keys [tx-process spec] :as data}]
