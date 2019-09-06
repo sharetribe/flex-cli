@@ -119,6 +119,23 @@
                      :html (load-file html-file)
                      :subject (load-file subject-file)}))))))))
 
+(defn write-templates [path templates]
+  (doseq [tmpl templates]
+    (let [{:emailTemplate/keys [name subject html]} tmpl
+          name-str (clojure.core/name name)]
+      (when (dir? (templates-path path))
+        (rmrf (templates-path path)))
+      (mkdirp (template-path path name-str))
+      (save-file (html-file-path path name-str) html)
+      (save-file (subject-file-path path name-str) subject))))
+
+(defn write-process-file [path process-data]
+  (save-file (process-file-path path) process-data))
+
+(defn write-process [path process]
+  (write-process-file path (:process/process process))
+  (write-templates path (:process/emailTemplates process)))
+
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
   with spaces and capitalizing the first word."

@@ -54,22 +54,7 @@
                          alias (assoc :alias alias)
                          version (assoc :version version))
 
-          res (<? (do-get api-client "/processes/show-dev" query-params))
+          res (<? (do-get api-client "/processes/show-dev" query-params))]
 
-          process-data (-> res :data :process/process)
-          templates-data (-> res :data :process/emailTemplates)]
-
-      ;; Clean templates dir if it exists
-      (when (io-util/dir? (io-util/templates-path path))
-        (io-util/rmrf (io-util/templates-path path)))
-
-      (io-util/save-file (io-util/process-file-path path) process-data)
-
-      (doseq [tmpl templates-data]
-        (let [{:emailTemplate/keys [name subject html]} tmpl
-              name-str (clojure.core/name name)]
-          (io-util/mkdirp (io-util/template-path path name-str))
-          (io-util/save-file (io-util/html-file-path path name-str) html)
-          (io-util/save-file (io-util/subject-file-path path name-str) subject)))
-
+      (io-util/write-process path (:data res))
       (io-util/log "Saved process to" path))))
