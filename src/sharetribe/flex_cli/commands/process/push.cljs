@@ -88,7 +88,7 @@
                       :templates templates}
 
          res (try
-               (<? (do-post api-client "/processes/create-version-dev" query-params body-params))
+               (<? (do-post api-client "/processes/create-version" query-params body-params))
                (catch js/Error e
                  (throw
                   (api.client/retype-ex e :process.push/api-call-failed))))]
