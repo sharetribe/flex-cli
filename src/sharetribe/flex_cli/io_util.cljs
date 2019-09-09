@@ -120,11 +120,11 @@
                      :subject (load-file subject-file)}))))))))
 
 (defn write-templates [path templates]
+  (when (dir? (templates-path path))
+    (rmrf (templates-path path)))
   (doseq [tmpl templates]
     (let [{:emailTemplate/keys [name subject html]} tmpl
           name-str (clojure.core/name name)]
-      (when (dir? (templates-path path))
-        (rmrf (templates-path path)))
       (mkdirp (template-path path name-str))
       (save-file (html-file-path path name-str) html)
       (save-file (subject-file-path path name-str) subject))))
