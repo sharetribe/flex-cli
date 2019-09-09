@@ -33,8 +33,26 @@
                           :version version
                           :aliases (str/join ", " (map io-util/namespaced-str aliases))
                           :transactions transactionCount})
-                       (:data res))]
-     (io-util/print-table versions))))
+                       (:data res))
+         version-placeholder {:version "..."}]
+     (io-util/print-table (->> res
+                               :data
+                               (map (fn [{:process/keys [version createdAt aliases transactionCount]}]
+                                      {:created (io-util/format-date-and-time createdAt)
+                                       :version version
+                                       :aliases (str/join ", " (map io-util/namespaced-str aliases))
+                                       :transactions transactionCount})
+                                    (:data res))
+                               (reduce (fn [versions v]
+                                         (let [prev (last versions)]
+                                           (if (and prev (not= (dec (:version prev))
+                                                               (:version v)))
+                                             ;; Add a placeholder line if versions are not continuous.
+                                             (conj versions version-placeholder v)
+                                             (conj versions v))
+                                           )
+                                         )
+                                       []))))))
 
 (defn list-processes [params ctx]
   (let [{:keys [api-client marketplace]} ctx
@@ -42,3 +60,7 @@
     (if process-name
       (list-process-versions api-client marketplace process-name)
       (list-all-processes api-client marketplace))))
+
+(comment
+  (sharetribe.flex-cli.core/main-dev-str "process list -m bike-soil --process preauth-with-nightly-booking")
+  )
