@@ -54,7 +54,7 @@
                          alias (assoc :alias alias)
                          version (assoc :version version))
 
-          res (<? (do-get api-client "/processes/show-dev" query-params))]
+          res (<? (do-get api-client "/processes/show" query-params))]
 
       (io-util/write-process path (:data res))
       (io-util/log "Saved process to" path))))
