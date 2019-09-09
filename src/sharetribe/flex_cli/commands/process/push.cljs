@@ -70,34 +70,34 @@
                        :errors ["--path should be a process directory"]})))
 
 (defn push-process [params ctx]
-  (go
-    (try
-      (let [{:keys [api-client marketplace]} ctx
-            {:keys [process-name path]} params
+  (go-try
+   (let [{:keys [api-client marketplace]} ctx
+         {:keys [process-name path]} params
 
-            _ (ensure-process-dir! path)
+         _ (ensure-process-dir! path)
 
-            process-str (io-util/load-file (io-util/process-file-path path))
-            templates (io-util/read-templates path)
+         process-str (io-util/load-file (io-util/process-file-path path))
+         templates (io-util/read-templates path)
 
-            ;; NOTE: this is used for validation, ignoring the parsed process
-            _ (tx-process/parse-tx-process-string process-str)
+         ;; NOTE: this is used for validation, ignoring the parsed process
+         _ (tx-process/parse-tx-process-string process-str)
 
-            query-params {:marketplace marketplace}
-            body-params {:name (keyword process-name)
-                         :definition process-str
-                         :templates templates}
+         query-params {:marketplace marketplace}
+         body-params {:name (keyword process-name)
+                      :definition process-str
+                      :templates templates}
 
-            res (<? (do-post api-client "/processes/create-version-dev" query-params body-params))]
+         res (try
+               (<? (do-post api-client "/processes/create-version-dev" query-params body-params))
+               (catch js/Error e
+                 (throw
+                  (api.client/retype-ex e :process.push/api-call-failed))))]
 
-        (if (= :no-changes (-> res :meta :result))
-          (io-util/ppd [:span "No changes"])
-          (io-util/ppd [:span
-                        "Version " (-> res :data :process/version str)
-                        " successfully saved for process " (-> res :data :process/name name)])))
-
-      (catch js/Error e
-        (api.client/retype-ex e :process.push/api-call-failed)))))
+     (if (= :no-changes (-> res :meta :result))
+       (io-util/ppd [:span "No changes"])
+       (io-util/ppd [:span
+                     "Version " (-> res :data :process/version str)
+                     " successfully saved for process " (-> res :data :process/name name)])))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "process push -m bike-soil --process preauth-with-nightly-booking --path test-process/process.edn")
