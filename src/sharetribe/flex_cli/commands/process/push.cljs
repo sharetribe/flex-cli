@@ -1,5 +1,6 @@
 (ns sharetribe.flex-cli.commands.process.push
-  (:require [clojure.core.async :as async :refer [go <!]]
+  (:require [clojure.set :as set]
+            [clojure.core.async :as async :refer [go <!]]
             [chalk]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]
@@ -50,6 +51,15 @@
     :invalid-templates (format-invalid-templates-error data)
     (api.client/default-error-format data)))
 
+(defmethod exception/format-exception :process.push/missing-templates [_ _ {:keys [notifications]}]
+  [:span
+   (map (fn [{:keys [name template]}]
+          [:span (.bold.red chalk "Error: ")
+           "template " (.bold chalk (clojure.core/name template))
+           " not found for notification " (.bold chalk (clojure.core/name name))
+           :line])
+        notifications)])
+
 (declare push-process)
 
 (def cmd {:name "push"
@@ -70,6 +80,21 @@
                       {:command :push
                        :errors ["--path should be a process directory"]})))
 
+(defn- ensure-templates! [tx-process templates]
+  (let [process-tmpl-names (->> tx-process :notifications (map :template) set)
+        template-names (set (map :name templates))
+        extra-tmpls (set/difference template-names process-tmpl-names)
+        missing-templates (remove (fn [n]
+                                    (contains? template-names (:template n)))
+                                  (:notifications tx-process))]
+    (doseq [t extra-tmpls]
+      (io-util/ppd-err [:span
+                        (.bold.yellow chalk "Warning: ")
+                        "template exists but is not used in the process: "
+                        (.bold chalk (name t))]))
+    (when (seq missing-templates)
+      (exception/throw! :process.push/missing-templates {:notifications missing-templates}))))
+
 (defn push-process [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
@@ -80,8 +105,8 @@
          process-str (io-util/load-file (io-util/process-file-path path))
          templates (io-util/read-templates path)
 
-         ;; NOTE: this is used for validation, ignoring the parsed process
-         _ (tx-process/parse-tx-process-string process-str)
+         tx-process (tx-process/parse-tx-process-string process-str)
+         _ (ensure-templates! tx-process templates)
 
          query-params {:marketplace marketplace}
          body-params {:name (keyword process-name)
