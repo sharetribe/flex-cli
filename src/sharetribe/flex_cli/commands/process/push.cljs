@@ -24,11 +24,12 @@
     (str "\n" error-arrow " " header msg "\n")))
 
 (defn template-error-report [total index error]
-  (let [{:keys [template-name reason evidence line column]} error]
+  (let [{:keys [template-name reason evidence line column template-part]} error]
     (error-report
      total
      index
-     {:msg (str "Error in template " (.bold chalk (name template-name))
+     {:msg (str "Error in " (.bold chalk (name template-name))
+                " template " (name template-part)
                 ". Reason: " reason
                 "\n\n" evidence)
       :loc {:row line
