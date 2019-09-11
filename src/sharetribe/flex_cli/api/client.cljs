@@ -106,7 +106,7 @@
       :method :get
       :params query
       :headers {"Authorization" (str "Apikey " (::api-key client))
-                "User-agent" user-agent}
+                "User-Agent" user-agent}
       :handler (fn [[ok? response]]
                  (put! c
                        (if ok?
@@ -127,7 +127,7 @@
       :url-params query
       :params body
       :headers {"Authorization" (str "Apikey " (::api-key client))
-                "User-agent" user-agent}
+                "User-Agent" user-agent}
       :handler (fn [[ok? response]]
                  (put! c
                        (if ok?
