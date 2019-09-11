@@ -85,7 +85,7 @@
         template-names (set (map :name templates))
         extra-tmpls (set/difference template-names process-tmpl-names)
         missing-templates (remove (fn [n]
-                                    (template-names (:template n)))
+                                    (contains? template-names (:template n)))
                                   (:notifications tx-process))]
     (doseq [t extra-tmpls]
       (io-util/ppd-err [:span
