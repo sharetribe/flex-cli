@@ -1,7 +1,8 @@
 (ns sharetribe.tempelhof.spec
   (:require [clojure.spec.alpha :as s]
             [loom.graph :as loom.graph]
-            [loom.alg :as loom.alg]))
+            [loom.alg :as loom.alg]
+            [clojure.set :as set]))
 
 ;; Time expressions
 ;;
@@ -163,12 +164,21 @@
                    transitions)]
     (apply loom.graph/digraph edges)))
 
+(defn- unreachable-states [g]
+  (if (empty? (loom.graph/nodes g))
+    #{}
+    (set/difference
+     (loom.graph/nodes g)
+     (set (loom.alg/pre-traverse g ::initial-state)))))
+
+(defn sorted-unreachable-states
+  "Returns unreachable states, sorted by their in-degree."
+  [transitions]
+  (let [g (loom-graph transitions)]
+    (sort-by #(loom.graph/in-degree g %) (unreachable-states g))))
+
 (defn all-states-reachable? [transitions]
-  (if (empty? transitions)
-    true
-    (let [g (loom-graph transitions)]
-      (= (loom.graph/nodes g)
-         (set (loom.alg/pre-traverse g ::initial-state))))))
+  (empty? (unreachable-states (loom-graph transitions))))
 
 (s/def :tx-process/transitions
   (s/and
