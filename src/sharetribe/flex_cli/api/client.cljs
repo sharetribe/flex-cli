@@ -8,6 +8,17 @@
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.flex-cli.view :as v]))
 
+(def user-agent
+  "User agent string with version and platform information
+
+  Example: flex-cli/0.4.0 (darwin x64; Node.js v12.10.0)
+  "
+  (str "flex-cli/" cli-info/version
+       " ("
+       (.-platform js/process) " " (.-arch js/process) "; "
+       "Node.js " (.-version js/process)
+       ")"))
+
 (defn bold [str]
   (.bold chalk str))
 
@@ -94,7 +105,8 @@
      {:uri (str (config/value :api-base-url) path)
       :method :get
       :params query
-      :headers {"Authorization" (str "Apikey " (::api-key client))}
+      :headers {"Authorization" (str "Apikey " (::api-key client))
+                "User-Agent" user-agent}
       :handler (fn [[ok? response]]
                  (put! c
                        (if ok?
@@ -114,7 +126,8 @@
       :method :post
       :url-params query
       :params body
-      :headers {"Authorization" (str "Apikey " (::api-key client))}
+      :headers {"Authorization" (str "Apikey " (::api-key client))
+                "User-Agent" user-agent}
       :handler (fn [[ok? response]]
                  (put! c
                        (if ok?
