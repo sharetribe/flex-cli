@@ -4,6 +4,7 @@
             [sharetribe.flex-cli.commands.process.list :as process.list]
             [sharetribe.flex-cli.commands.process.pull :as process.pull]
             [sharetribe.flex-cli.commands.process.push :as process.push]
+            [sharetribe.flex-cli.commands.process.create :as process.create]
             [sharetribe.flex-cli.commands.process.create-alias :as process.create-alias]
             [sharetribe.flex-cli.commands.process.update-alias :as process.update-alias]
             [sharetribe.flex-cli.commands.process.delete-alias :as process.delete-alias]
@@ -43,6 +44,7 @@
           :sub-cmds [process.list/cmd
                      process.pull/cmd
                      process.push/cmd
+                     process.create/cmd
                      process.create-alias/cmd
                      process.update-alias/cmd
                      process.delete-alias/cmd]})
