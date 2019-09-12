@@ -7,6 +7,7 @@
   phrase {:mvn/version "0.3-alpha4"}
   borkdude/edamame {:mvn/version "0.0.3"}
   fipp {:mvn/version "0.6.18"}
+  aysylu/loom {:mvn/version "1.0.2"}
 
   ;; Requires xmlhttprequest from NPM
   cljs-ajax {:mvn/version "0.7.5"}}}

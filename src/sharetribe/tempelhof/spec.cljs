@@ -1,5 +1,7 @@
 (ns sharetribe.tempelhof.spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [loom.graph :as loom.graph]
+            [loom.alg :as loom.alg]))
 
 ;; Time expressions
 ;;
@@ -154,10 +156,25 @@
   (let [names (map :name transitions)]
     (= (count names) (count (set names)))))
 
+(defn- loom-graph
+  [transitions]
+  (let [edges (map (fn [{:keys [from to] :as transition}]
+                     [(or from ::initial-state) to])
+                   transitions)]
+    (apply loom.graph/digraph edges)))
+
+(defn all-states-reachable? [transitions]
+  (if (empty? transitions)
+    true
+    (let [g (loom-graph transitions)]
+      (= (loom.graph/nodes g)
+         (set (loom.alg/pre-traverse g ::initial-state))))))
+
 (s/def :tx-process/transitions
   (s/and
    (s/coll-of :tx-process/transition)
-   unique-transition-names?))
+   unique-transition-names?
+   all-states-reachable?))
 
 (s/def :tx-process.notification/name keyword?)
 (s/def :tx-process.notification/on keyword?)
