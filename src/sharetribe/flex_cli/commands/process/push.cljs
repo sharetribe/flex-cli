@@ -5,23 +5,8 @@
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]
-            [sharetribe.flex-cli.exception :as exception]
             [sharetribe.tempelhof.tx-process :as tx-process]
-            [sharetribe.flex-cli.commands.process.exception-util :as process.exception-util]))
-
-(defmethod exception/format-exception :process.push/api-call-failed [_ _ data]
-  (case (:code (api.client/api-error data))
-    :invalid-templates (process.exception-util/format-invalid-templates-error data)
-    (api.client/default-error-format data)))
-
-(defmethod exception/format-exception :process.push/missing-templates [_ _ {:keys [notifications]}]
-  [:span
-   (map (fn [{:keys [name template]}]
-          [:span process.exception-util/error-arrow
-           " Template " (.bold chalk (clojure.core/name template))
-           " not found for notification " (.bold chalk (clojure.core/name name))
-           :line])
-        notifications)])
+            [sharetribe.flex-cli.process-util :as process-util]))
 
 (declare push-process)
 
@@ -37,39 +22,18 @@
                   :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}]})
 
-(defn- ensure-process-dir! [path]
-  (when-not (io-util/process-dir? path)
-    (exception/throw! :command/invalid-args
-                      {:command :push
-                       :errors ["--path should be a process directory"]})))
-
-(defn- ensure-templates! [tx-process templates]
-  (let [process-tmpl-names (->> tx-process :notifications (map :template) set)
-        template-names (set (map :name templates))
-        extra-tmpls (set/difference template-names process-tmpl-names)
-        missing-templates (remove (fn [n]
-                                    (contains? template-names (:template n)))
-                                  (:notifications tx-process))]
-    (doseq [t extra-tmpls]
-      (io-util/ppd-err [:span
-                        (.bold.yellow chalk "Warning: ")
-                        "template exists but is not used in the process: "
-                        (.bold chalk (name t))]))
-    (when (seq missing-templates)
-      (exception/throw! :process.push/missing-templates {:notifications missing-templates}))))
-
 (defn push-process [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
          {:keys [process-name path]} params
 
-         _ (ensure-process-dir! path)
+         _ (process-util/ensure-process-dir! path)
 
          process-str (io-util/load-file (io-util/process-file-path path))
          templates (io-util/read-templates path)
 
          tx-process (tx-process/parse-tx-process-string process-str)
-         _ (ensure-templates! tx-process templates)
+         _ (process-util/ensure-templates! tx-process templates)
 
          query-params {:marketplace marketplace}
          body-params {:name (keyword process-name)
@@ -80,7 +44,7 @@
                (<? (do-post api-client "/processes/create-version" query-params body-params))
                (catch js/Error e
                  (throw
-                  (api.client/retype-ex e :process.push/api-call-failed))))]
+                  (api.client/retype-ex e :process.util/new-process-api-call-failed))))]
 
      (if (= :no-changes (-> res :meta :result))
        (io-util/ppd [:span "No changes"])
