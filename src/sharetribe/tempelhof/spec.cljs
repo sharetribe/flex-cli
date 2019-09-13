@@ -159,7 +159,7 @@
 
 (defn- loom-graph
   [transitions]
-  (let [edges (map (fn [{:keys [from to] :as transition}]
+  (let [edges (map (fn [{:keys [from to]}]
                      [(or from ::initial-state) to])
                    transitions)]
     (apply loom.graph/digraph edges)))
