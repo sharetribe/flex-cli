@@ -1,18 +1,16 @@
-(ns sharetribe.flex-cli.commands.process.push
-  (:require [clojure.set :as set]
-            [clojure.core.async :as async :refer [go <!]]
-            [chalk]
+(ns sharetribe.flex-cli.commands.process.create
+  (:require [clojure.core.async :as async :refer [go <!]]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]
             [sharetribe.tempelhof.tx-process :as tx-process]
             [sharetribe.flex-cli.process-util :as process-util]))
 
-(declare push-process)
+(declare create-process)
 
-(def cmd {:name "push"
-          :handler #'push-process
-          :desc "push a process file to the remote"
+(def cmd {:name "create"
+          :handler #'create-process
+          :desc "create a new transaction process"
           :opts [{:id :process-name
                   :long-opt "--process"
                   :required "PROCESS_NAME"
@@ -22,7 +20,7 @@
                   :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}]})
 
-(defn push-process [params ctx]
+(defn create-process [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
          {:keys [process-name path]} params
@@ -41,17 +39,16 @@
                       :templates templates}
 
          res (try
-               (<? (do-post api-client "/processes/create-version" query-params body-params))
+               (<? (do-post api-client "/processes/create" query-params body-params))
                (catch js/Error e
                  (throw
                   (api.client/retype-ex e :process.util/new-process-api-call-failed))))]
 
-     (if (= :no-changes (-> res :meta :result))
-       (io-util/ppd [:span "No changes"])
-       (io-util/ppd [:span
-                     "Version " (-> res :data :process/version str)
-                     " successfully saved for process " (-> res :data :process/name name)])))))
+     (io-util/ppd [:span
+                   "Process " (-> res :data :process/name name)
+                   " successfully created."]))))
 
 (comment
-  (sharetribe.flex-cli.core/main-dev-str "process push -m bike-soil --process preauth-with-nightly-booking --path test-process/process.edn")
+  (sharetribe.flex-cli.core/main-dev-str "process list -m bike-soil")
+  (sharetribe.flex-cli.core/main-dev-str "process create -m bike-soil --process new-process --path test-process")
   )
