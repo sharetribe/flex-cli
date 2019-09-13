@@ -1,5 +1,8 @@
 (ns sharetribe.tempelhof.spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [loom.graph :as loom.graph]
+            [loom.alg :as loom.alg]
+            [clojure.set :as set]))
 
 ;; Time expressions
 ;;
@@ -154,10 +157,34 @@
   (let [names (map :name transitions)]
     (= (count names) (count (set names)))))
 
+(defn- loom-graph
+  [transitions]
+  (let [edges (map (fn [{:keys [from to]}]
+                     [(or from ::initial-state) to])
+                   transitions)]
+    (apply loom.graph/digraph edges)))
+
+(defn- unreachable-states [g]
+  (if (empty? (loom.graph/nodes g))
+    #{}
+    (set/difference
+     (loom.graph/nodes g)
+     (set (loom.alg/pre-traverse g ::initial-state)))))
+
+(defn sorted-unreachable-states
+  "Returns unreachable states, sorted by their in-degree."
+  [transitions]
+  (let [g (loom-graph transitions)]
+    (sort-by #(loom.graph/in-degree g %) (unreachable-states g))))
+
+(defn all-states-reachable? [transitions]
+  (empty? (unreachable-states (loom-graph transitions))))
+
 (s/def :tx-process/transitions
   (s/and
    (s/coll-of :tx-process/transition)
-   unique-transition-names?))
+   unique-transition-names?
+   all-states-reachable?))
 
 (s/def :tx-process.notification/name keyword?)
 (s/def :tx-process.notification/on keyword?)

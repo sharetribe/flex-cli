@@ -77,6 +77,41 @@
       (is (= `tempelhof.spec/unique-transition-names? (:pred p)))
       (is (= [:transitions] (:in p)))))
 
+  (testing "unreachable states because graph is disconnected"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/request
+                                  :to :state/preauthorized
+                                  :actor :actor.role/customer}
+                                 {:name :transition/accept
+                                  :from :state/pending
+                                  :to :state/accepted
+                                  :actor :actor.role/provider}]}
+          problems (validate process)
+          p (first problems)]
+
+      (is (= 1 (count problems)))
+      (is (= `tempelhof.spec/all-states-reachable? (:pred p)))
+      (is (= [:transitions] (:in p)))))
+
+  (testing "unreachable states in connected graph because of directions"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/request
+                                  :to :state/preauthorized
+                                  :actor :actor.role/customer}
+                                 {:name :transition/accept
+                                  :from :state/preauthorized
+                                  :to :state/accepted
+                                  :actor :actor.role/provider}
+                                 {:name :transition/accept-pending
+                                  :from :state/pending
+                                  :to :state/accepted
+                                  :actor :actor.role/provider}]}
+          problems (validate process)
+          p (first problems)]
+
+      (is (= 1 (count problems)))
+      (is (= `tempelhof.spec/all-states-reachable? (:pred p)))
+      (is (= [:transitions] (:in p)))))
   )
 
 (deftest actions

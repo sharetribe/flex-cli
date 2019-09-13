@@ -120,6 +120,14 @@
              "You gave: " (invalid-val val) ".")
    :loc (find-first-loc tx-process problem)})
 
+(defphraser tempelhof.spec/all-states-reachable?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  (let [trs (:transitions tx-process)
+        state (first (tempelhof.spec/sorted-unreachable-states trs))
+        tr (first (filter #(= state (:from %)) trs))]
+    {:msg (str "Unreachable state: " state)
+     :loc (location tr)}))
+
 ;; Actions
 ;;
 
