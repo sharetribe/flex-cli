@@ -2,7 +2,7 @@
   (:require [clojure.core.async :as async :refer [go <!]]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.io-util :as io-util]
-            [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]
+            [sharetribe.flex-cli.api.client :as api.client :refer [do-multipart-post]]
             [sharetribe.tempelhof.tx-process :as tx-process]
             [sharetribe.flex-cli.process-util :as process-util]))
 
@@ -34,12 +34,13 @@
          _ (process-util/ensure-templates! tx-process templates)
 
          query-params {:marketplace marketplace}
-         body-params {:name (keyword process-name)
-                      :definition process-str
-                      :templates templates}
+         body-params (process-util/to-multipart-form-data
+                      {:name process-name
+                       :definition process-str
+                       :templates templates})
 
          res (try
-               (<? (do-post api-client "/processes/create" query-params body-params))
+               (<? (do-multipart-post api-client "/processes/create" query-params body-params))
                (catch js/Error e
                  (throw
                   (api.client/retype-ex e :process.util/new-process-api-call-failed))))]
