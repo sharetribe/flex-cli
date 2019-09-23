@@ -3,6 +3,7 @@
             [clojure.core.async :as async :refer [put! chan <! go]]
             [com.cognitect.transit.types :as ty]
             [chalk]
+            [goog.object]
             [sharetribe.flex-cli.config :as config]
             [sharetribe.flex-cli.cli-info :as cli-info]
             [sharetribe.flex-cli.exception :as exception]
@@ -137,6 +138,28 @@
                                         :query query}
                                        response))))
       :format (ajax/transit-request-format)
+      :response-format (ajax/transit-response-format)})
+    c))
+
+(defn do-multipart-post [client path query form-data]
+  (let [c (chan)]
+    (ajax/ajax-request
+     {:uri (str (config/value :api-base-url) path)
+      :method :post
+      :url-params query
+      :params form-data
+      :headers {"Authorization" (str "Apikey " (::api-key client))
+                "User-Agent" user-agent}
+      :handler (fn [[ok? response]]
+                 (put! c
+                       (if ok?
+                         response
+                         (handle-error {:client client
+                                        :path path
+                                        :query query}
+                                       response))))
+      :format {:write #(.getBuffer %)
+               :content-type (goog.object/get (.getHeaders form-data) "content-type")}
       :response-format (ajax/transit-response-format)})
     c))
 

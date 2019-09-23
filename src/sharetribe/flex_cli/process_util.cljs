@@ -1,6 +1,7 @@
 (ns sharetribe.flex-cli.process-util
   (:require [clojure.set :as set]
             [chalk]
+            [form-data :as FormData]
             [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.api.client :as api.client]
             [sharetribe.flex-cli.exception :as exception]))
@@ -83,3 +84,14 @@
                         (.bold chalk (name t))]))
     (when (seq missing-templates)
       (exception/throw! :process.util/missing-templates {:notifications missing-templates}))))
+
+(defn to-multipart-form-data [{:keys [name definition templates]}]
+  (reduce
+   (fn [form-data tmpl]
+     (doto form-data
+       (.append (str "template-html-" (clojure.core/name (:name tmpl))) (:html tmpl))
+       (.append (str "template-subject-" (clojure.core/name (:name tmpl))) (:subject tmpl))))
+   (doto (FormData.)
+     (.append "name" name)
+     (.append "definition" definition))
+   templates))
