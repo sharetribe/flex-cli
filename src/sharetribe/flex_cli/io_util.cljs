@@ -78,7 +78,7 @@
 (defn join
   "Join the given paths"
   [& parts]
-  (apply fs/path.join parts))
+  (apply fs/path.join (remove nil? parts)))
 
 (defn process-file-path [path]
   (join path process-filename))
