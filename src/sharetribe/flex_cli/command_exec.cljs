@@ -15,8 +15,7 @@
   [parse-result commands]
   (go
     (let [{:keys [handler no-api-key? options arguments]} parse-result
-          api-key (when-not no-api-key?
-                    (<! (credential-store/get-api-key)))
+          api-key (when-not no-api-key? (credential-store/get-api-key))
           ctx (cond-> {:commands commands
                        :options options
                        :arguments arguments}

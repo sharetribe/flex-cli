@@ -4,7 +4,8 @@
 
   Implementation heavily inspired by:
   https://github.com/oclif/config/blob/61371ac333599096696b3b651f7e55e7fac8d170/src/config.ts"
-  (:require [goog.object]))
+  (:require [goog.object]
+            [sharetribe.flex-cli.io-util :as io-util]))
 
 (def ^:const dirname "flex-cli")
 
@@ -60,14 +61,29 @@
                  (xdg-home-fallback category))]
     (io-util/join base dirname)))
 
+(defn- ensure-dir-exists! [category]
+  (io-util/mkdirp (dir category)))
+
+(defn- read [category file]
+  (let [path (io-util/join (dir category) file)]
+    (when (io-util/file? path)
+      (io-util/load-file path))))
+
+(defn- write [category file content]
+  (let [path (io-util/join (dir category) file)]
+    (ensure-dir-exists! category)
+    (io-util/save-file path content)))
+
 ;; Public API
 ;;
 
 (defn config-dir []
   (dir :config))
 
-(defn data-dir []
-  (dir :data))
+(defn read-config-file!
+  [file]
+  (read :config file))
 
-(defn cache-dir []
-  (dir :cache))
+(defn write-config-file!
+  [file content]
+  (write :config file content))
