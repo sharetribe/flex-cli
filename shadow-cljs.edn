@@ -5,12 +5,36 @@
  {:dev {:target :node-script
         :output-to "target/dev.js"
         :main sharetribe.flex-cli.core/main-dev
+        :compiler-options {:warnings
+                           {;; loom causes invalid-arithmetic warning
+                            ;; it's unlikely that this would happen in
+                            ;; our own code, so let's just disable it.
+                            :invalid-arithmetic false
+                            }}
         :devtools {:autoload true}}
   :min {:target :node-script
         :output-to "target/min.js"
+        :compiler-options {:warnings
+                           {;; loom causes invalid-arithmetic warning
+                            ;; it's unlikely that this would happen in
+                            ;; our own code, so let's just disable it.
+                            :invalid-arithmetic false
+                            }}
         :main sharetribe.flex-cli.core/main}
-  :test-once {:target    :node-test
+  :test-once {:target :node-test
+              :compiler-options {:warnings
+                                 {;; loom causes invalid-arithmetic warning
+                                  ;; it's unlikely that this would happen in
+                                  ;; our own code, so let's just disable it.
+                                  :invalid-arithmetic false
+                                  }}
               :output-to "target/test-once.js"}
-  :test-autorun {:target    :node-test
+  :test-autorun {:target :node-test
+                 :compiler-options {:warnings
+                                    {;; loom causes invalid-arithmetic warning
+                                     ;; it's unlikely that this would happen in
+                                     ;; our own code, so let's just disable it.
+                                     :invalid-arithmetic false
+                                     }}
                  :output-to "target/test-autorun.js"
-                 :autorun   true}}}
+                 :autorun true}}}
