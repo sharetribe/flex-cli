@@ -18,8 +18,9 @@
                            {;; loom causes invalid-arithmetic warning
                             ;; it's unlikely that this would happen in
                             ;; our own code, so let's just disable it.
-                            :invalid-arithmetic false
-                            }}
+                            :invalid-arithmetic false}
+                           :infer-externs :auto
+                           :warnings-as-errors true}
         :main sharetribe.flex-cli.core/main}
   :test-once {:target :node-test
               :compiler-options {:warnings
