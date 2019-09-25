@@ -5,10 +5,6 @@ jobs:
       - image: circleci/clojure:tools-deps-node
     steps:
       - checkout
-      - run:
-          name: Install deps
-          command: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
-
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
