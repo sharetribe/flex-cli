@@ -141,7 +141,7 @@
       :response-format (ajax/transit-response-format)})
     c))
 
-(defn do-multipart-post [client path query form-data]
+(defn do-multipart-post [client path query ^js form-data]
   (let [c (chan)]
     (ajax/ajax-request
      {:uri (str (config/value :api-base-url) path)
@@ -158,7 +158,7 @@
                                         :path path
                                         :query query}
                                        response))))
-      :format {:write #(.getBuffer %)
+      :format {:write (fn [^js form-data] (.getBuffer form-data))
                :content-type (goog.object/get (.getHeaders form-data) "content-type")}
       :response-format (ajax/transit-response-format)})
     c))
