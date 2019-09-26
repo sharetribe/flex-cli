@@ -12,6 +12,7 @@
             #_[cljs-time.coerce :refer [to-date-time]]
             [chalk]
             [inquirer]
+            [os]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
             ["mkdirp" :rename {sync mkdirp-sync}]
@@ -129,8 +130,19 @@
       (save-file (html-file-path path name-str) html)
       (save-file (subject-file-path path name-str) subject))))
 
+(defn- with-os-eol
+  "Takes string `str` with `\n` end-of-line markers and replaces them
+  with OS specific end-of-line markers."
+  [str]
+  (let [eol (.-EOL os)]
+    (if-not (= "\n" eol)
+      (str/replace str #"\n" eol)
+      str)))
+
 (defn write-process-file [path process-data]
-  (save-file (process-file-path path) process-data))
+  (save-file
+   (process-file-path path)
+   (with-os-eol process-data)))
 
 (defn write-process [path process]
   (write-process-file path (:process/process process))
