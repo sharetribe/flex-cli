@@ -40,6 +40,9 @@ jobs:
           paths:
             - ~/.m2
       - run:
+          name: Compile release build
+          command: yarn run release
+      - run:
           name: Run test suite
           command: yarn run test-run
 workflows:
