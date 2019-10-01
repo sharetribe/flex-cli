@@ -12,11 +12,11 @@
           :desc "fetch a process file"
           :opts [{:id :process-name
                   :long-opt "--process"
-                  :desc "name of the process that is fetched"
+                  :desc "name of the process that is pulled"
                   :required "PROCESS_NAME"
                   :missing "--process is required"}
                  {:id :version
-                  :desc "version of the process that is fetched"
+                  :desc "version of the process that is pulled"
                   :long-opt "--version"
                   :required "VERSION"}
                  {:id :alias
