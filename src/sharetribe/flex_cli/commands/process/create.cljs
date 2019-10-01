@@ -13,10 +13,12 @@
           :desc "create a new transaction process"
           :opts [{:id :process-name
                   :long-opt "--process"
+                  :desc "name for the new process that is created"
                   :required "PROCESS_NAME"
                   :missing "--process is required"}
                  {:id :path
                   :long-opt "--path"
+                  :desc "path to the directory where the process.edn file is"
                   :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}]})
 
