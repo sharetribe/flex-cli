@@ -12,19 +12,24 @@
           :desc "fetch a process file"
           :opts [{:id :process-name
                   :long-opt "--process"
-                  :required "[WIP] PROCESS_NAME"
+                  :desc "name of the process that is fetched"
+                  :required "PROCESS_NAME"
                   :missing "--process is required"}
                  {:id :version
+                  :desc "version of the process that is fetched"
                   :long-opt "--version"
-                  :required "[WIP] VERSION"}
+                  :required "VERSION"}
                  {:id :alias
+                  :desc "alias to a specific process version, e.g. release-1"
                   :long-opt "--alias"
-                  :required "[WIP] ALIAS"}
+                  :required "ALIAS"}
                  {:id :path
                   :long-opt "--path"
-                  :required "[WIP] LOCAL_PROCESS_DIR"
+                  :desc "path to the directory where the process should be saved"
+                  :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}
                  {:id :force
+                  :desc "force overwriting an existing process directory"
                   :long-opt "--force"}]})
 
 (defn- ensure-process-dir! [path force]

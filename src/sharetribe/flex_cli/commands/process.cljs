@@ -19,6 +19,7 @@
           :desc "describe a process file"
           :opts [{:id :path
                   :long-opt "--path"
+                  :desc "path to the directory where the process.edn file is"
                   :required "PROCESS_DIR"}
 
                  ;; Commented out. These are not yet implemented.
@@ -33,6 +34,7 @@
                   :required "[WIP] PROCESS_ALIAS"}
                  {:id :transition-name
                   :long-opt "--transition"
+                  :desc "transition name, e.g. transition/request to get more details of it"
                   :required "TRANSITION_NAME"}
 
                  ;; TODO I don't know what's the plan for getting the

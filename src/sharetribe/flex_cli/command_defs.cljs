@@ -10,7 +10,8 @@
   {:id :marketplace
    :long-opt "--marketplace"
    :short-opt "-m"
-   :required "MARKETPLACE IDENT"
+   :desc "marketplace identifier"
+   :required "MARKETPLACE_ID"
    :missing "--marketplace is required"})
 
 (def command-definitions

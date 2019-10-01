@@ -12,6 +12,7 @@
           :desc "list all transaction processes"
           :opts [{:id :process-name
                   :long-opt "--process"
+                  :desc "print version and alias info of a specific process"
                   :required "PROCESS_NAME"}]})
 
 (defn list-all-processes [api-client marketplace]

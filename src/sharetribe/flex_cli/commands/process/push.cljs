@@ -15,10 +15,12 @@
           :desc "push a process file to the remote"
           :opts [{:id :process-name
                   :long-opt "--process"
+                  :desc "name of the process that should be updated"
                   :required "PROCESS_NAME"
                   :missing "--process is required"}
                  {:id :path
                   :long-opt "--path"
+                  :desc "path to the directory with the new process files"
                   :required "LOCAL_PROCESS_DIR"
                   :missing "--path is required"}]})
 
