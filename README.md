@@ -34,7 +34,7 @@ flex-cli
 ## Documentation
 
 To get started with Flex CLI, see the [Getting started with Flex
-CLI](https://deploy-preview-177--sharetribe-flex-docs-site.netlify.com/docs/tutorials/getting-started-with-flex-cli/)
+CLI](https://www.sharetribe.com/docs/tutorials/getting-started-with-flex-cli/)
 tutorial in Flex Docs.
 
 ## Issues
