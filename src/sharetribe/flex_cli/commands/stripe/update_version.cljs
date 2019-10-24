@@ -28,18 +28,9 @@
                       {:command :update-version
                        :errors [(str "--version should be one of: " (str/join ", " supported-versions) ". Was " version ".")]})))
 
-(defn confirm! [force version]
-  (let [confirm (or force
-                    (:confirm (<! (io-util/prompt [{:name :confirm
-                                                    :type :confirm
-                                                    :default false
-                                                    :message (str "Updating Stripe API version to " version ".\n"
-                                                                  "Make sure you are handling Capabilities (https://stripe.com/docs/connect/capabilities-overview)\n"
-                                                                  "and identity verification (https://stripe.com/docs/connect/identity-verification)\n"
-                                                                  "in your front end as specified by your new API version.\n\n"
-                                                                  "Confirm?")}]))))]
-    (when-not confirm
-      (exception/throw! :command/not-confirmed "Stripe API version update not confirmed. Exiting.")) ))
+(defn ensure-confirmed! [confirm]
+  (when-not confirm
+    (exception/throw! :command/not-confirmed "Stripe API version update not confirmed. Exiting.")))
 
 (defn update-version [params ctx]
   (go-try
@@ -51,13 +42,21 @@
                                                      :choices supported-versions
                                                      :type :list
                                                      :message "Stripe API version"}]))))
-
          _ (ensure-valid-version! version)
-         _ (confirm! force version)
+
+         confirm (or force
+                     (:confirm (<! (io-util/prompt [{:name :confirm
+                                                     :type :confirm
+                                                     :default false
+                                                     :message (str "Updating Stripe API version to " version ".\n"
+                                                                   "Make sure you are handling Capabilities (https://stripe.com/docs/connect/capabilities-overview)\n"
+                                                                   "and identity verification (https://stripe.com/docs/connect/identity-verification)\n"
+                                                                   "in your front end as specified by your new API version.\n\n"
+                                                                   "Confirm?")}]))))
+         _ (ensure-confirmed! confirm)
 
          query-params {:marketplace marketplace}
          body-params {:version version}
-
          res (try
                (<? (do-post api-client "/stripe/update-version" query-params body-params))
                (catch js/Error e
@@ -65,4 +64,3 @@
                   (api.client/retype-ex e :stripe/update-api-version-failed))))]
 
      (io-util/ppd (str "Stripe API version successfully changed to " (-> res :data))))))
-
