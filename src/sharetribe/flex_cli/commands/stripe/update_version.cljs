@@ -8,13 +8,15 @@
 
 (declare update-version)
 
+(def ^:const supported-versions #{"2019-02-19" "2019-09-09"})
+
 (def cmd {:name "update-version"
           :handler #'update-version
           :desc "Update Stripe API version in use."
           :opts [{:id :version
                   :long-opt "--version"
                   :required "VERSION"
-                  :desc "Stripe API version to update to. One of 2019-02-19 or 2019-09-09."}
+                  :desc (str "Stripe API version to update to. One of: " (str/join ", " supported-versions) ".")}
                  {:id :force
                   :long-opt "--force"
                   :short-opt "-f"
@@ -24,7 +26,7 @@
   (when-not (#{"2019-02-19" "2019-09-09"} version)
     (exception/throw! :command/invalid-args
                       {:command :update-version
-                       :errors ["--version should be one of 2019-02-19 or 2019-09-09. Was: " version]})))
+                       :errors [(str "--version should be one of: " (str/join ", " supported-versions) ". Was " version ".")]})))
 
 (defn confirm! [force version]
   (let [confirm (or force
@@ -46,7 +48,7 @@
 
          version (or version
                      (:version (<! (io-util/prompt [{:name :version
-                                                     :choices ["2019-09-09" "2019-02-19"]
+                                                     :choices supported-versions
                                                      :type :list
                                                      :message "Stripe API version"}]))))
 
