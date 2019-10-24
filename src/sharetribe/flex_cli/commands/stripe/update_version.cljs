@@ -51,7 +51,7 @@
                                                      :message (str "Updating Stripe API version to " version ".\n"
                                                                    "Make sure you are handling Capabilities (https://stripe.com/docs/connect/capabilities-overview)\n"
                                                                    "and identity verification (https://stripe.com/docs/connect/identity-verification)\n"
-                                                                   "in your front end as specified by your new API version.\n\n"
+                                                                   "in your frontend as specified by your new API version.\n\n"
                                                                    "Confirm?")}]))))
          _ (ensure-confirmed! confirm)
 
