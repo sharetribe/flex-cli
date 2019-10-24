@@ -187,6 +187,38 @@
   {:msg "Invalid time expression."
    :loc (find-first-loc tx-process problem)})
 
+(defphraser tempelhof.spec/valid-transitions-in-transition-timepoints?
+  [{:keys [tx-process]} _]
+  (let [invalid-timepoints (tempelhof.spec/invalid-transitions-in-transition-timepoints tx-process)]
+    (map (fn [n]
+           {:msg (str "Invalid transition " (:ref n) " used in time expression of transition " (:source n) " :at")
+            :loc (location (:at n))})
+         invalid-timepoints)))
+
+(defphraser tempelhof.spec/valid-states-in-transition-timepoints?
+  [{:keys [tx-process]} _]
+  (let [invalid-timepoints (tempelhof.spec/invalid-states-in-transition-timepoints tx-process)]
+    (map (fn [n]
+           {:msg (str "Invalid state " (:ref n) " used in time expression of transition " (:source n) " :at")
+            :loc (location (:at n))})
+         invalid-timepoints)))
+
+(defphraser tempelhof.spec/valid-transitions-in-notification-timepoints?
+  [{:keys [tx-process]} _]
+  (let [invalid-timepoints (tempelhof.spec/invalid-transitions-in-notification-timepoints tx-process)]
+    (map (fn [n]
+           {:msg (str "Invalid transition " (:ref n) " used in time expression of notification " (:source n) " :at")
+            :loc (location (:at n))})
+         invalid-timepoints)))
+
+(defphraser tempelhof.spec/valid-states-in-notification-timepoints?
+  [{:keys [tx-process]} _]
+  (let [invalid-timepoints (tempelhof.spec/invalid-states-in-notification-timepoints tx-process)]
+    (map (fn [n]
+           {:msg (str "Invalid state " (:ref n) " used in time expression of notification " (:source n) " :at")
+            :loc (location (:at n))})
+         invalid-timepoints)))
+
 ;; Not sure if this is a good idea?... But if it is it should be moved
 ;; to a util lib.
 (def error-arrow (.bold.red chalk "\u203A"))

@@ -1,5 +1,6 @@
 (ns sharetribe.tempelhof.spec
   (:require [clojure.spec.alpha :as s]
+            [clojure.walk :as w]
             [loom.graph :as loom.graph]
             [loom.alg :as loom.alg]
             [clojure.set :as set]))
@@ -225,9 +226,102 @@
                  (map :on))]
     (every? #(names %) ons)))
 
+(defn state-names [process]
+  (->> (:transitions process)
+       (mapcat #((juxt :to :from) %))
+       (remove nil?)
+       set))
+
+(defn transition-names [process]
+  (set (map :name (:transitions process))))
+
+(defn invalid-timepoint-transitions [transitions time-exp]
+  (let [invalid-trs (atom [])]
+    (w/prewalk (fn [arg]
+                 (when-let [tr (and (map? arg)
+                                    (-> arg
+                                        :tx-process.time/timepoint-transition-name
+                                        :transition-name))]
+                   (when (not (contains? transitions tr))
+                     (swap! invalid-trs conj tr)))
+                 arg)
+               time-exp)
+    @invalid-trs))
+
+(defn invalid-timepoint-states [states time-exp]
+  (let [invalid-sts (atom [])]
+    (w/prewalk (fn [arg]
+                 (when-let [st (and (map? arg)
+                                    (-> arg
+                                        :tx-process.time/timepoint-state-name
+                                        :state-name))]
+                   (when (not (contains? states st))
+                     (swap! invalid-sts conj st)))
+                 arg)
+               time-exp)
+    @invalid-sts))
+
+(defn timepoint-error [ref source at]
+  {:ref ref
+   :source source
+   :at at})
+
+(defn invalid-transitions-in-transition-timepoints [process]
+  (let [tr-names (transition-names process)]
+    (mapcat (fn [{:keys [name at]}]
+              (some->> at
+                       (s/conform :tx-process.time/expression)
+                       (invalid-timepoint-transitions tr-names)
+                       (map #(timepoint-error % name at))))
+            (:transitions process))))
+
+(defn invalid-states-in-transition-timepoints [process]
+  (let [st-names (state-names process)]
+    (mapcat (fn [{:keys [name at]}]
+              (some->> at
+                       (s/conform :tx-process.time/expression)
+                       (invalid-timepoint-states st-names)
+                       (map #(timepoint-error % name at))))
+            (:transitions process))))
+
+(defn invalid-transitions-in-notification-timepoints [process]
+  (let [tr-names (transition-names process)]
+    (mapcat (fn [{:keys [name at]}]
+              (some->> at
+                       (s/conform :tx-process.time/expression)
+                       (invalid-timepoint-transitions tr-names)
+                       (map #(timepoint-error % name at))))
+            (:notifications process))))
+
+(defn invalid-states-in-notification-timepoints [process]
+  (let [st-names (state-names process)]
+    (mapcat (fn [{:keys [name at]}]
+              (some->> at
+                       (s/conform :tx-process.time/expression)
+                       (invalid-timepoint-states st-names)
+                       (map #(timepoint-error % name at))))
+            (:notifications process))))
+
+(defn valid-transitions-in-transition-timepoints? [process]
+  (empty? (invalid-transitions-in-transition-timepoints process)))
+
+(defn valid-states-in-transition-timepoints? [process]
+  (empty? (invalid-states-in-transition-timepoints process)))
+
+(defn valid-transitions-in-notification-timepoints? [process]
+  (empty? (invalid-transitions-in-notification-timepoints process)))
+
+(defn valid-states-in-notification-timepoints? [process]
+  (empty? (invalid-states-in-notification-timepoints process)))
+
 (s/def :tempelhof/tx-process
   (s/and
    (s/keys :req-un [:tx-process/format
                     :tx-process/transitions]
            :opt-un [:tx-process/notifications])
-   notification-on-is-valid-transition-name?))
+   notification-on-is-valid-transition-name?
+
+   valid-transitions-in-transition-timepoints?
+   valid-states-in-transition-timepoints?
+   valid-transitions-in-notification-timepoints?
+   valid-states-in-notification-timepoints?))
