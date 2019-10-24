@@ -15,9 +15,9 @@
    (->> cmds
         (remove :hidden?)
         (mapcat
-         (fn [{:keys [name desc sub-cmds]}]
+         (fn [{:keys [name desc sub-cmds handler]}]
            (concat
-            [[(str/join " " (conj parent-cmds name)) (or desc "")]]
+            (when handler [[(str/join " " (conj parent-cmds name)) (or desc "")]])
             (when sub-cmds
               (list-commands sub-cmds (conj parent-cmds name)))))))))
 

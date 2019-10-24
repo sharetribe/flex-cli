@@ -31,7 +31,8 @@
     (is (= {:process-name "nightly-booking"} (:options parse-result)))))
 
 (deftest params-coercion+validation
-  (let [cmd {:opts [{:id :number
+  (let [cmd {:handler ::process-list
+             :opts [{:id :number
                      :short-opt "-n"
                      :long-opt "--number"
                      :parse-fn #(js/parseInt %)

@@ -4,6 +4,7 @@
             [sharetribe.flex-cli.commands.help :as help]
             [sharetribe.flex-cli.commands.main :as main]
             [sharetribe.flex-cli.commands.process :as process]
+            [sharetribe.flex-cli.commands.stripe :as stripe]
             [sharetribe.flex-cli.commands.version :as version]))
 
 (def marketplace-opt
@@ -46,6 +47,7 @@
      :no-api-key? true
      :no-marketplace? true
      :handler logout/logout}
+    stripe/cmd
     process/cmd]})
 
 (defn- with-marketplace-opt [cmd]
