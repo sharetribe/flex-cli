@@ -191,7 +191,7 @@
   [{:keys [tx-process]} _]
   (let [invalid-timepoints (tempelhof.spec/invalid-transitions-in-transition-timepoints tx-process)]
     (map (fn [n]
-           {:msg (str "Invalid transition " (:ref n) " used in time expression of transition " (:source n) " :at")
+           {:msg (str "Unknown transition " (:ref n) " used in time expression of transition " (:source n) " :at")
             :loc (location (:at n))})
          invalid-timepoints)))
 
@@ -199,7 +199,7 @@
   [{:keys [tx-process]} _]
   (let [invalid-timepoints (tempelhof.spec/invalid-states-in-transition-timepoints tx-process)]
     (map (fn [n]
-           {:msg (str "Invalid state " (:ref n) " used in time expression of transition " (:source n) " :at")
+           {:msg (str "Unknown state " (:ref n) " used in time expression of transition " (:source n) " :at")
             :loc (location (:at n))})
          invalid-timepoints)))
 
@@ -207,7 +207,7 @@
   [{:keys [tx-process]} _]
   (let [invalid-timepoints (tempelhof.spec/invalid-transitions-in-notification-timepoints tx-process)]
     (map (fn [n]
-           {:msg (str "Invalid transition " (:ref n) " used in time expression of notification " (:source n) " :at")
+           {:msg (str "Unknown transition " (:ref n) " used in time expression of notification " (:source n) " :at")
             :loc (location (:at n))})
          invalid-timepoints)))
 
@@ -215,7 +215,7 @@
   [{:keys [tx-process]} _]
   (let [invalid-timepoints (tempelhof.spec/invalid-states-in-notification-timepoints tx-process)]
     (map (fn [n]
-           {:msg (str "Invalid state " (:ref n) " used in time expression of notification " (:source n) " :at")
+           {:msg (str "Unknown state " (:ref n) " used in time expression of notification " (:source n) " :at")
             :loc (location (:at n))})
          invalid-timepoints)))
 
