@@ -38,3 +38,6 @@
 (defmethod format-exception :command/invalid-args [_ _ {:keys [command errors]}]
   (str "Invalid arguments for command " (name command) ":\n"
        (apply str (interpose "\n" errors))))
+
+(defmethod format-exception :command/not-confirmed [_ _ _]
+  "Not confirmed. Aborting.")
