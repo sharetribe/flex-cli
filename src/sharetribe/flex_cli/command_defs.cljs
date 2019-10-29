@@ -4,6 +4,7 @@
             [sharetribe.flex-cli.commands.help :as help]
             [sharetribe.flex-cli.commands.main :as main]
             [sharetribe.flex-cli.commands.process :as process]
+            [sharetribe.flex-cli.commands.search-schema :as search-schema]
             [sharetribe.flex-cli.commands.stripe :as stripe]
             [sharetribe.flex-cli.commands.version :as version]))
 
@@ -48,7 +49,8 @@
      :no-marketplace? true
      :handler logout/logout}
     stripe/cmd
-    process/cmd]})
+    process/cmd
+    search-schema/cmd]})
 
 (defn- with-marketplace-opt [cmd]
   (if (:no-marketplace? cmd)
