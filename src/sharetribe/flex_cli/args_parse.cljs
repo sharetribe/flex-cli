@@ -41,22 +41,47 @@
   "
   [args cmd]
   (let [parse-result (tools.cli/parse-opts args (:opts cmd) :in-order true :strict true)
-        {:keys [options arguments errors]} parse-result]
+        {:keys [options arguments errors]} parse-result
+        sub-cmd (find-sub (:sub-cmds cmd) (first arguments))
+        finished? (or (empty? arguments)
+                      (:catch-all? cmd))]
 
-    (when errors
-      (exception/throw! :command/parse-error {:errors errors}))
+    (if finished?
 
-    (if (or (empty? arguments)
-            (:catch-all? cmd))
-      (if-let [handler (:handler cmd)]
-        {:handler handler
+      (cond
+        ;; Parsing is finished. There were parse errors. Throw.
+        (seq errors)
+        (exception/throw! :command/parse-error {:errors errors})
+
+        ;; Parsing is finished but we couldn't find command with a
+        ;; handler. Throw command not found.
+        (not (:handler cmd))
+        (exception/throw! :command/not-found {:arguments [(:name cmd)]})
+
+        ;; Parsing is finished, command found, no errors. Success!
+        :else
+        {:handler (:handler cmd)
          :no-api-key? (:no-api-key? cmd)
          :options options
-         :arguments arguments}
-        (exception/throw! :command/not-found {:arguments [(:name cmd)]}))
-      (if-let [sub-cmd (find-sub (:sub-cmds cmd) (first arguments))]
-        (recur (rest arguments) sub-cmd)
-        (exception/throw! :command/not-found {:arguments arguments})))))
+         :arguments arguments})
+
+      (cond
+        ;; Parsing is not finished, but we couldn't find matching
+        ;; subcommand. In addition, there were parse errors. Throw
+        ;; parse-error instead of command not found, because most
+        ;; likely the parse errors were the reason for the failuere.
+        (and (not sub-cmd)
+             errors)
+        (exception/throw! :command/parse-error {:errors errors})
+
+        ;; Parsing is not finished, but we couldn't find matching
+        ;; subcommand.
+        (not sub-cmd)
+        (exception/throw! :command/not-found {:arguments arguments})
+
+        ;; Continue parsing.
+        :else
+        (recur (rest arguments) sub-cmd)))))
 
 (s/def ::args coll?)
 
