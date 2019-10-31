@@ -92,14 +92,14 @@
 
 (defn body-params [params]
   (let [{:keys [key scope type default]} params]
-    {:key (keyword key)
-     :scope (keyword "dataSchema.scope" scope)
-     :valueType (keyword "dataSchema.type"
-                         (if (= "multi-enum" type) "enum" type))
-     :cardinality (if (= "multi-enum" type)
-                    :dataSchema.cardinality/many
-                    :dataSchema.cardinality/one)
-     :defaultValue default}))
+    (cond-> {:key (keyword key)
+             :scope (keyword "dataSchema.scope" scope)
+             :valueType (keyword "dataSchema.type"
+                                 (if (= "multi-enum" type) "enum" type))
+             :cardinality (if (= "multi-enum" type)
+                            :dataSchema.cardinality/many
+                            :dataSchema.cardinality/one)}
+      default (assoc :defaultValue default))))
 
 (defn set-search-schema [params ctx]
   (go-try
