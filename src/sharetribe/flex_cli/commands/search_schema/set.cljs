@@ -42,6 +42,9 @@
   (let [{:keys [key scope type default]} params
 
         errors (cond-> []
+                 (str/includes? key ".")
+                 (conj (str "--key can not include dots (.). Only top-level keys can be indexed."))
+
                  (not (contains? types type))
                  (conj (str "--type must be one of: " (str/join ", " types)))
 
@@ -118,5 +121,5 @@
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "help")
-  (sharetribe.flex-cli.core/main-dev-str "search set --key category --scope metadata --type long -m bike-soil --default 1")
+  (sharetribe.flex-cli.core/main-dev-str "search set --key complexValue.innerValue --scope metadata --type long -m bike-soil --default 1.0")
   )
