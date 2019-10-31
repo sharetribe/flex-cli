@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [type])
   (:require [clojure.core.async :as async :refer [go <!]]
             [clojure.string :as str]
+            [chalk]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]))
@@ -35,6 +36,9 @@
                   :desc "default value for search if value is not set"
                   :required "DEFAULT"}]})
 
+(defn bold [str]
+  (.bold chalk str))
+
 (def types #{"enum" "multi-enum" "boolean" "long" "text"})
 (def scopes #{"public" "metadata"})
 
@@ -46,20 +50,20 @@
                  (conj (str "--key can not include dots (.). Only top-level keys can be indexed."))
 
                  (not (contains? types type))
-                 (conj (str "--type must be one of: " (str/join ", " types)))
+                 (conj (str "--type must be one of: " (str/join ", " (map bold types))))
 
                  (not (contains? scopes scope))
-                 (conj (str "--scope must be one of: " (str/join ", " scopes)))
+                 (conj (str "--scope must be one of: " (str/join ", " (map bold scopes))))
 
                  (and default
                       (= "boolean" type)
                       (not (boolean? default)))
-                 (conj (str "--default must be boolean value when --type is boolean"))
+                 (conj (str "--default must be either " (bold "true") " or " (bold false) " when --type is boolean"))
 
                  (and default
                       (= "long" type)
                       (not (int? default)))
-                 (conj (str "--default must be integer value when --type is long")))]
+                 (conj (str "--default must be an integer value when --type is long")))]
 
     (when (seq errors)
       (exception/throw! :command/invalid-args {:command :set
