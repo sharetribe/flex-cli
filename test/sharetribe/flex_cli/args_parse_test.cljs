@@ -1,4 +1,4 @@
-(ns sharetribe.flex-cli.parse-test
+(ns sharetribe.flex-cli.args-parse-test
   (:require [sharetribe.flex-cli.args-parse :as parse]
             [cljs.test :as t :refer-macros [deftest is testing]]))
 
@@ -30,6 +30,55 @@
     (is (= ::process-list (:handler parse-result)))
     (is (= {:process-name "nightly-booking"} (:options parse-result)))))
 
+(deftest command-with-required-opts+subcommands
+  (let [marketplace-opt {:id :marketplace
+                         :long-opt "--marketplace"
+                         :short-opt "-m"
+                         :desc "marketplace identifier"
+                         :required "MARKETPLACE_ID"
+                         :missing "--marketplace is required"}
+        cmd {:sub-cmds [{:name "search"
+                         :opts [marketplace-opt]
+                         :handler ::search
+                         :sub-cmds [{:name "set"
+                                     :handler ::search-set
+                                     :opts [marketplace-opt]}]}]}
+        search-parse-result (parse/parse ["search" "--marketplace=bike-soil"] cmd)
+        search-set-parse-result (parse/parse ["search" "set" "--marketplace=bike-soil"] cmd)]
+
+    (is (= ::search (:handler search-parse-result)))
+    (is (= ::search-set (:handler search-set-parse-result)))))
+
+(deftest subcommand-run-with-options-for-parent-command
+
+  ;; Options that are set between the main command and the subcommand are ignored.
+  ;;
+  ;; Please note that the purpose of this test is to document the
+  ;; CURRENT behaviour. However, the current behaviour may not be the
+  ;; DESIRED behaviour. We could also throw if options were passed
+  ;; between main and subcommand, but the implementation of this was
+  ;; untrivial, thus we currently just ignore them.
+
+  (let [marketplace-opt {:id :marketplace
+                         :long-opt "--marketplace"
+                         :short-opt "-m"
+                         :desc "marketplace identifier"
+                         :required "MARKETPLACE_ID"
+                         :missing "--marketplace is required"}
+        cmd {:sub-cmds [{:name "search"
+                         :opts [marketplace-opt]
+                         :handler ::search
+                         :sub-cmds [{:name "set"
+                                     :handler ::search-set}]}]}
+        known-params-parse-result (parse/parse ["search" "--marketplace=bike-soil" "set"] cmd)
+        unknown-params-parse-result (parse/parse ["search" "--unknown=bike-soil" "set"] cmd)]
+
+    (is (= ::search-set (:handler known-params-parse-result)))
+    (is (= {} (:options known-params-parse-result)))
+
+    (is (= ::search-set (:handler unknown-params-parse-result)))
+    (is (= {} (:options unknown-params-parse-result)))))
+
 (deftest params-coercion+validation
   (let [cmd {:handler ::process-list
              :opts [{:id :number
@@ -42,7 +91,7 @@
                      :missing "Missing number"}]}]
     (testing "missing"
       (let [e (try
-                (parse/parse [""] cmd)
+                (parse/parse nil cmd)
                 (catch js/Error e e))]
         (is (= (:type (ex-data e)) :command/parse-error))
         (is (contains? (-> (ex-data e) :data :errors set) "Missing number"))))

@@ -1,7 +1,6 @@
 (ns sharetribe.flex-cli.api.client
   (:require [ajax.core :as ajax]
             [clojure.core.async :as async :refer [put! chan <! go]]
-            [com.cognitect.transit.types :as ty]
             [chalk]
             [goog.object]
             [sharetribe.flex-cli.config :as config]
