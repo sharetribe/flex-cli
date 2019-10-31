@@ -49,14 +49,14 @@
     (if finished?
 
       (cond
-        ;; Parsing is finished. There were parse errors. Throw.
-        (seq errors)
-        (exception/throw! :command/parse-error {:errors errors})
-
         ;; Parsing is finished but we couldn't find command with a
         ;; handler. Throw command not found.
         (not (:handler cmd))
         (exception/throw! :command/not-found {:arguments [(:name cmd)]})
+
+        ;; Parsing is finished. There were parse errors. Throw.
+        (seq errors)
+        (exception/throw! :command/parse-error {:errors errors})
 
         ;; Parsing is finished, command found, no errors. Success!
         :else
