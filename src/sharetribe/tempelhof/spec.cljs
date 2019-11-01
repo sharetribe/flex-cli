@@ -107,6 +107,8 @@
                     :action/calculate-tx-two-units-total-price
                     :action/calculate-tx-provider-commission
                     :action/calculate-tx-customer-commission
+                    :action/calculate-tx-provider-fixed-commission
+                    :action/calculate-tx-customer-fixed-commission
                     :action/calculate-full-refund
                     :action/set-line-items-and-total
                     :action/set-negotiated-total-price
