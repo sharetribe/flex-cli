@@ -20,6 +20,8 @@
 
 (def ^:const process-filename "process.edn")
 (def ^:const templates-dir "templates")
+(def ^:const template-subject-suffix "-subject.txt")
+(def ^:const template-html-suffix "-html.html")
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
@@ -94,10 +96,16 @@
   (join (templates-path path) template-name))
 
 (defn html-file-path [path template-name]
-  (join (template-path path template-name) (str template-name "-html.html")))
+  (join (template-path path template-name) (str template-name template-html-suffix)))
 
 (defn subject-file-path [path template-name]
-  (join (template-path path template-name) (str template-name "-subject.txt")))
+  (join (template-path path template-name) (str template-name template-subject-suffix)))
+
+(defn read-template [tmpl-path]
+  (let [name (-> tmpl-path fs/path.parse .-name)]
+    {:name (keyword name)
+     :html (load-file (join tmpl-path (str name template-html-suffix)))
+     :subject (load-file (join tmpl-path (str name template-subject-suffix)))}))
 
 (defn read-templates [path]
   (let [tmpls-path (templates-path path)]
