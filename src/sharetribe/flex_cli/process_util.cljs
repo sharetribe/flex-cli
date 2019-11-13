@@ -44,6 +44,10 @@
       :line]
      (map-indexed (partial template-error-report total-errors) errors))))
 
+(defn format-invalid-template-error [data]
+  (let [error (-> (api.client/api-error data) :details :render-error)]
+    (template-error-report 1 0 error)))
+
 (defn- format-process-exists-error [data]
   [:span error-arrow
    " Process already exists: "
