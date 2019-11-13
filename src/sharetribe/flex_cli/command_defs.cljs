@@ -6,7 +6,8 @@
             [sharetribe.flex-cli.commands.process :as process]
             [sharetribe.flex-cli.commands.search-schema :as search-schema]
             [sharetribe.flex-cli.commands.stripe :as stripe]
-            [sharetribe.flex-cli.commands.version :as version]))
+            [sharetribe.flex-cli.commands.version :as version]
+            [sharetribe.flex-cli.commands.notifications :as notifications]))
 
 (def marketplace-opt
   {:id :marketplace
@@ -50,7 +51,8 @@
      :handler logout/logout}
     stripe/cmd
     process/cmd
-    search-schema/cmd]})
+    search-schema/cmd
+    notifications/cmd]})
 
 (defn- with-marketplace-opt [cmd]
   (if (:no-marketplace? cmd)
