@@ -29,21 +29,17 @@
 (defn bold [str]
   (.bold chalk str))
 
-(defn parse-context [s]
-  ;; TODO: add try catch and custom error message
-  (js->clj (.parse js/JSON s) :keywordize-keys true))
-
-(defn load-context! [path]
-  (let [context-str (io-util/load-file path)]
-    (-> context-str
-        parse-context
-        context-validation/validate!)
-    context-str))
-
 (defmethod exception/format-exception :notifications.preview/api-call-failed [_ _ data]
   (case (:code (api.client/api-error data))
     :invalid-template (process-util/format-invalid-template-error data)
     (api.client/default-error-format data)))
+
+(defn load-context! [path]
+  (let [context-str (io-util/load-file path)]
+    (-> context-str
+        context-validation/parse!
+        context-validation/validate!)
+    context-str))
 
 (defn open-tmp-file! [{:keys [subject html]}]
   (let [file (tmp/fileSync (clj->js {:keep true
