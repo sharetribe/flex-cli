@@ -6,6 +6,7 @@
             [sharetribe.flex-cli.process-util :as process-util]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]
             [sharetribe.flex-cli.exception :as exception]
+            [sharetribe.flex-cli.context-validation :as context-validation]
             [chalk]
             [tmp]
             [open]))
@@ -27,6 +28,17 @@
 
 (defn bold [str]
   (.bold chalk str))
+
+(defn parse-context [s]
+  ;; TODO: add try catch and custom error message
+  (js->clj (.parse js/JSON s) :keywordize-keys true))
+
+(defn load-context! [path]
+  (let [context-str (io-util/load-file path)]
+    (-> context-str
+        parse-context
+        context-validation/validate!)
+    context-str))
 
 (defmethod exception/format-exception :notifications.preview/api-call-failed [_ _ data]
   (case (:code (api.client/api-error data))
@@ -50,8 +62,10 @@
    (let [{:keys [api-client marketplace]} ctx
          {:keys [template context]} params
          tmpl (io-util/read-template template)
+         template-context (when context
+                            (load-context! context))
          body (cond-> {:template tmpl}
-                context (assoc :template-context (io-util/load-file context)))
+                template-context (assoc :template-context template-context))
          res (try
                (<? (do-post api-client
                             "/notifications/preview"
