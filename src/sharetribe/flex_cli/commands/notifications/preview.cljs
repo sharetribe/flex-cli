@@ -72,21 +72,19 @@
   (let [{:keys [api-client marketplace template context]} opts
         query-params {:marketplace marketplace}
         body-params (cond-> {:template (io-util/read-template template)}
-                      context (assoc :template-context (io-util/load-file context)))
-        c (chan)]
+                      context (assoc :template-context (io-util/load-file context)))]
     (println "Fetching a new preview...")
-    (go-try
-     (try
-       (let [res (<? (do-post api-client
-                              "/notifications/preview"
-                              query-params
-                              body-params))]
-         (>! c {:template (:data res)
-                :error nil}))
-       (catch js/Error e
-         (>! c {:template nil
-                :error e}))))
-    c))
+    (go
+      (try
+        (let [res (<? (do-post api-client
+                               "/notifications/preview"
+                               query-params
+                               body-params))]
+          {:template (:data res)
+           :error nil})
+        (catch js/Error e
+          {:template nil
+           :error e})))))
 
 (defn handle-error [^js res error]
   (let [data (exception/data error)
