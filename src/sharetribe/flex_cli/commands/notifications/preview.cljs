@@ -33,6 +33,14 @@
 
 (def preview-server (atom nil))
 
+(defn close-preview-server! [server]
+  (let [c (chan)]
+    (go
+      (when server
+        (println "Closing preview server")
+        (.close server #(close! c))
+        (<! c)))))
+
 (defn start-preview-server!
   "Start a new preview server
 
@@ -40,14 +48,12 @@
   for requests with the new one. Returns a channel that closes when
   the new server is listening for requests."
   [request-handler]
-  (let [close-chan (chan)
-        listening-chan (chan)
+  (println "Starting preview server")
+  (let [listening-chan (chan)
         server (.createServer http request-handler)]
     (go
-      (when-let [s @preview-server]
-        (reset! preview-server server)
-        (.close s #(close! close-chan))
-        (<! close-chan))
+      (<! (close-preview-server! @preview-server))
+      (reset! preview-server server)
       (.listen server port #(close! listening-chan))
       (<! listening-chan))))
 
@@ -73,7 +79,7 @@
         query-params {:marketplace marketplace}
         body-params (cond-> {:template (io-util/read-template template)}
                       context (assoc :template-context (io-util/load-file context)))]
-    (println "Fetching a new preview...")
+    (println "Fetching a new preview")
     (go
       (try
         (let [res (<? (do-post api-client
@@ -138,15 +144,17 @@
               :template template
               :context context}]
     (.on js/process "SIGINT" (fn [_]
-                               (close! done-chan)))
+                               (go
+                                 (<! (close-preview-server! @preview-server))
+                                 (close! done-chan))))
     (go
       (<! (start-preview-server! (create-preview-request-handler opts)))
 
-      (println "Opening preview HTML in a browser.")
+      (println "Opening preview HTML in a browser")
       (open preview-server-url)
 
       (<! done-chan)
-      (println "Preview server closed."))))
+      (println "Preview server closed"))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "notifications preview -m bike-soil --template test-process/templates/booking-request-accepted --context test-process/sample-context.json")
