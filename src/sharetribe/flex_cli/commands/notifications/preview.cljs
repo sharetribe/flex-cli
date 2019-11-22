@@ -29,8 +29,8 @@
 ;; Some random port where the preview server is opened. Should not
 ;; clash with other common Flex tooling.
 (def port 3535)
-(def preview-server-url (str "http://localhost:" port))
 
+(def preview-server-url (str "http://localhost:" port))
 (def preview-server (atom nil))
 
 (defn close-preview-server! [server]
@@ -66,7 +66,7 @@
 (defn format-template [{:keys [subject text] :as template}]
   (str (.bold chalk "Template: ") (name (:name template))
        (.bold chalk "\nSubject: ") subject
-       (.bold chalk "\nText:\n") text
+       (.bold chalk "\nPlain text content:\n") text
        "\n---\n"
        "See " preview-server-url " for the HTML preview. "
        "Refresh the browser to reload the template and render a new preview. "
@@ -79,13 +79,15 @@
         query-params {:marketplace marketplace}
         body-params (cond-> {:template (io-util/read-template template)}
                       context (assoc :template-context (io-util/load-file context)))]
-    (println "Fetching a new preview")
+    (println "================================================")
+    (println "Fetching a new preview...")
     (go
       (try
         (let [res (<? (do-post api-client
                                "/notifications/preview"
                                query-params
                                body-params))]
+          (println "Preview fetched\n")
           {:template (:data res)
            :error nil})
         (catch js/Error e

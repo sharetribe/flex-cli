@@ -43,7 +43,7 @@
                  (throw
                   (api.client/retype-ex e :notifications.send/api-call-failed))))
          {:keys [admin-email] :as tmpl} (:data res)]
-     (println "Sent a preview to" admin-email))))
+     (println "Preview successfully sent to" admin-email))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "notifications send -m bike-soil --template test-process/templates/booking-request-accepted --context test-process/sample-context.json")
