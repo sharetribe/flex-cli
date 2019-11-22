@@ -31,9 +31,8 @@
     "form-data": "^2.5.1",
     "inquirer": "^6.2.2",
     "mkdirp": "^0.5.1",
-    "open": "^7.0.0",
+    "open": "6.4.0",
     "rimraf": "^3.0.0",
-    "tmp": "^0.1.0",
     "xmlhttprequest": "^1.8.0"
   }
 }
