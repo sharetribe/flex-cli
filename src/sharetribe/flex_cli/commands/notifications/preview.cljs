@@ -62,7 +62,9 @@
        (.bold chalk "\nSubject: ") subject
        (.bold chalk "\nText:\n") text
        "\n---\n"
-       "See " preview-server-url " for the HTML preview. Refresh the browser to preview again. Type <Ctrl>+C to quit."))
+       "See " preview-server-url " for the HTML preview. "
+       "Refresh the browser to reload the template and render a new preview. "
+       "Type <Ctrl>+C to quit."))
 
 (defn fetch-preview!
   "Fetch a template preview"
