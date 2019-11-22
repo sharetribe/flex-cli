@@ -86,7 +86,7 @@
           {:template nil
            :error e})))))
 
-(defn handle-error [^js res error]
+(defn handle-error [error]
   (let [data (exception/data error)
         {:keys [out msg]} (case (:code (api.client/api-error data))
                             :invalid-template
@@ -101,32 +101,33 @@
     (io-util/ppd-err (str "Fix the errors above and refresh "
                           preview-server-url
                           " in the browser to continue. Type <Ctrl>+C to quit."))
-    (set! (.-statusCode res) 400)
-    (doto res
-      (.setHeader "Content-Type" "text/html")
-      (.end error-html))))
+    {:status 400
+     :content-type "text/html"
+     :body error-html}))
 
-(defn handle-success [^js res template]
+(defn handle-success [template]
   (println (format-template template))
-  (set! (.-statusCode res) 200)
-  (doto res
-    (.setHeader "Content-Type" "text/html")
-    (.write (inject-title template))
-    (.end)))
-
-(defn handle-not-found [^js res]
-  (set! (.-statusCode res) 404)
-  (.end res))
+  {:status 200
+   :content-type "text/html"
+   :body (inject-title template)})
 
 (defn create-preview-request-handler [opts]
-  (fn [req res]
-    (if (= "/" (.-url req))
-      (go
-        (let [{:keys [template error]} (<! (fetch-preview! opts))]
-          (if error
-            (handle-error res error)
-            (handle-success res template))))
-      (handle-not-found res))))
+  (let [response (fn [^js res opts]
+                   (let [{:keys [status content-type body]} opts]
+                     (set! (.-statusCode res) status)
+                     (when content-type
+                       (.setHeader res "Content-Type" content-type))
+                     (when body
+                       (.write res body))
+                     (.end res)))]
+    (fn [req res]
+      (if (= "/" (.-url req))
+        (go
+          (let [{:keys [template error]} (<! (fetch-preview! opts))]
+            (response res (if error
+                            (handle-error error)
+                            (handle-success template)))))
+        (response res {:status 404})))))
 
 (defn preview [params ctx]
   (let [{:keys [api-client marketplace]} ctx
