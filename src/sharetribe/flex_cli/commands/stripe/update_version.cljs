@@ -8,7 +8,9 @@
 
 (declare update-version)
 
-(def ^:const supported-versions #{"2019-02-19" "2019-09-09"})
+;; Order matters, keep the newest version first in the vector
+;; Prompt shows options in order
+(def ^:const supported-versions ["2019-12-03" "2019-09-09" "2019-02-19"])
 
 (def cmd {:name "update-version"
           :handler #'update-version
