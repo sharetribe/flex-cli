@@ -25,7 +25,7 @@
                   :desc "Force Stripe API version update without confirmation."}]})
 
 (defn ensure-valid-version! [version]
-  (when-not (#{"2019-02-19" "2019-09-09"} version)
+  (when-not ((set supported-versions) version)
     (exception/throw! :command/invalid-args
                       {:command :update-version
                        :errors [(str "--version should be one of: " (str/join ", " supported-versions) ". Was " version ".")]})))
