@@ -77,6 +77,7 @@
 (s/def :tx-process.transition/name keyword?)
 (s/def :tx-process.transition/from keyword?)
 (s/def :tx-process.transition/to keyword?)
+(s/def :tx-process.transition/privileged? boolean?)
 
 ;; Note: We may want to force migration to single actor by saying that
 ;;
@@ -153,7 +154,8 @@
                  :opt-un [:tx-process.transition/actions
                           :tx-process.transition/actor
                           :tx-process.transition/at
-                          :tx-process.transition/from])
+                          :tx-process.transition/from
+                          :tx-process.transition/privileged?])
          transition-has-either-actor-or-at?))
 
 (defn unique-transition-names? [transitions]

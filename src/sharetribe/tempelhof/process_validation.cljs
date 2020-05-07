@@ -83,6 +83,12 @@
              "You gave: " (invalid-val val))
    :loc (find-first-loc tx-process problem)})
 
+(defphraser boolean?
+  [{:keys [tx-process]} {:keys [val] :as problem}]
+  {:msg (str "Invalid " (config-type problem) ". "
+             (invalid-key problem) " must be a boolean value true or false. "
+             "You gave: " (invalid-val val))
+   :loc (find-first-loc tx-process problem)})
 
 ;; Process
 ;;
