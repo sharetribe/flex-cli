@@ -77,9 +77,15 @@
     (io-util/print-table ks (map format-state states)))
   (println) (println))
 
-(defn- format-transition [transition]
+(defn- format-actor [actor privileged?]
+  (let [actor-role (io-util/kw->title actor)]
+    (if privileged?
+      (str actor-role " (privileged transition)")
+      actor-role)))
+
+(defn- format-transition [{:keys [privileged?] :as transition}]
   (-> transition
-      (update :actor io-util/kw->title)
+      (update :actor format-actor privileged?)
       (update :name io-util/namespaced-str)
       (update :from io-util/namespaced-str)
       (update :to io-util/namespaced-str)

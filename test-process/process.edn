@@ -3,7 +3,8 @@
  [{:name :transition/enquire,
    :actor :actor.role/customer,
    :actions [],
-   :to :state/enquiry}
+   :to :state/enquiry
+   :privileged? true}
   {:name :transition/request-payment,
    :actor :actor.role/customer,
    :actions
