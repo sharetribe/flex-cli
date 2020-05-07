@@ -93,43 +93,49 @@
 ;;                               :into #{})))
 
 
-(def action-names #{:action.initializer/init-listing-tx
-                    :action/create-booking
-                    :action/accept-booking
-                    :action/decline-booking
-                    :action/cancel-booking
-                    :action/calculate-tx-total ;; backward compatibility
-                    :action/calculate-tx-daily-total ;; deprecated
-                    :action/calculate-tx-nightly-total ;;deprecated
-                    :action/calculate-tx-daily-total-price
-                    :action/calculate-tx-nightly-total-price
-                    :action/calculate-tx-total-daily-booking-exclude-start
-                    :action/calculate-tx-unit-total-price
-                    :action/calculate-tx-two-units-total-price
-                    :action/calculate-tx-provider-commission
-                    :action/calculate-tx-customer-commission
-                    :action/calculate-tx-provider-fixed-commission
-                    :action/calculate-tx-customer-fixed-commission
-                    :action/calculate-full-refund
-                    :action/set-line-items-and-total
-                    :action/set-negotiated-total-price
-                    :action/post-review-by-customer
-                    :action/post-review-by-provider
-                    :action/publish-reviews
-                    :action/reveal-customer-protected-data
-                    :action/reveal-provider-protected-data
-                    :action/stripe-create-charge
-                    :action/stripe-create-charge-pi
-                    :action/stripe-create-payment-intent
-                    :action/stripe-confirm-payment-intent
-                    :action/stripe-capture-payment-intent
-                    :action/stripe-capture-charge
-                    :action/stripe-capture-charge-pi
-                    :action/stripe-refund-charge
-                    :action/stripe-refund-payment
-                    :action/stripe-create-payout
-                    :action/update-protected-data
-                    :action/fail})
+(def privileged-action-names #{:action/privileged-set-line-items})
+
+(def nonprivileged-action-names #{:action.initializer/init-listing-tx
+                                  :action/create-booking
+                                  :action/accept-booking
+                                  :action/decline-booking
+                                  :action/cancel-booking
+                                  :action/privileged-set-line-items
+                                  :action/calculate-tx-total ;; backward compatibility
+                                  :action/calculate-tx-daily-total ;; deprecated
+                                  :action/calculate-tx-nightly-total ;;deprecated
+                                  :action/calculate-tx-daily-total-price
+                                  :action/calculate-tx-nightly-total-price
+                                  :action/calculate-tx-total-daily-booking-exclude-start
+                                  :action/calculate-tx-unit-total-price
+                                  :action/calculate-tx-two-units-total-price
+                                  :action/calculate-tx-provider-commission
+                                  :action/calculate-tx-customer-commission
+                                  :action/calculate-tx-provider-fixed-commission
+                                  :action/calculate-tx-customer-fixed-commission
+                                  :action/calculate-full-refund
+                                  :action/set-line-items-and-total
+                                  :action/set-negotiated-total-price
+                                  :action/post-review-by-customer
+                                  :action/post-review-by-provider
+                                  :action/publish-reviews
+                                  :action/reveal-customer-protected-data
+                                  :action/reveal-provider-protected-data
+                                  :action/stripe-create-charge
+                                  :action/stripe-create-charge-pi
+                                  :action/stripe-create-payment-intent
+                                  :action/stripe-confirm-payment-intent
+                                  :action/stripe-capture-payment-intent
+                                  :action/stripe-capture-charge
+                                  :action/stripe-capture-charge-pi
+                                  :action/stripe-refund-charge
+                                  :action/stripe-refund-payment
+                                  :action/stripe-create-payout
+                                  :action/update-protected-data
+                                  :action/fail})
+
+(def action-names (set/union privileged-action-names
+                             nonprivileged-action-names))
 
 (defn known-action-name? [name] (contains? action-names name))
 
@@ -148,6 +154,20 @@
   (or (and (:actor transition) (not (:at transition)))
       (and (not (:actor transition)) (:at transition))))
 
+(defn privileged-actions [transition]
+  (set/intersection
+   privileged-action-names
+   (->> transition
+        :actions
+        (map :name)
+        set)))
+
+(defn transition-is-privileged-if-privileged-actions?
+  [transition]
+  (let [privileged? (:privileged? transition)]
+    (or privileged?
+        (empty? (privileged-actions transition)))))
+
 (s/def :tx-process/transition
   (s/and (s/keys :req-un [:tx-process.transition/name
                           :tx-process.transition/to]
@@ -156,7 +176,8 @@
                           :tx-process.transition/at
                           :tx-process.transition/from
                           :tx-process.transition/privileged?])
-         transition-has-either-actor-or-at?))
+         transition-has-either-actor-or-at?
+         transition-is-privileged-if-privileged-actions?))
 
 (defn unique-transition-names? [transitions]
   (let [names (map :name transitions)]
