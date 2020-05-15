@@ -14,15 +14,15 @@
 
 (def cmd {:name "update-version"
           :handler #'update-version
-          :desc "Update Stripe API version in use."
+          :desc "update Stripe API version in use"
           :opts [{:id :version
                   :long-opt "--version"
                   :required "VERSION"
-                  :desc (str "Stripe API version to update to. One of: " (str/join ", " supported-versions) ".")}
+                  :desc (str "Stripe API version to update to. One of: " (str/join ", " supported-versions))}
                  {:id :force
                   :long-opt "--force"
                   :short-opt "-f"
-                  :desc "Force Stripe API version update without confirmation."}]})
+                  :desc "force Stripe API version update without confirmation"}]})
 
 (defn ensure-valid-version! [version]
   (when-not ((set supported-versions) version)
