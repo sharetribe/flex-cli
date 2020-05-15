@@ -36,7 +36,7 @@
 (defn query-listing-approval [_ ctx]
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
-     (let [res (<? (do-get api-client "/listing-approval/query" {:marketplace marketplace}))]
+     (let [res (<? (do-get api-client "/marketplace/show" {:marketplace marketplace}))]
        (if (-> res :data :marketplace/requireListingApproval)
          (println "Listing approvals are enabled in" marketplace)
          (println "Listing approvals are disabled in" marketplace))))))
