@@ -45,7 +45,11 @@
 
   (testing "minimal valid transition with at"
     (let [process {:format :v3
-                   :transitions [{:name :transition/request
+                   :transitions [{:name :transition/init
+                                  :to :state/init
+                                  :actor :actor.role/customer}
+                                 {:name :transition/request
+                                  :from :state/init
                                   :to :state/preauthorized
                                   :at {:fn/timepoint [:time/booking-end]}}]}]
       (is (nil? (validate process)))))
@@ -112,6 +116,62 @@
       (is (= 1 (count problems)))
       (is (= `tempelhof.spec/all-states-reachable? (:pred p)))
       (is (= [:transitions] (:in p)))))
+
+  (testing "initial transition actor"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/request
+                                  :to :state/preauthorized
+                                  :actor :actor.role/customer}
+                                 {:name :transition/offer
+                                  :to :state/offer
+                                  :actor :actor.role/provider}]}
+          problems (validate process)
+          p (first problems)]
+
+      (is (= 1 (count problems)))
+      (is (= `tempelhof.spec/valid-initial-transition-actor? (:pred p)))))
+
+  (testing "trusted context required"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/request
+                                  :to :state/preauthorized
+                                  :actor :actor.role/customer
+                                  :actions [{:name :action/accept-booking}
+                                            {:name :action/privileged-set-line-items}
+                                            {:name :action/decline-booking}
+                                            {:name :action/cancel-booking}]}]}
+          problems (validate process)
+          p (first problems)]
+      (is (= 1 (count problems)))
+      (is (= `tempelhof.spec/transition-with-trusted-context-if-privileged-actions? (:pred p)))
+      (is (= [:transitions 0] (:in p)))))
+
+  (testing "privileged transition is trusted context"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/request
+                                  :to :state/preauthorized
+                                  :actor :actor.role/customer
+                                  :privileged? true
+                                  :actions [{:name :action/accept-booking}
+                                            {:name :action/privileged-set-line-items}
+                                            {:name :action/decline-booking}
+                                            {:name :action/cancel-booking}]}]}]
+      (is (nil? (validate process)))))
+
+  (testing "operator transition is trusted context"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/init
+                                  :actor :actor.role/customer
+                                  :to :state/init}
+                                 {:name :transition/request
+                                  :from :state/init
+                                  :to :state/preauthorized
+                                  :actor :actor.role/operator
+                                  :actions [{:name :action/accept-booking}
+                                            {:name :action/privileged-set-line-items}
+                                            {:name :action/decline-booking}
+                                            {:name :action/cancel-booking}]}]}]
+      (is (nil? (validate process)))))
   )
 
 (deftest actions

@@ -134,12 +134,12 @@
     {:msg (str "Unreachable state: " state)
      :loc (location tr)}))
 
-(defphraser tempelhof.spec/transition-is-privileged-if-privileged-actions?
+(defphraser tempelhof.spec/transition-with-trusted-context-if-privileged-actions?
   [{:keys [tx-process]} {:keys [val] :as problems}]
   (let [offending-actions (tempelhof.spec/privileged-actions val)]
     {:msg (str "Invalid transition " (:name val)
-               ".\nActions that require privileged context have been defined but the transition is not marked as privileged"
-               ". Add :privileged? true to transition properties."
+               ".\nActions that require trusted context have been defined but the transition is not marked as privileged"
+               ". Either add :privileged? true to transition properties or set actor to :actor.role/operator."
                "\nActions that require privileged context are: "
                (str/join ", " offending-actions))
      :loc (location val)}))
@@ -151,6 +151,7 @@
   [{:keys [tx-process]} {:keys [val] :as problem}]
   {:msg (str "Unknown action name: " (invalid-val val) ". Available actions are:\n"
              (->> tempelhof.spec/action-names
+                  sort
                   (map #(str "  " %))   ; Padding
                   (str/join "\n")))     ; Print one per line
    :loc (find-first-loc tx-process problem)})
@@ -234,6 +235,18 @@
            {:msg (str "Unknown state " (:ref n) " used in time expression of notification " (:source n) " :at")
             :loc (location (:at n))})
          invalid-timepoints)))
+
+;; Actor validation
+;;
+
+(defphraser tempelhof.spec/valid-initial-transition-actor?
+  [{:keys [tx-process]} _]
+  (let [invalid-transitions (tempelhof.spec/invalid-actor-in-initial-transitions tx-process)]
+    (map (fn [t]
+           {:msg (str "Invalid transition " (:name t) ". "
+                      "The value of :actor must be :actor.role/customer for all initial transitions.")
+            :loc (location t)})
+         invalid-transitions)))
 
 ;; Not sure if this is a good idea?... But if it is it should be moved
 ;; to a util lib.

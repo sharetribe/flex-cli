@@ -93,7 +93,8 @@
 ;;                               :into #{})))
 
 
-(def privileged-action-names #{:action/privileged-set-line-items})
+(def privileged-action-names #{:action/privileged-set-line-items
+                               :action/privileged-update-metadata})
 
 (def nonprivileged-action-names #{:action.initializer/init-listing-tx
                                   :action/create-booking
@@ -162,10 +163,12 @@
         (map :name)
         set)))
 
-(defn transition-is-privileged-if-privileged-actions?
+(defn transition-with-trusted-context-if-privileged-actions?
   [transition]
-  (let [privileged? (:privileged? transition)]
+  (let [privileged? (:privileged? transition)
+        operator? (= :actor.role/operator (:actor transition))]
     (or privileged?
+        operator?
         (empty? (privileged-actions transition)))))
 
 (s/def :tx-process/transition
@@ -177,7 +180,7 @@
                           :tx-process.transition/from
                           :tx-process.transition/privileged?])
          transition-has-either-actor-or-at?
-         transition-is-privileged-if-privileged-actions?))
+         transition-with-trusted-context-if-privileged-actions?))
 
 (defn unique-transition-names? [transitions]
   (let [names (map :name transitions)]
@@ -327,6 +330,13 @@
                        (map #(timepoint-error % name at))))
             (:notifications process))))
 
+(defn invalid-actor-in-initial-transitions [process]
+  (->> process
+       :transitions
+       (remove :from)
+       (remove (fn [{:keys [actor]}]
+                 (= :actor.role/customer actor)))))
+
 (defn valid-transitions-in-transition-timepoints? [process]
   (empty? (invalid-transitions-in-transition-timepoints process)))
 
@@ -339,6 +349,9 @@
 (defn valid-states-in-notification-timepoints? [process]
   (empty? (invalid-states-in-notification-timepoints process)))
 
+(defn valid-initial-transition-actor? [process]
+  (empty? (invalid-actor-in-initial-transitions process)))
+
 (s/def :tempelhof/tx-process
   (s/and
    (s/keys :req-un [:tx-process/format
@@ -349,4 +362,5 @@
    valid-transitions-in-transition-timepoints?
    valid-states-in-transition-timepoints?
    valid-transitions-in-notification-timepoints?
-   valid-states-in-notification-timepoints?))
+   valid-states-in-notification-timepoints?
+   valid-initial-transition-actor?))
