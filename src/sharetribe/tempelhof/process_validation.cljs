@@ -151,6 +151,7 @@
   [{:keys [tx-process]} {:keys [val] :as problem}]
   {:msg (str "Unknown action name: " (invalid-val val) ". Available actions are:\n"
              (->> tempelhof.spec/action-names
+                  sort
                   (map #(str "  " %))   ; Padding
                   (str/join "\n")))     ; Print one per line
    :loc (find-first-loc tx-process problem)})
