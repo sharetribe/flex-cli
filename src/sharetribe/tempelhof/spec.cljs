@@ -93,7 +93,8 @@
 ;;                               :into #{})))
 
 
-(def privileged-action-names #{:action/privileged-set-line-items})
+(def privileged-action-names #{:action/privileged-set-line-items
+                               :action/privileged-update-metadata})
 
 (def nonprivileged-action-names #{:action.initializer/init-listing-tx
                                   :action/create-booking
@@ -162,10 +163,12 @@
         (map :name)
         set)))
 
-(defn transition-is-privileged-if-privileged-actions?
+(defn transition-with-trusted-context-if-privileged-actions?
   [transition]
-  (let [privileged? (:privileged? transition)]
+  (let [privileged? (:privileged? transition)
+        operator? (= :actor.role/operator (:actor transition))]
     (or privileged?
+        operator?
         (empty? (privileged-actions transition)))))
 
 (s/def :tx-process/transition
@@ -177,7 +180,7 @@
                           :tx-process.transition/from
                           :tx-process.transition/privileged?])
          transition-has-either-actor-or-at?
-         transition-is-privileged-if-privileged-actions?))
+         transition-with-trusted-context-if-privileged-actions?))
 
 (defn unique-transition-names? [transitions]
   (let [names (map :name transitions)]

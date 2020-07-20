@@ -134,12 +134,12 @@
     {:msg (str "Unreachable state: " state)
      :loc (location tr)}))
 
-(defphraser tempelhof.spec/transition-is-privileged-if-privileged-actions?
+(defphraser tempelhof.spec/transition-with-trusted-context-if-privileged-actions?
   [{:keys [tx-process]} {:keys [val] :as problems}]
   (let [offending-actions (tempelhof.spec/privileged-actions val)]
     {:msg (str "Invalid transition " (:name val)
-               ".\nActions that require privileged context have been defined but the transition is not marked as privileged"
-               ". Add :privileged? true to transition properties."
+               ".\nActions that require trusted context have been defined but the transition is not marked as privileged"
+               ". Either add :privileged? true to transition properties or set actor to :actor.role/operator."
                "\nActions that require privileged context are: "
                (str/join ", " offending-actions))
      :loc (location val)}))
