@@ -236,6 +236,18 @@
             :loc (location (:at n))})
          invalid-timepoints)))
 
+;; Actor validation
+;;
+
+(defphraser tempelhof.spec/valid-initial-transition-actor?
+  [{:keys [tx-process]} _]
+  (let [invalid-transitions (tempelhof.spec/invalid-actor-in-initial-transitions tx-process)]
+    (map (fn [t]
+           {:msg (str "Invalid transition " (:name t) ". "
+                      "The value of :actor must be :actor.role/customer for all initial transitions.")
+            :loc (location t)})
+         invalid-transitions)))
+
 ;; Not sure if this is a good idea?... But if it is it should be moved
 ;; to a util lib.
 (def error-arrow (.bold.red chalk "\u203A"))
