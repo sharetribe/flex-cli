@@ -97,8 +97,11 @@
                                :action/privileged-update-metadata})
 
 (def nonprivileged-action-names #{:action.initializer/init-listing-tx
-                                  :action/create-booking
+                                  :action/create-pending-booking
+                                  :action/create-proposed-booking
+                                  :action/create-booking ;; deprecated
                                   :action/accept-booking
+                                  :action/update-booking
                                   :action/decline-booking
                                   :action/cancel-booking
                                   :action/privileged-set-line-items
