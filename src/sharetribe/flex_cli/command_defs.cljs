@@ -8,7 +8,8 @@
             [sharetribe.flex-cli.commands.stripe :as stripe]
             [sharetribe.flex-cli.commands.version :as version]
             [sharetribe.flex-cli.commands.notifications :as notifications]
-            [sharetribe.flex-cli.commands.listing-approval :as listing-approval]))
+            [sharetribe.flex-cli.commands.listing-approval :as listing-approval]
+            [sharetribe.flex-cli.commands.events :as events]))
 
 (def marketplace-opt
   {:id :marketplace
@@ -54,7 +55,8 @@
     process/cmd
     search-schema/cmd
     notifications/cmd
-    listing-approval/cmd]})
+    listing-approval/cmd
+    events/cmd]})
 
 (defn- with-marketplace-opt [cmd]
   (if (:no-marketplace? cmd)
