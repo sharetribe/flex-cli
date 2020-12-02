@@ -77,7 +77,7 @@
      :resource-ID resourceId
      :event-type eventType
      :source (some-> source (str/replace #".*/" ""))
-     :created-at (io-util/format-date-and-time (js/Date. createdAt))
+     :created-at-local-time (io-util/format-date-and-time (js/Date. createdAt))
      :actor (or (:user/email audit) (:admin/email audit))}))
 
 (defn json-str-event
@@ -161,7 +161,7 @@
          json-pretty (doseq [event-str (map json-pretty-str-event (:data res))]
                        (print event-str))
          :else (io-util/print-table
-                [:seq-ID :resource-ID :event-type :created-at :source :actor]
+                [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
                 (->> (:data res) (map terse-event-row))))))))
 
 
