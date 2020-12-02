@@ -332,9 +332,16 @@
                  (put! c (js->clj answers :keywordize-keys true)))))
     c))
 
+(def error-arrow (.bold.red chalk "\u203A"))
+
+(defn format-error [error-str]
+  (str error-arrow " " error-str "\n"))
+
+
 (comment
   (go
-    (println "inquirer result:"
+    (println
+     "inquirer result:"
      (<! (prompt [{:type :password
                    :name :api-key
                    :message "Copy-paste here your API key from Console"}
