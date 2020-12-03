@@ -95,13 +95,15 @@
   Build API endpoint params."
   [marketplace api-client params]
   (let [{:keys [resource filter seqid after-seqid before-seqid after-ts before-ts limit]} params
-        query-params (cond-> {:marketplace marketplace}
+        query-params (cond-> {:marketplace marketplace :latest true}
                        (some? seqid) (assoc (param->api-param :seqid) seqid)
                        (some? resource) (assoc (param->api-param :resource) resource)
                        (some? filter) (assoc (param->api-param :filter) filter)
                        (some? after-seqid) (assoc (param->api-param :after-seqid) after-seqid)
+                       (some? after-seqid) (assoc :latest false)
                        (some? before-seqid) (assoc (param->api-param :before-seqid) before-seqid)
                        (some? after-ts) (assoc (param->api-param :after-ts) after-ts)
+                       (some? after-ts) (assoc :latest false)
                        (some? before-ts) (assoc (param->api-param :before-ts) before-ts)
                        (some? limit) (assoc (param->api-param :limit) limit))]
     (do-get api-client "/events/query" query-params)))
