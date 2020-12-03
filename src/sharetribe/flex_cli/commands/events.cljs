@@ -159,9 +159,9 @@
                        (api.client/retype-ex e :events.query/api-call-failed))))]
        (cond
          json (doseq [event-str (map json-str-event (:data res))]
-                (print event-str))
+                (println event-str))
          json-pretty (doseq [event-str (map json-pretty-str-event (:data res))]
-                       (print event-str))
+                       (println event-str))
          :else (io-util/print-table
                 [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
                 (->> (:data res) (map terse-event-row))))))))
