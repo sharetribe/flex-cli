@@ -216,10 +216,11 @@
                                     (->> (:data res) (map terse-event-row)))))
               new-wait-time (or (-> res :meta :liveTailPollInterval)
                                 wait-time)
-              chs (if (-> res :data seq)
-                    [stop-loop-ch (async/timeout 250)]
-                    [stop-loop-ch (async/timeout wait-time)])
-              [_ ch] (async/alts! chs)]
+              full-response? (>= (-> res :data count)
+                                 (-> res :meta :perPage))
+              [_ ch] (async/alts! (if full-response?
+                                    [stop-loop-ch (async/timeout 250)]
+                                    [stop-loop-ch (async/timeout wait-time)]))]
           (when-not (= ch stop-loop-ch)
             (recur (-> next-params
                        (assoc :after-seqid last-seqid)
