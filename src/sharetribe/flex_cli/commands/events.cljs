@@ -113,6 +113,10 @@
   [event]
   (.stringify js/JSON (-> event :event/data clj->js) nil 2))
 
+
+;; Fetching events from Build API
+;;
+
 (defn fetch-events
   "Make the API call to fetch events with given parameters mapped to
   Build API endpoint params."
@@ -170,7 +174,7 @@
 ;; Polling loop for live tailing
 ;;
 
-(def polling-loop (atom nil))
+(defonce polling-loop (atom nil))
 
 (defn- stop-polling-loop! []
   (go
@@ -189,36 +193,39 @@
       (reset! polling-loop stop-loop-ch)
 
       (loop [next-params start-params
-             widths nil]
+             widths nil
+             wait-time 5000]
         (let [res (try (<? (fetch-events marketplace api-client next-params))
                        (catch js/Error e
                          (throw
                           (api.client/retype-ex e :events.query/api-call-failed))))
               last-seqid (or (-> res :data last :event/data :sequenceId)
                              (:after-seqid next-params))
-              widths (cond
-                       json (doseq [event-str (map json-str-event (:data res))]
-                              (println event-str))
-                       json-pretty (doseq [event-str (map json-pretty-str-event (:data res))]
-                                     (println event-str))
-                       :else (if-not widths
-                               (io-util/print-table
-                                [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
-                                (->> (:data res) (map terse-event-row)))
-                               (io-util/print-table-continuation
-                                [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
-                                widths
-                                (->> (:data res) (map terse-event-row)))))
+              new-widths (cond
+                           json (doseq [event-str (map json-str-event (:data res))]
+                                  (println event-str))
+                           json-pretty (doseq [event-str (map json-pretty-str-event (:data res))]
+                                         (println event-str))
+                           :else (if-not widths
+                                   (io-util/print-table
+                                    [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
+                                    (->> (:data res) (map terse-event-row)))
+                                   (io-util/print-table-continuation
+                                    [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
+                                    widths
+                                    (->> (:data res) (map terse-event-row)))))
+              new-wait-time (or (-> res :meta :liveTailPollInterval)
+                                wait-time)
               chs (if (-> res :data seq)
                     [stop-loop-ch (async/timeout 250)]
-                    [stop-loop-ch (async/timeout 5000)])
+                    [stop-loop-ch (async/timeout wait-time)])
               [_ ch] (async/alts! chs)]
           (when-not (= ch stop-loop-ch)
             (recur (-> next-params
                        (assoc :after-seqid last-seqid)
                        (dissoc :limit))
-                   widths)))))))
-
+                   new-widths
+                   new-wait-time)))))))
 
 ;; Command handlers
 ;;
