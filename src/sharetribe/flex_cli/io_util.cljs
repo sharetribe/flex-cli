@@ -207,7 +207,30 @@
      (println)
      (println (fmt-headers ks))
      (doseq [row rows]
-       (println (fmt-row row))))))
+       (println (fmt-row row)))
+
+     widths)))
+
+(defn print-table-continuation
+  "Print more rows to continue a table that was printed earlier. Takes
+  previously calculated column widths as the second argument (return
+  value of 'print-table'). Skips printing the header but still needs
+  the column information to order columns. Returns widths through."
+  [ks widths rows]
+  (let [right-pad (fn [s str-width col-width]
+                    (let [pad-len (- col-width str-width)]
+                      (apply str s (when (> pad-len 0)
+                                     (repeat pad-len " ")))))
+        fmt-row (fn [row]
+                  (apply str
+                         (interpose
+                          " "
+                          (for [[col width] (map vector (map #(get row %) ks) widths)]
+                            (right-pad (str col) (count (str col)) width)))))]
+    (doseq [row rows]
+      (println (fmt-row row)))
+
+    widths))
 
 (defn section-title
   "Format title string as section title."

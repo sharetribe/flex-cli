@@ -8,6 +8,7 @@
             [clojure.string :as str]))
 
 (declare list-events)
+(declare start-live-tail)
 
 (def cmd {:name "events"
           :handler #'list-events
@@ -50,7 +51,29 @@
                   :desc "Print full event data as one JSON string."}
                  {:id :json-pretty
                   :long-opt "--json-pretty"
-                  :desc "Print full event data as indented multi-line JSON string."} ]})
+                  :desc "Print full event data as indented multi-line JSON string."}]
+          :sub-cmds [{:name "tail"
+                      :handler #'start-live-tail
+                      :desc "Tail events live as they happen"
+                      :opts [{:id :resource
+                              :long-opt "--resource"
+                              :desc "Show events for a specific resource ID only."
+                              :required "RESOURCE_ID"}
+                             {:id :filter
+                              :long-opt "--filter"
+                              :desc "Show only events of given types, e.g. '--filter listing/updated,user'."
+                              :required "EVENT_TYPES"}
+                             {:id :limit
+                              :long-opt "--limit"
+                              :short-opt "-l"
+                              :desc "Show given number of latest events and then start tailing (default is 10 and max is 100). Can be combined with other parameters."
+                              :required "NUMBER"}
+                             {:id :json
+                              :long-opt "--json"
+                              :desc "Print full event data as one JSON string."}
+                             {:id :json-pretty
+                              :long-opt "--json-pretty"
+                              :desc "Print full event data as indented multi-line JSON string."}]}]})
 
 (def ^:private param->api-param
   {:resource :resource-id
@@ -89,6 +112,10 @@
   "Format event as an indented multi line JSON string."
   [event]
   (.stringify js/JSON (-> event :event/data clj->js) nil 2))
+
+
+;; Fetching events from Build API
+;;
 
 (defn fetch-events
   "Make the API call to fetch events with given parameters mapped to
@@ -144,8 +171,64 @@
             "' for param " (name (api-param->param (first path))) "."))
       (api.client/default-error-format data))))
 
+;; Polling loop for live tailing
+;;
 
-;; Command handler
+(defonce polling-loop (atom nil))
+
+(defn- stop-polling-loop! []
+  (go
+    (when-let [stop-loop-ch @polling-loop]
+      (async/close! stop-loop-ch))))
+
+(defn- start-polling-loop! [marketplace api-client params]
+  (let [stop-loop-ch (async/chan)
+        {:keys [json json-pretty]} params
+        start-params (if (contains? params :limit)
+                       params
+                       (assoc params :limit 10))]
+
+    (go
+      (<! (stop-polling-loop!))
+      (reset! polling-loop stop-loop-ch)
+
+      (loop [next-params start-params
+             widths nil
+             wait-time 5000]
+        (let [res (try (<? (fetch-events marketplace api-client next-params))
+                       (catch js/Error e
+                         (throw
+                          (api.client/retype-ex e :events.query/api-call-failed))))
+              last-seqid (or (-> res :data last :event/data :sequenceId)
+                             (:after-seqid next-params))
+              new-widths (cond
+                           json (doseq [event-str (map json-str-event (:data res))]
+                                  (println event-str))
+                           json-pretty (doseq [event-str (map json-pretty-str-event (:data res))]
+                                         (println event-str))
+                           :else (if-not widths
+                                   (io-util/print-table
+                                    [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
+                                    (->> (:data res) (map terse-event-row)))
+                                   (io-util/print-table-continuation
+                                    [:seq-ID :resource-ID :event-type :created-at-local-time :source :actor]
+                                    widths
+                                    (->> (:data res) (map terse-event-row)))))
+              new-wait-time (or (-> res :meta :liveTailPollInterval)
+                                wait-time)
+              full-response? (>= (-> res :data count)
+                                 (-> res :meta :perPage))
+              [_ ch] (async/alts! (if full-response?
+                                    [stop-loop-ch (async/timeout 250)]
+                                    [stop-loop-ch (async/timeout wait-time)]))]
+          (when-not (= ch stop-loop-ch)
+            (recur (-> next-params
+                       (assoc :after-seqid last-seqid)
+                       (dissoc :limit))
+                   new-widths
+                   new-wait-time)))))))
+
+;; Command handlers
 ;;
 
 (defn list-events [params ctx]
@@ -167,7 +250,36 @@
                 (->> (:data res) (map terse-event-row))))))))
 
 
+(defn start-live-tail [params ctx]
+  (let [{:keys [api-client marketplace]} ctx
+        done-chan (async/chan)
+        {:keys [json json-pretty]} params
+        ;; Only print user friendly messages when output is not --json
+        ;; or --json-pretty so that we don't mess up piping json to
+        ;; parser.
+        table-output? (not (or json json-pretty))]
+
+    ;; Setup Ctrl+C handler to terminate process
+    (.on js/process "SIGINT" (fn [_]
+                               (go
+                                 (when table-output?
+                                   (println "Exiting..."))
+                                 (<! (stop-polling-loop!))
+                                 (async/close! done-chan))))
+    (go
+      (when table-output?
+        (println "Starting live tail of events. Type <Ctrl>+C to quit."))
+      (<! (start-polling-loop! marketplace api-client params))
+      (<! done-chan))))
+
+
 (comment
+
+  (sharetribe.flex-cli.core/main-dev-str "help events tail")
+  (sharetribe.flex-cli.core/main-dev-str "events tail -m drivelah -l 5")
+  (sharetribe.flex-cli.core/main-dev-str "events tail -m drivelah -l 10")
+  (stop-polling-loop!)
+
   (sharetribe.flex-cli.core/main-dev-str "help events")
   (sharetribe.flex-cli.core/main-dev-str "events -m bike-soil")
   (sharetribe.flex-cli.core/main-dev-str "events -m bike-soil --limit 3")
