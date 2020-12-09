@@ -49,7 +49,7 @@
 (defn conf-map
   "Return the whole configuration map"
   []
-  {:api-base-url (env "FLEX_API_BASE_URL" "https://flex-console.sharetribe.com/v1/build-api")})
+  {:api-base-url (env "FLEX_API_BASE_URL" "https://flex-build-api.sharetribe.com/v1/build-api")})
 
 (defn value
   "Return a configuration value for `key`"
