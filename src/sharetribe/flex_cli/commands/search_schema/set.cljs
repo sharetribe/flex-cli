@@ -55,12 +55,12 @@
                  (not (contains? scopes scope))
                  (conj (str "--scope must be one of: " (str/join ", " (map bold scopes))))
 
-                 (and default
+                 (and (some? default)
                       (= "boolean" type)
                       (not (boolean? default)))
                  (conj (str "--default must be either " (bold "true") " or " (bold false) " when --type is boolean"))
 
-                 (and default
+                 (and (some? default)
                       (= "long" type)
                       (not (int? default)))
                  (conj (str "--default must be an integer value when --type is long")))]
@@ -103,7 +103,7 @@
              :cardinality (if (= "multi-enum" type)
                             :dataSchema.cardinality/many
                             :dataSchema.cardinality/one)}
-      default (assoc :defaultValue default))))
+      (some? default) (assoc :defaultValue default))))
 
 (defn set-search-schema [params ctx]
   (go-try
