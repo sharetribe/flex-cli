@@ -17,6 +17,10 @@
                   :long-opt "--resource"
                   :desc "Show events for a specific resource ID only."
                   :required "RESOURCE_ID"}
+                 {:id :related-resource
+                  :long-opt "--related-resource"
+                  :desc "Show events that are related to a specific resource ID."
+                  :required "RELATED_RESOURCE_ID"}
                  {:id :filter
                   :long-opt "--filter"
                   :desc "Show only events of given types, e.g. '--filter listing/updated,user'."
@@ -59,6 +63,10 @@
                               :long-opt "--resource"
                               :desc "Show events for a specific resource ID only."
                               :required "RESOURCE_ID"}
+                             {:id :related-resource
+                              :long-opt "--related-resource"
+                              :desc "Show events that are related to a specific resource ID."
+                              :required "RELATED_RESOURCE_ID"}
                              {:id :filter
                               :long-opt "--filter"
                               :desc "Show only events of given types, e.g. '--filter listing/updated,user'."
@@ -77,6 +85,7 @@
 
 (def ^:private param->api-param
   {:resource :resource-id
+   :related-resource :related-resource-id
    :seqid :sequence-id
    :filter :event-types
    :after-seqid :start-after-sequence-id
@@ -121,10 +130,11 @@
   "Make the API call to fetch events with given parameters mapped to
   Build API endpoint params."
   [marketplace api-client params]
-  (let [{:keys [resource filter seqid after-seqid before-seqid after-ts before-ts limit]} params
+  (let [{:keys [resource related-resource filter seqid after-seqid before-seqid after-ts before-ts limit]} params
         query-params (cond-> {:marketplace marketplace :latest true}
                        (some? seqid) (assoc (param->api-param :seqid) seqid)
                        (some? resource) (assoc (param->api-param :resource) resource)
+                       (some? related-resource) (assoc (param->api-param :related-resource) related-resource)
                        (some? filter) (assoc (param->api-param :filter) filter)
                        (some? after-seqid) (assoc (param->api-param :after-seqid) after-seqid)
                        (some? after-seqid) (assoc :latest false)
@@ -140,13 +150,19 @@
 ;;
 
 (defn validate-params [params]
-  (let [{:keys [seqid after-seqid before-seqid after-ts before-ts]} params]
+  (let [{:keys [seqid after-seqid before-seqid after-ts before-ts resource related-resource]} params]
     (cond-> []
       (> (->> [seqid after-seqid before-seqid after-ts before-ts]
               (filter some?)
               count)
          1)
-      (conj (io-util/format-error "Only one of seqid, after-seqid, before-seqid, after-ts or before-ts can be specified.")))))
+      (conj (io-util/format-error "Only one of seqid, after-seqid, before-seqid, after-ts or before-ts can be specified."))
+
+      (> (->> [resource related-resource]
+              (filter some?)
+              count)
+         1)
+      (conj (io-util/format-error "Only one of resource or related-resource can be specified.")) )))
 
 (defn validate-params! [params]
   (when-let [errors (seq (validate-params params))]
