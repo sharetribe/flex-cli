@@ -128,6 +128,7 @@
                                   :action/stripe-create-charge
                                   :action/stripe-create-charge-pi
                                   :action/stripe-create-payment-intent
+                                  :action/stripe-create-payment-intent-push
                                   :action/stripe-confirm-payment-intent
                                   :action/stripe-capture-payment-intent
                                   :action/stripe-capture-charge
