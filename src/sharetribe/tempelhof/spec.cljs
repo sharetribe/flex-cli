@@ -104,6 +104,11 @@
                                   :action/update-booking
                                   :action/decline-booking
                                   :action/cancel-booking
+                                  :action/create-pending-stock-reservation
+                                  :action/create-proposed-stock-reservation
+                                  :action/decline-stock-reservation
+                                  :action/accept-stock-reservation
+                                  :action/cancel-stock-reservation
                                   :action/calculate-tx-total ;; backward compatibility
                                   :action/calculate-tx-daily-total ;; deprecated
                                   :action/calculate-tx-nightly-total ;;deprecated
