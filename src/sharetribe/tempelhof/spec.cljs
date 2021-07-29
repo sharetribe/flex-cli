@@ -104,7 +104,6 @@
                                   :action/update-booking
                                   :action/decline-booking
                                   :action/cancel-booking
-                                  :action/privileged-set-line-items
                                   :action/calculate-tx-total ;; backward compatibility
                                   :action/calculate-tx-daily-total ;; deprecated
                                   :action/calculate-tx-nightly-total ;;deprecated
