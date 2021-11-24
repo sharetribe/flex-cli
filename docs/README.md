@@ -44,6 +44,28 @@ To get rid of the annoying questions when running
 > cp .dir-locals.el.tmpl .dir-locals.el
 ```
 
+### Development using Cursive
+
+For REPL configuration, refer to:
+https://shadow-cljs.github.io/docs/UsersGuide.html#_cursive
+https://gist.github.com/akovantsev/44e2a0e10908785d1f40d3d3bcfff574#file-cursive-shadow-cljs-repl-setup-md
+
+```bash
+yarn shadow-cljs watch :dev
+```
+
+```clojure
+(shadow/repl :dev)
+```
+
+In another terminal,
+
+```bash
+yarn run dev
+```
+
+Now, you can use cursive REPL! 
+
 ### Hot loading
 
 The `dev` build is configured to do hot code loading.
