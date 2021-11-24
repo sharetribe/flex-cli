@@ -55,6 +55,10 @@ If you are having problems with Flex CLI, contact our support through
 the widget in Console, or ask for help in the Flex developer Slack
 forum.
 
+## Development
+
+Refer to the [README](./docs/README.md) for development.
+
 ## License
 
 This project is licensed under the terms of Apache License, Version 2.0.
