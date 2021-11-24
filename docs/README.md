@@ -26,7 +26,7 @@
     > node target/dev.js (or yarn run dev, which does take same thing)
     ```
 
-Now your dev environment is up an running! You can evaluate code in
+Now your dev environment is up and running! You can evaluate code in
 Emacs and Cider is connected to the running application.
 
 To run the CLI with command-line arguments, evaluate in REPL:
