@@ -44,17 +44,19 @@
 (defn list-search-schemas [_ ctx]
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
-     (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace}))]
+     (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace
+                                                               :of "dataSchema.of/userProfile,dataSchema.of/listing"}))]
        (io-util/print-table
-        [:key :scope :type :default-value :doc]
+        [:of :key :scope :type :default-value :doc]
         (->> (:data res)
-             (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue]}]
+             (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue of]}]
                     {:key (name key)
                      :doc doc
                      :scope (name scope)
                      :type (type-label valueType cardinality)
-                     :default-value (default-value-label defaultValue)}))
-             (sort-by (juxt :scope :key))))))))
+                     :default-value (default-value-label defaultValue)
+                     :of (name of)}))
+             (sort-by (juxt :of :scope :key))))))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")
