@@ -47,7 +47,7 @@
      (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace
                                                                :of "dataSchema.of/userProfile,dataSchema.of/listing"}))]
        (io-util/print-table
-        [:of :key :scope :type :default-value :doc]
+        [:schema-for :key :scope :type :default-value :doc]
         (->> (:data res)
              (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue of]}]
                     {:key (name key)
@@ -55,7 +55,7 @@
                      :scope (name scope)
                      :type (type-label valueType cardinality)
                      :default-value (default-value-label defaultValue)
-                     :of (name of)}))
+                     :schema-for (name of)}))
              (sort-by (juxt :of :scope :key))))))))
 
 (comment
