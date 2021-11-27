@@ -100,6 +100,8 @@
   (-> ex-data :res :response :errors first))
 
 (defn do-get [client path query]
+  (println "real function called")
+  (.error js/console "real function called")
   (let [c (chan)]
     (ajax/ajax-request
      {:uri (str (config/value :api-base-url) path)

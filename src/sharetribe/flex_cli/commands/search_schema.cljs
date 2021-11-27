@@ -11,7 +11,7 @@
 (declare list-search-schemas)
 
 (def cmd {:name "search"
-          :handler #'list-search-schemas
+          :handler (partial #'list-search-schemas do-get)
           :desc "list all search schemas"
           :opts []
           :sub-cmds [search-schema.set/cmd
@@ -41,22 +41,29 @@
       (str/join ", " v)
       (str v))))
 
-(defn list-search-schemas [_ ctx]
+(defn- extract-rows [res]
+  (->> (:data res)
+       (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue of]}]
+              {:key (name key)
+               :doc doc
+               :scope (name scope)
+               :type (type-label valueType cardinality)
+               :default-value (default-value-label defaultValue)
+               :schema-for (name of)}))
+       (sort-by (juxt :of :scope :key))))
+
+(defn list-search-schemas [do-get _ ctx]
+  (def ctx ctx)
+  (def _abc _)
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
      (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace
                                                                :of "dataSchema.of/userProfile,dataSchema.of/listing"}))]
+
+       (def res1  res)
        (io-util/print-table
         [:schema-for :key :scope :type :default-value :doc]
-        (->> (:data res)
-             (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue of]}]
-                    {:key (name key)
-                     :doc doc
-                     :scope (name scope)
-                     :type (type-label valueType cardinality)
-                     :default-value (default-value-label defaultValue)
-                     :schema-for (name of)}))
-             (sort-by (juxt :of :scope :key))))))))
+        (extract-rows res))))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")
