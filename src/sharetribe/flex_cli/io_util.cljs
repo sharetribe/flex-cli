@@ -18,10 +18,10 @@
             ["mkdirp" :rename {sync mkdirp-sync}]
             ["rimraf" :rename {sync rmrf-sync}]))
 
-(def ^:const process-filename "process.edn")
-(def ^:const templates-dir "templates")
-(def ^:const template-subject-suffix "-subject.txt")
-(def ^:const template-html-suffix "-html.html")
+(def process-filename "process.edn")
+(def templates-dir "templates")
+(def template-subject-suffix "-subject.txt")
+(def template-html-suffix "-html.html")
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
