@@ -150,4 +150,13 @@
 (comment
   (sharetribe.flex-cli.core/main-dev-str "help")
   (sharetribe.flex-cli.core/main-dev-str "search set --key complexValue.innerValue --scope metadata --type long -m bike-soil --default 1.0")
+  ; => Invalid arguments for command set:
+  ; --key cannot include dots (.). Only top-level keys can be indexed.
+  (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope protected --type long -m bike-soil --schema-for userProfile")
+  ; Protected data schema, age is successfully set for userProfile.
+  (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope metadata --type long -m bike-soil")
+  ; Metadata schema, age is successfully set for listing.
+  (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")
+  (sharetribe.flex-cli.core/main-dev-str "help search set")
+  
   )
