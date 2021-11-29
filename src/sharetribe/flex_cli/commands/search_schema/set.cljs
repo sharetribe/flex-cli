@@ -47,7 +47,7 @@
 
         errors (cond-> []
                  (str/includes? key ".")
-                 (conj (str "--key can not include dots (.). Only top-level keys can be indexed."))
+                 (conj (str "--key cannot include dots (.). Only top-level keys can be indexed."))
 
                  (not (contains? types type))
                  (conj (str "--type must be one of: " (str/join ", " (map bold types))))
