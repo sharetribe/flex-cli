@@ -101,16 +101,19 @@
                               s))))
 
 (defn body-params [params]
-  (let [{:keys [key scope type default schema-for]} params]
-    (cond-> {:key (keyword key)
-             :scope (keyword "dataSchema.scope" scope)
-             :valueType (keyword "dataSchema.type"
-                                 (if (= "multi-enum" type) "enum" type))
-             :cardinality (if (= "multi-enum" type)
-                            :dataSchema.cardinality/many
-                            :dataSchema.cardinality/one)
-             :of (keyword "dataSchema.of" schema-for)}
-      (some? default) (assoc :defaultValue default))))
+  (let [{:keys [doc key scope type default schema-for]} params]
+    (merge {:key (keyword key)
+            :scope (keyword "dataSchema.scope" scope)
+            :valueType (keyword "dataSchema.type"
+                                (if (= "multi-enum" type) "enum" type))
+            :cardinality (if (= "multi-enum" type)
+                           :dataSchema.cardinality/many
+                           :dataSchema.cardinality/one)
+            :of (keyword "dataSchema.of" schema-for)}
+           (when (some? default)
+             {:defaultValue default})
+           (when (some? doc)
+             {:doc doc}))))
 
 (defn set-search-schema [{:keys [scope] :as params} ctx]
   (go-try
@@ -141,7 +144,7 @@
   (sharetribe.flex-cli.core/main-dev-str "search set --key complexValue.innerValue --scope metadata --type long -m bike-soil --default 1.0")
   ; => Invalid arguments for command set:
   ; --key cannot include dots (.). Only top-level keys can be indexed.
-  (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope protected --type long -m bike-soil --schema-for userProfile")
+  (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope protected --type long -m bike-soil --schema-for userProfile --doc \"bye\"")
   ; Protected data schema, age is successfully set for userProfile.
   (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope metadata --type long -m bike-soil")
   ; Metadata schema, age is successfully set for listing.
