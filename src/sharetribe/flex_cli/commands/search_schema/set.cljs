@@ -2,8 +2,8 @@
   (:refer-clojure :exclude [type])
   (:require [clojure.core.async :as async :refer [go <!]]
             [clojure.string :as str]
-            [chalk]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
+            [sharetribe.flex-cli.commands.search-schema.common :as common]
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]))
 
@@ -41,36 +41,30 @@
                   :desc "Subject of the schema (either listing or userProfile, defaults to listing)"
                   :required "SCHEMA FOR"}]})
 
-(defn bold [str]
-  (.bold chalk str))
-
-(def schema-for->scopes
-  {"userProfile" #{"metadata" "private" "protected" "public"}
-   "listing" #{"metadata" "public"}})
-
 (def types #{"enum" "multi-enum" "boolean" "long" "text"})
 
 (defn- ensure-valid-params! [params]
   (let [{:keys [key scope type default schema-for]} params
-        scopes-for-schema-for (schema-for->scopes schema-for)
+        scopes-for-schema-for (common/schema-for->scopes schema-for)
         errors (cond-> []
                  (str/includes? key ".")
                  (conj (str "--key cannot include dots (.). Only top-level keys can be indexed."))
 
                  (not (contains? types type))
-                 (conj (str "--type must be one of: " (str/join ", " (map bold types))))
+                 (conj (str "--type must be one of: " (str/join ", " (map common/bold types))))
 
                  (not scopes-for-schema-for)
-                 (conj (str "--schema-for must be one of: " (str/join ", " (map bold (keys schema-for->scopes)))))
+                 (conj (str "--schema-for must be one of: "
+                            (str/join ", " (map common/bold (keys common/schema-for->scopes)))))
 
                  (not (contains? scopes-for-schema-for scope))
                  (conj (str "--scope must be one of: "
-                            (str/join ", " (map bold scopes-for-schema-for)) " for " schema-for))
+                            (str/join ", " (map common/bold scopes-for-schema-for)) " for " schema-for))
 
                  (and (some? default)
                       (= "boolean" type)
                       (not (boolean? default)))
-                 (conj (str "--default must be either " (bold "true") " or " (bold false) " when --type is boolean"))
+                 (conj (str "--default must be either " (common/bold "true") " or " (common/bold false) " when --type is boolean"))
 
                  (and (some? default)
                       (= "long" type)
@@ -118,17 +112,12 @@
              :of (keyword "dataSchema.of" schema-for)}
       (some? default) (assoc :defaultValue default))))
 
-(defn default-schema-for-param [{:keys [schema-for] :as params}]
-  (if (str/blank? schema-for)
-    (assoc params :schema-for "listing")
-    params))
-
 (defn set-search-schema [{:keys [scope] :as params} ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
          query {:marketplace marketplace}
          body (-> params
-                  default-schema-for-param
+                  common/default-schema-for-param
                   coerce-default-value
                   ensure-valid-params!
                   body-params)]

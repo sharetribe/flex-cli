@@ -2,6 +2,7 @@
   (:require [clojure.core.async :as async :refer [go <!]]
             [clojure.string :as str]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
+            [sharetribe.flex-cli.commands.search-schema.common :as common]
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]))
 
@@ -15,46 +16,65 @@
                   :desc "key name"
                   :required "KEY"
                   :missing "--key is required"}
+                 {:id :schema-for
+                  :long-opt "--schema-for"
+                  :desc "Subject of the schema (either listing or userProfile, defaults to listing)"
+                  :required "SCHEMA FOR"}
                  {:id :scope
                   :long-opt "--scope"
                   :desc "extended data scope (either public or metadata)"
                   :required "SCOPE"
                   :missing "--scope is required"}]})
 
-(def scopes #{"public" "metadata"})
-
 (defn- ensure-valid-params! [params]
-  (let [{:keys [scope]} params
-        errors (when-not (contains? scopes scope)
-                 [(str "--scope must be one of: " (str/join ", " scopes))])]
+  (let [{:keys [key schema-for scope]} params
+        scopes-for-schema-for (common/schema-for->scopes schema-for)
+        errors (cond-> []
+                       (str/includes? key ".")
+                       (conj "--key cannot include dots (.). Only top-level keys can be indexed.")
 
-    (when errors
+                       (not scopes-for-schema-for)
+                       (conj (str "--schema-for must be one of: "
+                                  (str/join ", " (map common/bold (keys common/schema-for->scopes)))))
+
+                       (not (contains? scopes-for-schema-for scope))
+                       (conj (str "--scope must be one of: "
+                                  (str/join ", " (map common/bold scopes-for-schema-for)) " for " schema-for)))]
+
+    (when (seq errors)
       (exception/throw! :command/invalid-args {:command :unset
                                                :errors errors}))
 
     params))
 
 (defn- body-params [params]
-  (let [{:keys [key scope]} params]
+  (let [{:keys [key schema-for scope]} params]
     {:key (keyword key)
-     :scope (keyword "dataSchema.scope" scope)}))
+     :scope (keyword "dataSchema.scope" scope)
+     :of (keyword "dataSchema.of" schema-for)}))
 
-(defn unset-search-schema [params ctx]
+(defn unset-search-schema [{:keys [scope] :as params} ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
          query {:marketplace marketplace}
          body (-> params
+                  common/default-schema-for-param
                   ensure-valid-params!
-                  body-params)
-
-         res (<? (do-post api-client "/search-schemas/unset" query body))]
+                  body-params)]
+     (<? (do-post api-client "/search-schemas/unset" query body))
 
      (println
       (str
-       (if (= "public" (:scope params))
-         "Public data"
-         "Metadata")
-       " schema for " (:key params) " successfully unset.")))))
+       (case scope
+         "metadata" "Metadata"
+         "private" "Private data"
+         "protected" "Protected data"
+         "public" "Public data")
+       " schema, "
+       (:key params)
+       " is successfully unset for "
+       (name (:of body))
+       ".")))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "help")
