@@ -81,4 +81,6 @@
   (sharetribe.flex-cli.core/main-dev-str "search list -m bike-soil")
   (sharetribe.flex-cli.core/main-dev-str "search set --key category --scope metadata --type long -m bike-soil --default 1.12")
   (sharetribe.flex-cli.core/main-dev-str "search unset --key category --scope metadata -m bike-soil")
+  (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")
+  (sharetribe.flex-cli.core/main-dev-str "search unset --schema-for userProfile --key age --scope protected -m bike-soil")
   )
