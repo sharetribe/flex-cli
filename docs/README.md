@@ -2,9 +2,12 @@
 
 ## Development
 
-*These instructions are for Emacs & Cider.*
+Use `.env.edn` file to set `"FLEX_API_BASE_URL"` to point to different environments (local, staging, prod ... )
+Set `:api-key` in `~/.config/flex-cli` file to quickly change API key (or use `flex-cli login`)
 
-1. Create .env.end file
+### Development using Cursive Emacs & Cider
+
+1. Create .env.end file. 
 
     ```bash
     cp .env.edn.tmpl .env.edn
