@@ -3,7 +3,7 @@
 ## Development
 
 Use `.env.edn` file to set `"FLEX_API_BASE_URL"` to point to different environments (local, staging, prod ... )
-Set `:api-key` in `~/.config/flex-cli` file to quickly change API key (or use `flex-cli login`)
+Set `:api-key` in `~/.config/flex-cli/auth.edn` file to quickly change API key (or use `flex-cli login`)
 
 ### Development using Cursive Emacs & Cider
 
