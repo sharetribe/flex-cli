@@ -48,10 +48,14 @@
         scopes-for-schema-for (common/schema-for->scopes schema-for)
         errors (cond-> []
                  (str/includes? key ".")
-                 (conj (str "--key cannot include dots (.). Only top-level keys can be indexed."))
+                 (conj "--key cannot include dots (.). Only top-level keys can be indexed.")
 
                  (not (contains? types type))
                  (conj (str "--type must be one of: " (str/join ", " (map common/bold types))))
+
+                 (and (= schema-for "userProfile") (= type "text"))
+                 (conj
+                  (str "--type " (common/bold "text") " is not supported for " (common/bold "userProfile") " schema"))
 
                  (not scopes-for-schema-for)
                  (conj (str "--schema-for must be one of: "
@@ -64,12 +68,14 @@
                  (and (some? default)
                       (= "boolean" type)
                       (not (boolean? default)))
-                 (conj (str "--default must be either " (common/bold "true") " or " (common/bold false) " when --type is boolean"))
+                 (conj
+                  (str "--default must be either " (common/bold "true") " or "
+                       (common/bold false) " when --type is boolean"))
 
                  (and (some? default)
                       (= "long" type)
                       (not (int? default)))
-                 (conj (str "--default must be an integer value when --type is long")))]
+                 (conj "--default must be an integer value when --type is long"))]
 
     (when (seq errors)
       (exception/throw! :command/invalid-args {:command :set
@@ -147,6 +153,10 @@
   (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope protected --type long -m bike-soil --schema-for userProfile --doc \"bye\"")
   ; Protected data schema, age is successfully set for userProfile.
   (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope metadata --type long -m bike-soil")
+  ; --type text not allowed for userProfile.
+  (sharetribe.flex-cli.core/main-dev-str "search set --schema-for userProfile --key description --scope public --type text -m bike-soil")
+  ; unset
+  (sharetribe.flex-cli.core/main-dev-str "search unset --schema-for userProfile --key description --scope public -m bike-soil")
   ; Metadata schema, age is successfully set for listing.
   (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")
   (sharetribe.flex-cli.core/main-dev-str "help search set")
