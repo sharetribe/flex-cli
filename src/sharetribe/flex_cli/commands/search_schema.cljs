@@ -41,20 +41,28 @@
       (str/join ", " v)
       (str v))))
 
+(defn- extract-rows [res]
+  (->> (:data res)
+       (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue of]}]
+              {:key (name key)
+               :doc doc
+               :scope (name scope)
+               :type (type-label valueType cardinality)
+               :default-value (default-value-label defaultValue)
+               :schema-for (name of)}))
+       (sort-by (juxt :schema-for :scope :key))))
+
+(def ^:private table-header
+  [:schema-for :scope :key :type :default-value :doc])
+
 (defn list-search-schemas [_ ctx]
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
-     (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace}))]
+     (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace
+                                                               :of "dataSchema.of/userProfile,dataSchema.of/listing"}))]
        (io-util/print-table
-        [:key :scope :type :default-value :doc]
-        (->> (:data res)
-             (map (fn [{:dataSchema/keys [key doc scope valueType cardinality defaultValue]}]
-                    {:key (name key)
-                     :doc doc
-                     :scope (name scope)
-                     :type (type-label valueType cardinality)
-                     :default-value (default-value-label defaultValue)}))
-             (sort-by (juxt :scope :key))))))))
+        table-header
+        (extract-rows res))))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")

@@ -172,6 +172,35 @@
       (str ns "/" (name kw))
       (name kw))))
 
+(defn- construct-table [ks rows]
+  (let [widths (map
+                (fn [k]
+                  (+ (apply max (count (str k)) (map #(count (str (get % k))) rows))
+                     1))
+                ks)
+        right-pad (fn [s str-width col-width]
+                    (let [pad-len (- col-width str-width)]
+                      (apply str s (when (> pad-len 0)
+                                     (repeat pad-len " ")))))
+        fmt-headers (fn [ks]
+                      (apply str
+                             (interpose
+                              " "
+                              (for [[col width] (map vector ks widths)]
+                                (let [fmt-col (kw->title col)]
+                                  (right-pad (.bold.black chalk fmt-col) (count fmt-col) width))))))
+        fmt-row (fn [row]
+                  (apply str
+                         (interpose
+                          " "
+                          (for [[col width] (map vector (map #(get row %) ks) widths)]
+                            (right-pad (str col) (count (str col)) width)))))]
+    (str \newline
+         (fmt-headers ks) \newline
+         (str/join
+          (for [row rows]
+            (str (fmt-row row) \newline))))))
+
 ;; TODO Table printing should take max col length and now how to print
 ;; a column with line breaks while maintaining column alignment.
 (defn print-table
@@ -186,28 +215,8 @@
                  (fn [k]
                    (+ (apply max (count (str k)) (map #(count (str (get % k))) rows))
                       1))
-                 ks)
-         right-pad (fn [s str-width col-width]
-                     (let [pad-len (- col-width str-width)]
-                       (apply str s (when (> pad-len 0)
-                                      (repeat pad-len " ")))))
-         fmt-headers (fn [ks]
-                       (apply str
-                              (interpose
-                               " "
-                               (for [[col width] (map vector ks widths)]
-                                 (let [fmt-col (kw->title col)]
-                                   (right-pad (.bold.black chalk fmt-col) (count fmt-col) width))))))
-         fmt-row (fn [row]
-                   (apply str
-                          (interpose
-                           " "
-                           (for [[col width] (map vector (map #(get row %) ks) widths)]
-                             (right-pad (str col) (count (str col)) width)))))]
-     (println)
-     (println (fmt-headers ks))
-     (doseq [row rows]
-       (println (fmt-row row)))
+                 ks)]
+     (print (construct-table ks rows))
 
      widths)))
 

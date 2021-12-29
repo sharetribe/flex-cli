@@ -2,8 +2,8 @@
   (:refer-clojure :exclude [type])
   (:require [clojure.core.async :as async :refer [go <!]]
             [clojure.string :as str]
-            [chalk]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
+            [sharetribe.flex-cli.commands.search-schema.common :as common]
             [sharetribe.flex-cli.exception :as exception]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-post]]))
 
@@ -19,7 +19,8 @@
                   :missing "--key is required"}
                  {:id :scope
                   :long-opt "--scope"
-                  :desc "extended data scope (either public or metadata)"
+                  :desc (str "extended data scope (either metadata or public for listing schema,"
+                             " metadata, private, protected or public for userProfile schema)")
                   :required "SCOPE"
                   :missing "--scope is required"}
                  {:id :type
@@ -34,36 +35,47 @@
                  {:id :default
                   :long-opt "--default"
                   :desc "default value for search if value is not set"
-                  :required "DEFAULT"}]})
-
-(defn bold [str]
-  (.bold chalk str))
+                  :required "DEFAULT"}
+                 {:id :schema-for
+                  :long-opt "--schema-for"
+                  :desc "Subject of the schema (either listing or userProfile, defaults to listing)"
+                  :required "SCHEMA FOR"}]})
 
 (def types #{"enum" "multi-enum" "boolean" "long" "text"})
-(def scopes #{"public" "metadata"})
 
 (defn- ensure-valid-params! [params]
-  (let [{:keys [key scope type default]} params
-
+  (let [{:keys [key scope type default schema-for]} params
+        scopes-for-schema-for (common/schema-for->scopes schema-for)
         errors (cond-> []
                  (str/includes? key ".")
-                 (conj (str "--key can not include dots (.). Only top-level keys can be indexed."))
+                 (conj "--key cannot include dots (.). Only top-level keys can be indexed.")
 
                  (not (contains? types type))
-                 (conj (str "--type must be one of: " (str/join ", " (map bold types))))
+                 (conj (str "--type must be one of: " (str/join ", " (map common/bold types))))
 
-                 (not (contains? scopes scope))
-                 (conj (str "--scope must be one of: " (str/join ", " (map bold scopes))))
+                 (and (= schema-for "userProfile") (= type "text"))
+                 (conj
+                  (str "--type " (common/bold "text") " is not supported for " (common/bold "userProfile") " schema"))
+
+                 (not scopes-for-schema-for)
+                 (conj (str "--schema-for must be one of: "
+                            (str/join ", " (map common/bold (keys common/schema-for->scopes)))))
+
+                 (not (contains? scopes-for-schema-for scope))
+                 (conj (str "--scope must be one of: "
+                            (str/join ", " (map common/bold scopes-for-schema-for)) " for " schema-for))
 
                  (and (some? default)
                       (= "boolean" type)
                       (not (boolean? default)))
-                 (conj (str "--default must be either " (bold "true") " or " (bold false) " when --type is boolean"))
+                 (conj
+                  (str "--default must be either " (common/bold "true") " or "
+                       (common/bold false) " when --type is boolean"))
 
                  (and (some? default)
                       (= "long" type)
                       (not (int? default)))
-                 (conj (str "--default must be an integer value when --type is long")))]
+                 (conj "--default must be an integer value when --type is long"))]
 
     (when (seq errors)
       (exception/throw! :command/invalid-args {:command :set
@@ -95,35 +107,58 @@
                               s))))
 
 (defn body-params [params]
-  (let [{:keys [key scope type default]} params]
-    (cond-> {:key (keyword key)
-             :scope (keyword "dataSchema.scope" scope)
-             :valueType (keyword "dataSchema.type"
-                                 (if (= "multi-enum" type) "enum" type))
-             :cardinality (if (= "multi-enum" type)
-                            :dataSchema.cardinality/many
-                            :dataSchema.cardinality/one)}
-      (some? default) (assoc :defaultValue default))))
+  (let [{:keys [doc key scope type default schema-for]} params]
+    (merge {:key (keyword key)
+            :scope (keyword "dataSchema.scope" scope)
+            :valueType (keyword "dataSchema.type"
+                                (if (= "multi-enum" type) "enum" type))
+            :cardinality (if (= "multi-enum" type)
+                           :dataSchema.cardinality/many
+                           :dataSchema.cardinality/one)
+            :of (keyword "dataSchema.of" schema-for)}
+           (when (some? default)
+             {:defaultValue default})
+           (when (some? doc)
+             {:doc doc}))))
 
-(defn set-search-schema [params ctx]
+(defn set-search-schema [{:keys [scope] :as params} ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
          query {:marketplace marketplace}
          body (-> params
+                  common/default-schema-for-param
                   coerce-default-value
                   ensure-valid-params!
-                  body-params)
-
-         res (<? (do-post api-client "/search-schemas/set" query body))]
+                  body-params)]
+     (<? (do-post api-client "/search-schemas/set" query body))
 
      (println
       (str
-       (if (= "public" (:scope params))
-         "Public data"
-         "Metadata")
-       " schema for " (:key params) " successfully set.")))))
+       (case scope
+         "metadata" "Metadata"
+         "private" "Private data"
+         "protected" "Protected data"
+         "public" "Public data")
+       " schema, "
+       (:key params)
+       " is successfully set for "
+       (name (:of body))
+       ".")))))
 
 (comment
   (sharetribe.flex-cli.core/main-dev-str "help")
   (sharetribe.flex-cli.core/main-dev-str "search set --key complexValue.innerValue --scope metadata --type long -m bike-soil --default 1.0")
+  ; => Invalid arguments for command set:
+  ; --key cannot include dots (.). Only top-level keys can be indexed.
+  (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope protected --type long -m bike-soil --schema-for userProfile --doc \"bye\"")
+  ; Protected data schema, age is successfully set for userProfile.
+  (sharetribe.flex-cli.core/main-dev-str "search set --key age --scope metadata --type long -m bike-soil")
+  ; --type text not allowed for userProfile.
+  (sharetribe.flex-cli.core/main-dev-str "search set --schema-for userProfile --key description --scope public --type text -m bike-soil")
+  ; unset
+  (sharetribe.flex-cli.core/main-dev-str "search unset --schema-for userProfile --key description --scope public -m bike-soil")
+  ; Metadata schema, age is successfully set for listing.
+  (sharetribe.flex-cli.core/main-dev-str "search -m bike-soil")
+  (sharetribe.flex-cli.core/main-dev-str "help search set")
+  
   )

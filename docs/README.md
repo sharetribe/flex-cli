@@ -2,9 +2,12 @@
 
 ## Development
 
-*These instructions are for Emacs & Cider.*
+Use `.env.edn` file to set `"FLEX_API_BASE_URL"` to point to different environments (local, staging, prod ... )
+Set `:api-key` in `~/.config/flex-cli/auth.edn` file to quickly change API key (or use `flex-cli login`)
 
-1. Create .env.end file
+### Development using Cursive Emacs & Cider
+
+1. Create .env.end file. 
 
     ```bash
     cp .env.edn.tmpl .env.edn
@@ -26,7 +29,7 @@
     > node target/dev.js (or yarn run dev, which does take same thing)
     ```
 
-Now your dev environment is up an running! You can evaluate code in
+Now your dev environment is up and running! You can evaluate code in
 Emacs and Cider is connected to the running application.
 
 To run the CLI with command-line arguments, evaluate in REPL:
@@ -43,6 +46,28 @@ To get rid of the annoying questions when running
 ```
 > cp .dir-locals.el.tmpl .dir-locals.el
 ```
+
+### Development using Cursive
+
+For REPL configuration, refer to:
+https://shadow-cljs.github.io/docs/UsersGuide.html#_cursive
+https://gist.github.com/akovantsev/44e2a0e10908785d1f40d3d3bcfff574#file-cursive-shadow-cljs-repl-setup-md
+
+```bash
+yarn shadow-cljs watch :dev
+```
+
+```clojure
+(shadow/repl :dev)
+```
+
+In another terminal,
+
+```bash
+yarn run dev
+```
+
+Now, you can use cursive REPL! 
 
 ### Hot loading
 
