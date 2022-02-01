@@ -3,8 +3,10 @@
   (:refer-clojure :exclude [load-file])
   (:require [cljs-node-io.core :as io]
             [cljs-node-io.fs :as fs]
+            [cljs-node-io.streams :as streams]
             [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
+            [edamame.core :as edamame]
             [fipp.engine :as fipp]
             [clojure.string :as str]
             [clojure.core.async :as async :refer [go <! chan put! take!]]
@@ -22,6 +24,8 @@
 (def ^:const templates-dir "templates")
 (def ^:const template-subject-suffix "-subject.txt")
 (def ^:const template-html-suffix "-html.html")
+(def ^:const asset-meta-dirname ".flex-cli")
+(def ^:const asset-meta-filename "asset-meta.edn")
 
 (defmethod exception/format-exception :io/file-not-found [_ _ {:keys [path]}]
   (str "File not found: " path))
@@ -67,6 +71,11 @@
   [path]
   (fs/file? path))
 
+(defn dirname
+  "Return the directory portion of path."
+  [path]
+  (fs/dirname path))
+
 (defn mkdirp
   "Create a directory and possible subdirectories for the given path."
   [path]
@@ -77,6 +86,11 @@
   path. Same as rm -rf."
   [path]
   (rmrf-sync path))
+
+(defn unlink
+  "Remove a file with given path."
+  [path]
+  (fs/unlink path))
 
 (defn join
   "Join the given paths"
@@ -155,6 +169,91 @@
 (defn write-process [path process]
   (write-process-file path (:process/process process))
   (write-templates path (:process/emailTemplates process)))
+
+(defn asset-meta-file-path
+  [path]
+  (join path asset-meta-dirname asset-meta-filename))
+
+(defn read-asset-meta
+  [path]
+  (let [f (asset-meta-file-path path)]
+    (if (file? f)
+      (-> f
+          (load-file)
+          edamame/parse-string)
+      nil)))
+
+(defn write-asset-meta
+  [path meta]
+  (let [dir (join path asset-meta-dirname)
+        f (asset-meta-file-path path)]
+    (mkdirp dir)
+    ;; Use pprint as it makes the meta file more diff-friendly
+    (save-file f (with-os-eol
+                   (with-out-str
+                     (pprint (into (sorted-map) meta)))))))
+
+(defn remove-assets
+  [asset-dir-path paths]
+  (when (fs/dir? asset-dir-path)
+    (doseq [path paths]
+      (let [full-path (join asset-dir-path path)]
+        (if (file? full-path)
+          (unlink full-path)
+          (exception/throw! :assets/not-a-file {:path full-path}))))))
+
+(defn list-assets
+  ([path] (list-assets path ""))
+  ([path relative-path]
+   (if-not (fs/dir? path)
+     []
+     (->> path
+          fs/readdir
+          (into
+           #{}
+           (comp
+            (remove #(= asset-meta-dirname %))
+            (remove #(= ".git" %))
+            (mapcat (fn [dir-or-file]
+                      (let [full-path (join path dir-or-file)]
+                        (if (dir? full-path)
+                          (list-assets full-path (join relative-path dir-or-file))
+                          [{:filename dir-or-file
+                            :full-path full-path
+                            :path (join relative-path dir-or-file)}]))))))))))
+
+(defn read-assets
+  [path]
+  ;; TODO no EOL conversion in the CLI atm. Perhaps CLI should behave like
+  ;; git with core.autocrlf=true: convert unix2dos on pull, convert
+  ;; dos2unix on push
+  (->> (list-assets path)
+       (map (fn [{:keys [filename path full-path]}]
+              {:path path
+               :full-path full-path
+               :filename filename
+               ;; TODO: form-data doesn't seem to accept neither the stream
+               ;; created straight with JS, nor the cljs-node-io.streams
+               ;; variant. Thows same exception about: "The first argument
+               ;; must be of type string or an instance of Buffer,
+               ;; ArrayBuffer, or Array or an Array-like Object. Received
+               ;; an instance of DelayedStream". So for now reading the
+               ;; file fully in memory seems necessary.
+               :data-raw (load-file full-path)
+               :file-stream (streams/FileInputStream full-path)}))))
+
+(defn write-assets
+  [asset-dir-path assets]
+  (if-not (fs/dir? asset-dir-path)
+    nil
+    (doseq [{:keys [data-raw path]} assets]
+      (let [file-path (join asset-dir-path path)
+            dir-path (dirname file-path)]
+        (mkdirp dir-path)
+        ;; TODO no EOL conversion in the CLI atm. Perhaps CLI should behave like
+        ;; git with core.autocrlf=true: convert unix2dos on pull, convert
+        ;; dos2unix on push
+        (save-file file-path data-raw)))))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
