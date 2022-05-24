@@ -2,6 +2,7 @@
   "Commands for managing assets."
   (:require [clojure.core.async :as async :refer [go <!]]
             [clojure.set :as set]
+            [clojure.string :as str]
             [form-data :as FormData]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-multipart-post do-get]]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
@@ -111,14 +112,19 @@
 (defn- validate-assets!
   [assets]
   (doseq [asset assets]
-    (try
-      (.parse js/JSON (:data-raw asset))
-      (catch js/Error e
-        (throw (ex-info (str "File '"
-                             (:full-path asset)
-                             "' does not contain valid JSON:\n"
-                             e)
-                        {}))))))
+    (let [path-lower (-> asset
+                         :path
+                         str/lower-case)]
+      (when
+        (str/ends-with? path-lower ".json")
+        (try
+          (.parse js/JSON (:data-raw asset))
+          (catch js/Error e
+            (throw (ex-info (str "File '"
+                                 (:full-path asset)
+                                 "' does not contain valid JSON:\n"
+                                 e)
+                            {}))))))))
 
 (defn push-assets [params ctx]
   (go-try
