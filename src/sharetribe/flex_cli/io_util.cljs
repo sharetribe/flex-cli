@@ -4,10 +4,9 @@
   (:require [cljs-node-io.core :as io]
             [cljs-node-io.fs :as fs]
             [cljs-node-io.streams :as streams]
-            [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
-            [edamame.core :as edamame]
             [fipp.engine :as fipp]
+            [clojure.edn :as edn]
             [clojure.string :as str]
             [clojure.core.async :as async :refer [go <! chan put! take!]]
             #_[cljs-time.format :refer [formatter unparse]]
@@ -45,21 +44,38 @@
   (binding [*print-fn* *print-err-fn*]
     (apply println args)))
 
+(defn- map->kwargs
+  [opts]
+  (->> opts seq flatten))
+
 (defn load-file
-  "Load file as str from given file path."
-  [path]
-  (try
-    (io/slurp path)
-    (catch js/Error e
-      (exception/throw! :io/file-not-found {:path path}))))
+  "Load file as str from given file path. Read as binary in a Buffer, if :encoding
+  is explicitly passed as empty string in the opts."
+  ([path] (load-file path nil))
+  ([path opts]
+   (try
+     (apply io/slurp path (map->kwargs opts))
+     (catch js/Error e
+       (exception/throw! :io/file-not-found {:path path})))))
 
 (defn save-file
   "Save the content to the given file path."
-  [path content]
-  (try
-    (io/spit path content)
-    (catch js/Error e
-      (exception/throw! :io/write-failed {:path path}))))
+  ([path content] (save-file path content nil))
+  ([path content opts]
+   (try
+     (apply io/spit path content (map->kwargs opts))
+     (catch js/Error e
+       (exception/throw! :io/write-failed {:path path})))))
+
+(defn save-file-binary
+  "Save the content to the given file path. If content is a Buffer, i.e. binary
+  data, does not do eny encoding."
+  ([path content] (save-file-binary path content nil))
+  ([path content opts]
+   (try
+     (fs/writeFile path content opts)
+     (catch js/Error e
+       (exception/throw! :io/write-failed {:path path})))))
 
 (defn dir?
   "Check if the given path is a directory."
@@ -180,7 +196,7 @@
     (if (file? f)
       (-> f
           (load-file)
-          edamame/parse-string)
+          edn/read-string)
       nil)))
 
 (defn write-asset-meta
@@ -239,21 +255,28 @@
                ;; ArrayBuffer, or Array or an Array-like Object. Received
                ;; an instance of DelayedStream". So for now reading the
                ;; file fully in memory seems necessary.
-               :data-raw (load-file full-path)
+               :data-raw (load-file full-path {:encoding ""})
                :file-stream (streams/FileInputStream full-path)}))))
 
 (defn write-assets
   [asset-dir-path assets]
   (if-not (fs/dir? asset-dir-path)
     nil
-    (doseq [{:keys [data-raw path]} assets]
+    (doseq [{:keys [data-raw path type]} assets]
       (let [file-path (join asset-dir-path path)
             dir-path (dirname file-path)]
         (mkdirp dir-path)
         ;; TODO no EOL conversion in the CLI atm. Perhaps CLI should behave like
         ;; git with core.autocrlf=true: convert unix2dos on pull, convert
         ;; dos2unix on push
-        (save-file file-path data-raw)))))
+        (case type
+          ;; For JSON assets, data-raw is a string.
+          :json (save-file file-path data-raw)
+          ;; Image asset data is served as a byte array in Transit, which gets
+          ;; turned into a JS Buffer automatically by the JS transit
+          ;; implementation. So, we are passing a Buffer to save-file-binary and
+          ;; it saves the file without attempting any string encoding.
+          :image (save-file-binary file-path data-raw))))))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
