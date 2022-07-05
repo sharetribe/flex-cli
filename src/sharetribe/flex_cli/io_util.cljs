@@ -4,10 +4,9 @@
   (:require [cljs-node-io.core :as io]
             [cljs-node-io.fs :as fs]
             [cljs-node-io.streams :as streams]
-            [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
-            [edamame.core :as edamame]
             [fipp.engine :as fipp]
+            [clojure.edn :as edn]
             [clojure.string :as str]
             [clojure.core.async :as async :refer [go <! chan put! take!]]
             #_[cljs-time.format :refer [formatter unparse]]
@@ -190,7 +189,7 @@
     (if (file? f)
       (-> f
           (load-file)
-          edamame/parse-string)
+          edn/read-string)
       nil)))
 
 (defn write-asset-meta
