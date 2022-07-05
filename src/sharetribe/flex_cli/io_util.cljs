@@ -44,31 +44,38 @@
   (binding [*print-fn* *print-err-fn*]
     (apply println args)))
 
+(defn- map->kwargs
+  [opts]
+  (->> opts seq flatten))
+
 (defn load-file
   "Load file as str from given file path. Read as binary in a Buffer, if :encoding
-  is explicitly passed as empty string."
-  [path & opts]
-  (try
-    (apply io/slurp path opts)
-    (catch js/Error e
-      (exception/throw! :io/file-not-found {:path path}))))
+  is explicitly passed as empty string in the opts."
+  ([path] (load-file path nil))
+  ([path opts]
+   (try
+     (apply io/slurp path (map->kwargs opts))
+     (catch js/Error e
+       (exception/throw! :io/file-not-found {:path path})))))
 
 (defn save-file
   "Save the content to the given file path."
-  [path content & opts]
-  (try
-    (apply io/spit path content opts)
-    (catch js/Error e
-      (exception/throw! :io/write-failed {:path path}))))
+  ([path content] (save-file path content nil))
+  ([path content opts]
+   (try
+     (apply io/spit path content (map->kwargs opts))
+     (catch js/Error e
+       (exception/throw! :io/write-failed {:path path})))))
 
 (defn save-file-binary
   "Save the content to the given file path. If content is a Buffer, i.e. binary
-  data, does not do eny encoding.."
-  [path content & opts]
-  (try
-    (fs/writeFile path content (apply hash-map opts))
-    (catch js/Error e
-      (exception/throw! :io/write-failed {:path path}))))
+  data, does not do eny encoding."
+  ([path content] (save-file-binary path content nil))
+  ([path content opts]
+   (try
+     (fs/writeFile path content opts)
+     (catch js/Error e
+       (exception/throw! :io/write-failed {:path path})))))
 
 (defn dir?
   "Check if the given path is a directory."
@@ -248,7 +255,7 @@
                ;; ArrayBuffer, or Array or an Array-like Object. Received
                ;; an instance of DelayedStream". So for now reading the
                ;; file fully in memory seems necessary.
-               :data-raw (load-file full-path :encoding "")
+               :data-raw (load-file full-path {:encoding ""})
                :file-stream (streams/FileInputStream full-path)}))))
 
 (defn write-assets
