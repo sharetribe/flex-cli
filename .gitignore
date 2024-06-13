@@ -18,3 +18,7 @@ target/
 # Local configurations and development
 .env.edn
 tmp/
+
+# CLJ-kondo and LSP
+.clj-kondo
+.lsp
