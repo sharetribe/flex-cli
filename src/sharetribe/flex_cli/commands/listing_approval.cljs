@@ -20,6 +20,7 @@
 
 (def cmd {:name "listing-approval"
           :handler #'query-listing-approval
+          :hidden? true ;; deprecate, thus -> true
           :desc "check if listing approvals are enabled or disabled"
           :sub-cmds [enable-cmd
                      disable-cmd]})
