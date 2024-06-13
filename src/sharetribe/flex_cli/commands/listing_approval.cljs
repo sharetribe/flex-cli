@@ -24,13 +24,13 @@
 (defn enable-listing-approval [_ ctx]
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
-     (let [res (<? (do-post api-client "/listing-approval/enable" {:marketplace marketplace} {}))]
+     (let [_res (<? (do-post api-client "/listing-approval/enable" {:marketplace marketplace} {}))]
        (println "Successfully enabled listing approvals in" marketplace)))))
 
 (defn disable-listing-approval [_ ctx]
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
-     (let [res (<? (do-post api-client "/listing-approval/disable" {:marketplace marketplace} {}))]
+     (let [_res (<? (do-post api-client "/listing-approval/disable" {:marketplace marketplace} {}))]
        (println "Successfully disabled listing approvals in" marketplace)))))
 
 (defn query-listing-approval [_ ctx]
