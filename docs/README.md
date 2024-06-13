@@ -172,8 +172,8 @@ your network, do this:
 
 1. Change package `version` in `package.json` and in
    `src/sharetribe/flex_cli/cli_info.cljs`
-2. Go to the repo root dir
-3. Clean the build dir:
+1. Go to the repo root dir
+1. Clean the build dir:
 
     ```bash
     yarn run clean
@@ -181,28 +181,37 @@ your network, do this:
 
    The `target/` directory should be empty now.
 
-4. Make a release build:
+1. Make a release build:
 
     ```bash
     yarn run release
     ```
 
-5. Login
+1. Commit and push
+
+1. Login as `sharetribe` with `npm login`
+
+   - check credentials from password manager
+
+1. Publish with `npm publish`
+
+1. Add a new tag
 
     ```bash
-    npm login
+    git tag -a v1.2.3 -m v1.2.3
     ```
 
-    Login as `sharetribe`, check the credentials from the company
-    password manager.
-
-6. Tag the version
-
-    Commit the changed `version` in `package.json`, tag the commit
-    with the version and push to the upstream.
-
-7. Publish to NPM
+1.  Update `latest` tag
 
     ```bash
-    npm publish
+    git push origin :refs/tags/latest
+    git tag -f -a latest -m latest
     ```
+
+1.  Push the tag
+
+    ```bash
+    git push --tags
+    ```
+    
+1.  Announce the new version in Slack
