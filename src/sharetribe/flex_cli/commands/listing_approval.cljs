@@ -1,4 +1,8 @@
 (ns sharetribe.flex-cli.commands.listing-approval
+  "Command to enable/disable listing approval.
+
+  DEPRECATED: Use Console instead.
+  "
   (:require
    [chalk]
    [sharetribe.flex-cli.api.client :refer [do-get do-post]]
