@@ -1,7 +1,10 @@
 (ns sharetribe.flex-cli.commands.listing-approval
-  (:require [sharetribe.flex-cli.api.client :refer [do-get do-post]]
-            [clojure.core.async :as async :refer [go <!]]
-            [sharetribe.flex-cli.async-util :refer [<? go-try]]))
+  (:require
+   [chalk]
+   [sharetribe.flex-cli.api.client :refer [do-get do-post]]
+   [clojure.core.async :as async :refer [go <!]]
+   [sharetribe.flex-cli.async-util :refer [<? go-try]]
+   [sharetribe.flex-cli.io-util :as io-util]))
 
 (declare query-listing-approval)
 (declare enable-listing-approval)
@@ -21,19 +24,28 @@
           :sub-cmds [enable-cmd
                      disable-cmd]})
 
+(defn- deprecated []
+  (io-util/ppd-err
+   [:span
+    (.bold.yellow chalk "Warning: ")
+    "CLI command `listing-approval` is deprecated. Use Console instead."]))
+
 (defn enable-listing-approval [_ ctx]
+  (deprecated)
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
      (let [_res (<? (do-post api-client "/listing-approval/enable" {:marketplace marketplace} {}))]
        (println "Successfully enabled listing approvals in" marketplace)))))
 
 (defn disable-listing-approval [_ ctx]
+  (deprecated)
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
      (let [_res (<? (do-post api-client "/listing-approval/disable" {:marketplace marketplace} {}))]
        (println "Successfully disabled listing approvals in" marketplace)))))
 
 (defn query-listing-approval [_ ctx]
+  (deprecated)
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
      (let [res (<? (do-get api-client "/marketplace/show" {:marketplace marketplace}))]
