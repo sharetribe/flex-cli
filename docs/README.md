@@ -69,6 +69,17 @@ yarn run dev
 
 Now, you can use cursive REPL! 
 
+### Development using VSCode
+
+For REPL configuration, refer to:
+https://shadow-cljs.github.io/docs/UsersGuide.html#_calva_vs_code
+
+1. Install Calva extension: https://marketplace.visualstudio.com/items?itemName=betterthantomorrow.calva
+2. Use the Calva command `Start a Project REPL and Connect (aka Jack-in)` to start the REPL
+   - Select `deps.edn + shadow-cljs` as the project type
+   - Select `:dev` as the build
+4. Run `yarn run dev` in a terminal.
+
 ### Hot loading
 
 The `dev` build is configured to do hot code loading.
