@@ -1,15 +1,13 @@
-# Flex CLI
+# Sharetribe (Flex) CLI
 
-A command-line interface for [Sharetribe
-Flex](https://www.sharetribe.com/flex/). Flex CLI enables you to
+A command-line interface for [Sharetribe](https://www.sharetribe.com/) (formerly Sharetribe Flex). Sharetribe CLI enables you to
 manage the transaction processes and transactional email templates of
 your marketplaces.
 
-To use Flex CLI, you will need a marketplace and an admin user API
-key. You can request a marketplace from
-[www.sharetribe.com/flex](https://www.sharetribe.com/flex/) to get
-credentials to Console where you can generate new API keys in the
-Build section.
+To use Sharetribe CLI, you will need a marketplace and an admin user API
+key. You can create a Sharetribe marketplace from
+[www.sharetribe.com/](https://www.sharetribe.com/) and get
+credentials to Console where you can generate new API keys in [your account's "Manage API keys"](https://console.sharetribe.com/api-keys).
 
 ## Installation
 
@@ -35,7 +33,7 @@ flex-cli
 
 #### flex-cli: command not found (on Windows)
 
-If you're seeing `flex-cli: command not found` error on Windows and you installed Flex CLI with Yarn, you need to add Yarn global bin path to the PATH environment varible.
+If you're seeing `flex-cli: command not found` error on Windows and you installed Sharetribe CLI with Yarn, you need to add Yarn global bin path to the PATH environment varible.
 
 1. Run `yarn global bin` to see the global bin path
 2. Add it to PATH environment variable
@@ -45,15 +43,15 @@ For a step-by-step guide with screenshots, have a look at this blog post: ['yarn
 
 ## Documentation
 
-To get started with Flex CLI, see the [Getting started with Flex
-CLI](https://www.sharetribe.com/docs/tutorials/getting-started-with-flex-cli/)
-tutorial in Flex Docs.
+To get started with Sharetribe CLI, see the [Getting started with Sharetribe
+CLI](https://www.sharetribe.com/docs/introduction/getting-started-with-sharetribe-cli/)
+tutorial in Sharetribe Docs.
 
 ## Issues
 
-If you are having problems with Flex CLI, contact our support through
-the widget in Console, or ask for help in the Flex developer Slack
-forum.
+If you are having problems with Sharetribe CLI, contact our support through
+the chat widget in Console, or ask for help in the Sharetribe Developer Slack
+workspace.
 
 ## Development
 
