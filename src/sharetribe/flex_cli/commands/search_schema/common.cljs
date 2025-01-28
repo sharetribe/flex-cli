@@ -8,7 +8,8 @@
 
 (def schema-for->scopes
   {"userProfile" #{"metadata" "private" "protected" "public"}
-   "listing" #{"metadata" "public"}})
+   "listing" #{"metadata" "public"}
+   "transaction" #{"metadata" "protected"}})
 
 (defn default-schema-for-param [{:keys [schema-for] :as params}]
   (if (str/blank? schema-for)

@@ -59,7 +59,7 @@
   (let [{:keys [api-client marketplace]} ctx]
     (go-try
      (let [res (<? (do-get api-client "/search-schemas/query" {:marketplace marketplace
-                                                               :of "dataSchema.of/userProfile,dataSchema.of/listing"}))]
+                                                               :of "dataSchema.of/userProfile,dataSchema.of/listing,dataSchema.of/transaction"}))]
        (io-util/print-table
         table-header
         (extract-rows res))))))
