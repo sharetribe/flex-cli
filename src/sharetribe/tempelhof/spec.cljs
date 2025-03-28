@@ -366,7 +366,6 @@
                     :tx-process/transitions]
            :opt-un [:tx-process/notifications])
    notification-on-is-valid-transition-name?
-
    valid-transitions-in-transition-timepoints?
    valid-states-in-transition-timepoints?
    valid-transitions-in-notification-timepoints?
