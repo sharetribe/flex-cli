@@ -343,7 +343,7 @@
        :transitions
        (remove :from)
        (remove (fn [{:keys [actor]}]
-                 (= :actor.role/customer actor)))))
+                 (contains? #{:actor.role/customer :actor.role/provider} actor)))))
 
 (defn valid-transitions-in-transition-timepoints? [process]
   (empty? (invalid-transitions-in-transition-timepoints process)))
