@@ -124,7 +124,7 @@
                                   :actor :actor.role/customer}
                                  {:name :transition/offer
                                   :to :state/offer
-                                  :actor :actor.role/provider}]}
+                                  :actor :actor.role/operator}]}
           problems (validate process)
           p (first problems)]
 
