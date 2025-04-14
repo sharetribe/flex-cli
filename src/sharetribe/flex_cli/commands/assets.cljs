@@ -23,6 +23,10 @@
                               :desc "Path to directory where the assets will be stored"
                               :required "PATH"
                               :missing "--path is required"}
+                             {:id :version
+                              :desc "Version of the assets that are pulled"
+                              :long-opt "--version"
+                              :required "VERSION"}
                              {:id :prune
                               :long-opt "--prune"
                               :desc "Delete local files that are no longer present as assets on Flex"}]}
@@ -71,21 +75,29 @@
 (defn pull-assets [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
-         {:keys [path prune]} params
+         {:keys [path prune version]} params
 
          _ (ensure-asset-dir! path)
 
          {old-version :version :as asset-meta} (io-util/read-asset-meta path)
 
-         query-params {:marketplace marketplace
-                       :version-alias "latest"}
+
+         version-params (if version
+                          {:version version}
+                          {:version-alias "latest"})
+
+         query-params (merge
+                       version-params
+                       {:marketplace marketplace})
 
          res (try
                (<? (do-get api-client "/assets/pull" query-params))
                (catch js/Error e
                  (throw e)))
 
-         new-version (-> res :meta :aliased-version)
+         new-version (or
+                      (-> res :meta :version)
+                      (-> res :meta :aliased-version))
          local-assets (when prune (io-util/list-assets path))
          deleted-paths (when prune
                          (set/difference (into #{} (map :path local-assets))
