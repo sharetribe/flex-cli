@@ -20,7 +20,8 @@
                  {:id :scope
                   :long-opt "--scope"
                   :desc (str "extended data scope (either metadata or public for listing schema,"
-                             " metadata, private, protected or public for userProfile schema)")
+                             " metadata, private, protected or public for userProfile schema,"
+                             " metadata or protected for transaction schema)")
                   :required "SCOPE"
                   :missing "--scope is required"}
                  {:id :type
@@ -38,7 +39,7 @@
                   :required "DEFAULT"}
                  {:id :schema-for
                   :long-opt "--schema-for"
-                  :desc "Subject of the schema (either listing or userProfile, defaults to listing)"
+                  :desc "Subject of the schema (either listing, userProfile or transaction, defaults to listing)"
                   :required "SCHEMA FOR"}]})
 
 (def types #{"enum" "multi-enum" "boolean" "long" "text"})
