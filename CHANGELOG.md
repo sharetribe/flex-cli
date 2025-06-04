@@ -12,6 +12,10 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 - Allow provider to be the actor of a transaction initializing transition. [#106](https://github.com/sharetribe/flex-cli/pull/106)
 
+### Added
+
+- Add support for `:time/last-entered-state` time point definition. [#109](https://github.com/sharetribe/flex-cli/pull/109)
+
 ## [v1.14.1] - 2025-04-15
 
 ### Added
