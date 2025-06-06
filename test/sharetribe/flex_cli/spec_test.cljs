@@ -281,3 +281,18 @@
       (is (= [] (:in p)))))
 
   )
+
+(deftest timepoints
+  (testing "invalid timepoint definition"
+    (let [process {:format :v3
+                   :transitions [{:name :transition/init
+                                  :to :state/init
+                                  :actor :actor.role/customer}
+                                 {:name :transition/request
+                                  :from :state/init
+                                  :to :state/preauthorized
+                                  :at {:fn/timepoint [:time/unknown-timepoint]}}]}
+          problems (validate process)
+          p (first problems)]
+      (is (= [:transitions :at] (:path p)))
+      (is (= `tempelhof.spec/valid-time-expression? (:pred p))))))

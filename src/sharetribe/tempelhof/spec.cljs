@@ -14,6 +14,7 @@
 (s/def :tx-process.time/timepoint-args
   (s/or :tx-initiated (s/tuple #{:time/tx-initiated})
         :first-entered-state (s/cat :tx-process.time/timepoint-name #{:time/first-entered-state} :tx-process.time/timepoint-state-name :tx-process.time/state-name)
+        :last-entered-state (s/cat :tx-process.time/timepoint-name #{:time/last-entered-state} :tx-process.time/timepoint-state-name :tx-process.time/state-name)
         :first-transitioned (s/cat :tx-process.time/timepoint-name #{:time/first-transitioned} :tx-process.time/timepoint-transition-name :tx-process.time/transition-name)
         :booking-start (s/tuple #{:time/booking-start})
         :booking-end (s/tuple #{:time/booking-end})
