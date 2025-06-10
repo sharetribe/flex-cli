@@ -244,7 +244,7 @@
   (let [invalid-transitions (tempelhof.spec/invalid-actor-in-initial-transitions tx-process)]
     (map (fn [t]
            {:msg (str "Invalid transition " (:name t) ". "
-                      "The value of :actor must be :actor.role/customer for all initial transitions.")
+                      "The value of :actor must be :actor.role/customer or :actor.role/provider for all initial transitions.")
             :loc (location t)})
          invalid-transitions)))
 
