@@ -8,6 +8,11 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] - xxxx-xx-xx
 
+### Changed
+
+- Update shadow-cljs to 2.15.12.
+  [#111](https://github.com/sharetribe/flex-cli/pull/111)
+
 ## [v1.15.0-beta.0] - 2025-06-10
 
 ### Changed
