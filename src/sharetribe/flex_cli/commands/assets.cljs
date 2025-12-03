@@ -54,7 +54,7 @@
   [{:keys [current-version assets]}]
   (:form-data
    (reduce
-    (fn [{:keys [form-data i]} {:keys [path op data-raw filename file-stream]}]
+    (fn [{:keys [form-data i]} {:keys [path op data-raw filename]}]
       {:form-data (case op
                     :delete
                     (doto form-data
@@ -138,6 +138,17 @@
                                  e)
                             {}))))))))
 
+(defn filter-assets-to-upload
+  [existing-meta local-assets]
+  (let [existing-meta (or existing-meta [])
+        hash-by-path (into {} (map (juxt :path :content-hash)) existing-meta)
+        changed? (fn [{:keys [path content-hash]}]
+                   (let [stored-hash (get hash-by-path path)]
+                     ;; Assets without stored metadata are treated as changed.
+                     (or (nil? stored-hash)
+                         (not= stored-hash content-hash))))]
+    (filter changed? local-assets)))
+
 (defn push-assets [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
@@ -147,39 +158,43 @@
 
          {:keys [version assets] :as asset-meta} (io-util/read-asset-meta path)
          local-assets (io-util/read-assets path)
+         changed-assets (filter-assets-to-upload assets local-assets)
 
          _ (validate-assets! local-assets)
 
          delete-assets (when prune
-                         (->> (set/difference (into #{} (map :path assets))
+                         (->> (set/difference (into #{} (map :path (or assets [])))
                                               (into #{} (map :path local-assets)))
                               (map (fn [path]
                                      {:path path
                                       :op :delete}))))
+         no-ops? (and (empty? changed-assets)
+                      (empty? delete-assets))]
 
-         query-params {:marketplace marketplace}
-         body-params (to-multipart-form-data
-                      {:current-version (if version version "nil") ;; stringify nil as initial version
-                       :assets (concat local-assets delete-assets)})
+     (if no-ops?
+       (io-util/ppd [:span "Assets are up to date."])
+       (let [query-params {:marketplace marketplace}
+             body-params (to-multipart-form-data
+                          {:current-version (if version version "nil") ;; stringify nil as initial version
+                           :assets (concat changed-assets delete-assets)})
 
+             res (try
+                   (<? (do-multipart-post api-client "/assets/push" query-params body-params))
+                   (catch js/Error e
+                     (throw e)))
 
-         res (try
-               (<? (do-multipart-post api-client "/assets/push" query-params body-params))
-               (catch js/Error e
-                 (throw e)))
+             new-version (-> res :data :version)]
 
-         new-version (-> res :data :version)]
-
-     (if new-version
-       (do
-         (io-util/write-asset-meta path (assoc asset-meta
-                                               :version new-version
-                                               :assets (-> res :data :asset-meta)))
-         (io-util/ppd [:span
-                       "New version " new-version
-                       " successfully created."]))
-       (io-util/ppd [:span
-                     "Assets are up to date."])))))
+         (if new-version
+           (do
+             (io-util/write-asset-meta path (assoc asset-meta
+                                                   :version new-version
+                                                   :assets (-> res :data :asset-meta)))
+             (io-util/ppd [:span
+                           "New version " new-version
+                           " successfully created."]))
+           (io-util/ppd [:span
+                         "Assets are up to date."])))))))
 
 (comment
 
