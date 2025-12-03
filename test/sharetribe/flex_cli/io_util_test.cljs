@@ -3,7 +3,19 @@
    [chalk]
    [cljs.test :refer-macros [deftest is testing]]
    [clojure.string :as str]
-   [sharetribe.flex-cli.io-util :as io-util]))
+   [sharetribe.flex-cli.io-util :as io-util]
+   ["crypto" :as crypto]))
+
+(defn- backend-style-hash [payload]
+  (let [data-buffer (cond
+                      (string? payload) (js/Buffer.from payload "utf8")
+                      (instance? js/Uint8Array payload) (js/Buffer.from payload)
+                      :else (js/Buffer.from payload))
+        prefix (js/Buffer.from (str (.-length data-buffer) "|") "utf8")
+        sha (.createHash crypto "sha1")]
+    (.update sha prefix)
+    (.update sha data-buffer)
+    (.digest sha "hex")))
 
 (defn- get-nth-row-output-values [table n]
   (-> table
@@ -73,3 +85,13 @@
 
       (is (= ["userProfile" "metadata" "subscription" "enum" "User subscription."]
              (get-nth-row-output-values table 5))))))
+
+(deftest derive-content-hash-string-test
+  (let [payload "{\"foo\":\"bar\"}"
+        expected (backend-style-hash payload)]
+    (is (= expected (io-util/derive-content-hash payload)))))
+
+(deftest derive-content-hash-binary-test
+  (let [payload (js/Uint8Array. #js [0 1 2 3 255 16 32])
+        expected (backend-style-hash payload)]
+    (is (= expected (io-util/derive-content-hash payload)))))

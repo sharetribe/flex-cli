@@ -16,6 +16,8 @@
             [os]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
+            [goog.crypt :as crypt]
+            [goog.crypt.Sha1]
             ["mkdirp" :rename {sync mkdirp-sync}]
             ["rimraf" :rename {sync rmrf-sync}]))
 
@@ -238,6 +240,34 @@
                             :full-path full-path
                             :path (join relative-path dir-or-file)}]))))))))))
 
+(defn derive-content-hash
+  "Derive SHA-1 content hash matching the backend convention.
+
+  Strings are encoded as UTF-8 prior to hashing. Binary inputs are
+  expected to be Buffer/Uint8Array instances. Content is prefixed with
+  `${byte-count}|` before hashing."
+  [content]
+  (when (nil? content)
+    (throw (js/Error. "derive-content-hash expects non-nil content.")))
+  (let [sha (goog.crypt.Sha1.)]
+    (cond
+      (string? content)
+      (let [body-bytes (crypt/stringToUtf8ByteArray content)
+            prefix-bytes (crypt/stringToUtf8ByteArray (str (count body-bytes) "|"))]
+        (.update sha prefix-bytes)
+        (.update sha body-bytes)
+        (crypt/byteArrayToHex (.digest sha)))
+
+      :else
+      (let [byte-length (.-length content)]
+        (when-not (number? byte-length)
+          (throw (js/Error. "derive-content-hash expects string or byte array content.")))
+        (let [body-bytes (js/Array.prototype.slice.call content)
+              prefix-bytes (crypt/stringToUtf8ByteArray (str byte-length "|"))]
+          (.update sha prefix-bytes)
+          (.update sha body-bytes)
+          (crypt/byteArrayToHex (.digest sha)))))))
+
 (defn read-assets
   [path]
   ;; TODO no EOL conversion in the CLI atm. Perhaps CLI should behave like
@@ -245,18 +275,20 @@
   ;; dos2unix on push
   (->> (list-assets path)
        (map (fn [{:keys [filename path full-path]}]
-              {:path path
-               :full-path full-path
-               :filename filename
-               ;; TODO: form-data doesn't seem to accept neither the stream
-               ;; created straight with JS, nor the cljs-node-io.streams
-               ;; variant. Thows same exception about: "The first argument
-               ;; must be of type string or an instance of Buffer,
-               ;; ArrayBuffer, or Array or an Array-like Object. Received
-               ;; an instance of DelayedStream". So for now reading the
-               ;; file fully in memory seems necessary.
-               :data-raw (load-file full-path {:encoding ""})
-               :file-stream (streams/FileInputStream full-path)}))))
+              (let [data (load-file full-path {:encoding ""})]
+                {:path path
+                 :full-path full-path
+                 :filename filename
+                 ;; TODO: form-data doesn't seem to accept neither the stream
+                 ;; created straight with JS, nor the cljs-node-io.streams
+                 ;; variant. Thows same exception about: "The first argument
+                 ;; must be of type string or an instance of Buffer,
+                 ;; ArrayBuffer, or Array or an Array-like Object. Received
+                 ;; an instance of DelayedStream". So for now reading the
+                 ;; file fully in memory seems necessary.
+                 :data-raw data
+                 :content-hash (derive-content-hash data)
+                 :file-stream (streams/FileInputStream full-path)})))))
 
 (defn write-assets
   [asset-dir-path assets]
