@@ -3,6 +3,7 @@
   (:require [clojure.core.async :as async :refer [go <!]]
             [clojure.set :as set]
             [clojure.string :as str]
+            [chalk]
             [form-data :as FormData]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-multipart-post do-get]]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
@@ -168,6 +169,10 @@
                               (map (fn [path]
                                      {:path path
                                       :op :delete}))))
+
+         _ (when (seq changed-assets)
+             (let [paths (str/join ", " (map :path changed-assets))]
+               (io-util/log (.green chalk (str "Uploading changed assets: " paths)))))
          no-ops? (and (empty? changed-assets)
                       (empty? delete-assets))]
 
