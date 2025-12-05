@@ -16,8 +16,7 @@
             [os]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
-            [goog.crypt :as crypt]
-            [goog.crypt.Sha1]
+            ["crypto" :as crypto]
             ["mkdirp" :rename {sync mkdirp-sync}]
             ["rimraf" :rename {sync rmrf-sync}]))
 
@@ -242,17 +241,18 @@
 
 (defn derive-content-hash
   "Derive SHA-1 content hash matching the backend convention.
-
-  Expects Buffer/Uint8Array inputs. Content is prefixed with
-  `${byte-count}|` before hashing."
-  [content]
-  (let [sha (goog.crypt.Sha1.)
-        byte-length (.-length content)]
-    (let [body-bytes (js/Array.prototype.slice.call content)
-          prefix-bytes (crypt/stringToUtf8ByteArray (str byte-length "|"))]
-      (.update sha prefix-bytes)
-      (.update sha body-bytes)
-      (crypt/byteArrayToHex (.digest sha)))))
+   Expects Buffer/Uint8Array inputs. Content is prefixed with
+   `${byte-count}|` before hashing."
+  [payload]
+  (let [data-buffer (cond
+                      (string? payload) (js/Buffer.from payload "utf8")
+                      (instance? js/Uint8Array payload) (js/Buffer.from payload)
+                      :else (js/Buffer.from payload))
+        prefix (js/Buffer.from (str (.-length data-buffer) "|") "utf8")
+        sha (.createHash crypto "sha1")]
+    (.update sha prefix)
+    (.update sha data-buffer)
+    (.digest sha "hex")))
 
 (defn read-assets
   [path]
@@ -519,5 +519,4 @@
                    :message "Copy-paste here your API key from Console"}
                   {:name :list-test
                    :choices ["bike-soil" "bike-soil-testing"]
-                   :type :list}]))))
-  )
+                   :type :list}])))))
