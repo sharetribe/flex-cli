@@ -16,6 +16,7 @@
             [os]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
+            ["crypto" :as crypto]
             ["mkdirp" :rename {sync mkdirp-sync}]
             ["rimraf" :rename {sync rmrf-sync}]))
 
@@ -238,6 +239,21 @@
                             :full-path full-path
                             :path (join relative-path dir-or-file)}]))))))))))
 
+(defn derive-content-hash
+  "Derive SHA-1 content hash matching the backend convention.
+   Expects Buffer/Uint8Array inputs. Content is prefixed with
+   `${byte-count}|` before hashing."
+  [payload]
+  (let [data-buffer (cond
+                      (string? payload) (js/Buffer.from payload "utf8")
+                      (instance? js/Uint8Array payload) (js/Buffer.from payload)
+                      :else (js/Buffer.from payload))
+        prefix (js/Buffer.from (str (.-length data-buffer) "|") "utf8")
+        sha (.createHash crypto "sha1")]
+    (.update sha prefix)
+    (.update sha data-buffer)
+    (.digest sha "hex")))
+
 (defn read-assets
   [path]
   ;; TODO no EOL conversion in the CLI atm. Perhaps CLI should behave like
@@ -245,18 +261,20 @@
   ;; dos2unix on push
   (->> (list-assets path)
        (map (fn [{:keys [filename path full-path]}]
-              {:path path
-               :full-path full-path
-               :filename filename
-               ;; TODO: form-data doesn't seem to accept neither the stream
-               ;; created straight with JS, nor the cljs-node-io.streams
-               ;; variant. Thows same exception about: "The first argument
-               ;; must be of type string or an instance of Buffer,
-               ;; ArrayBuffer, or Array or an Array-like Object. Received
-               ;; an instance of DelayedStream". So for now reading the
-               ;; file fully in memory seems necessary.
-               :data-raw (load-file full-path {:encoding ""})
-               :file-stream (streams/FileInputStream full-path)}))))
+              (let [data (load-file full-path {:encoding ""})]
+                {:path path
+                 :full-path full-path
+                 :filename filename
+                 ;; TODO: form-data doesn't seem to accept neither the stream
+                 ;; created straight with JS, nor the cljs-node-io.streams
+                 ;; variant. Thows same exception about: "The first argument
+                 ;; must be of type string or an instance of Buffer,
+                 ;; ArrayBuffer, or Array or an Array-like Object. Received
+                 ;; an instance of DelayedStream". So for now reading the
+                 ;; file fully in memory seems necessary.
+                 :data-raw data
+                 :content-hash (derive-content-hash data)
+                 :file-stream (streams/FileInputStream full-path)})))))
 
 (defn write-assets
   [asset-dir-path assets]
@@ -501,5 +519,4 @@
                    :message "Copy-paste here your API key from Console"}
                   {:name :list-test
                    :choices ["bike-soil" "bike-soil-testing"]
-                   :type :list}]))))
-  )
+                   :type :list}])))))

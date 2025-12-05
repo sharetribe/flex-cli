@@ -73,3 +73,11 @@
 
       (is (= ["userProfile" "metadata" "subscription" "enum" "User subscription."]
              (get-nth-row-output-values table 5))))))
+
+(deftest derive-content-hash-binary-test
+  (let [payload (js/Uint8Array. #js [0 1 2 3 255 16 32])
+
+        ;; The expected value is derived on Core side
+        ;; by taking the payload and runnoing asset-data/safe-hash fn
+        expected "56ddd6a0a0f41e38faa52e20ea07c7c511ff8283"]
+    (is (= expected (io-util/derive-content-hash payload)))))
