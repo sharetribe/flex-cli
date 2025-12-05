@@ -3,19 +3,7 @@
    [chalk]
    [cljs.test :refer-macros [deftest is testing]]
    [clojure.string :as str]
-   [sharetribe.flex-cli.io-util :as io-util]
-   ["crypto" :as crypto]))
-
-(defn- backend-style-hash [payload]
-  (let [data-buffer (cond
-                      (string? payload) (js/Buffer.from payload "utf8")
-                      (instance? js/Uint8Array payload) (js/Buffer.from payload)
-                      :else (js/Buffer.from payload))
-        prefix (js/Buffer.from (str (.-length data-buffer) "|") "utf8")
-        sha (.createHash crypto "sha1")]
-    (.update sha prefix)
-    (.update sha data-buffer)
-    (.digest sha "hex")))
+   [sharetribe.flex-cli.io-util :as io-util]))
 
 (defn- get-nth-row-output-values [table n]
   (-> table
@@ -88,5 +76,8 @@
 
 (deftest derive-content-hash-binary-test
   (let [payload (js/Uint8Array. #js [0 1 2 3 255 16 32])
-        expected (backend-style-hash payload)]
+
+        ;; The expected value is derived on Core side
+        ;; by taking the payload and runnoing asset-data/safe-hash fn
+        expected "56ddd6a0a0f41e38faa52e20ea07c7c511ff8283"]
     (is (= expected (io-util/derive-content-hash payload)))))
