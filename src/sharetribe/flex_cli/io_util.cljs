@@ -243,30 +243,16 @@
 (defn derive-content-hash
   "Derive SHA-1 content hash matching the backend convention.
 
-  Strings are encoded as UTF-8 prior to hashing. Binary inputs are
-  expected to be Buffer/Uint8Array instances. Content is prefixed with
+  Expects Buffer/Uint8Array inputs. Content is prefixed with
   `${byte-count}|` before hashing."
   [content]
-  (when (nil? content)
-    (throw (js/Error. "derive-content-hash expects non-nil content.")))
-  (let [sha (goog.crypt.Sha1.)]
-    (cond
-      (string? content)
-      (let [body-bytes (crypt/stringToUtf8ByteArray content)
-            prefix-bytes (crypt/stringToUtf8ByteArray (str (count body-bytes) "|"))]
-        (.update sha prefix-bytes)
-        (.update sha body-bytes)
-        (crypt/byteArrayToHex (.digest sha)))
-
-      :else
-      (let [byte-length (.-length content)]
-        (when-not (number? byte-length)
-          (throw (js/Error. "derive-content-hash expects string or byte array content.")))
-        (let [body-bytes (js/Array.prototype.slice.call content)
-              prefix-bytes (crypt/stringToUtf8ByteArray (str byte-length "|"))]
-          (.update sha prefix-bytes)
-          (.update sha body-bytes)
-          (crypt/byteArrayToHex (.digest sha)))))))
+  (let [sha (goog.crypt.Sha1.)
+        byte-length (.-length content)]
+    (let [body-bytes (js/Array.prototype.slice.call content)
+          prefix-bytes (crypt/stringToUtf8ByteArray (str byte-length "|"))]
+      (.update sha prefix-bytes)
+      (.update sha body-bytes)
+      (crypt/byteArrayToHex (.digest sha)))))
 
 (defn read-assets
   [path]

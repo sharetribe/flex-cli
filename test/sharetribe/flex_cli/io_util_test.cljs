@@ -86,11 +86,6 @@
       (is (= ["userProfile" "metadata" "subscription" "enum" "User subscription."]
              (get-nth-row-output-values table 5))))))
 
-(deftest derive-content-hash-string-test
-  (let [payload "{\"foo\":\"bar\"}"
-        expected (backend-style-hash payload)]
-    (is (= expected (io-util/derive-content-hash payload)))))
-
 (deftest derive-content-hash-binary-test
   (let [payload (js/Uint8Array. #js [0 1 2 3 255 16 32])
         expected (backend-style-hash payload)]
