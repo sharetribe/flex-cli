@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "chalk": "^2.4.2",
-    "form-data": "^2.5.1",
     "inquirer": "^6.2.2",
     "mkdirp": "^0.5.1",
     "open": "6.4.0",

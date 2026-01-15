@@ -1,7 +1,6 @@
 (ns sharetribe.flex-cli.process-util
   (:require [clojure.set :as set]
             [chalk]
-            [form-data :as FormData]
             [sharetribe.flex-cli.io-util :as io-util]
             [sharetribe.flex-cli.api.client :as api.client]
             [sharetribe.flex-cli.exception :as exception]))
@@ -95,7 +94,7 @@
      (doto form-data
        (.append (str "template-html-" (clojure.core/name (:name tmpl))) (:html tmpl))
        (.append (str "template-subject-" (clojure.core/name (:name tmpl))) (:subject tmpl))))
-   (doto (FormData.)
+   (doto (js/FormData.)
      (.append "name" name)
      (.append "definition" definition))
    templates))
