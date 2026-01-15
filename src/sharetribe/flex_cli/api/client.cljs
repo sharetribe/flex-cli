@@ -38,7 +38,7 @@
 (defn default-error-format [data]
   (let [{:keys [req res]} data
         {:keys [path]} req
-        {:keys [status response]} res
+        {:keys [status response original-text]} res
         marketplace (-> req :query :marketplace)
         api-key-suffix (->> req
                             :client
@@ -66,7 +66,12 @@
        [:span "Use " (bold (str cli-info/bin " login")) " to relogin if needed." :line])
 
       :else
-      (error-page [:span "API call failed. Status: " (str status) ", reason: " (or (-> response :errors first :title) "Unspecified") :line]))))
+      (error-page (cond->
+                      [:span "API call failed. Status: " (str status)
+                       ", reason: " (or (-> response :errors first :title) original-text "Unspecified")]
+                    ;; Enable for debugging
+                    #_#_(-> response :errors first :details) (conj (str ", details: " (-> response :errors first :details)))
+                    true (conj :line))))))
 
 (defmethod exception/format-exception :api/error [_ _ data]
   (default-error-format data))
