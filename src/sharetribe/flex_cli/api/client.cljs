@@ -1,12 +1,15 @@
 (ns sharetribe.flex-cli.api.client
-  (:require [cognitect.transit :as t]
-            [clojure.core.async :as async :refer [put! chan <! go]]
+  (:require ["stream" :refer [Readable]]
+            [util]
+            [cognitect.transit :as t]
+            [clojure.core.async :as async :refer [go]]
             [chalk]
             [goog.object]
             [sharetribe.flex-cli.config :as config]
             [sharetribe.flex-cli.cli-info :as cli-info]
             [sharetribe.flex-cli.exception :as exception]
-            [sharetribe.flex-cli.view :as v]))
+            [sharetribe.flex-cli.view :as v]
+            [sharetribe.flex-cli.async-util :refer [->chan <? go-try]]))
 
 (def user-agent
   "User agent string with version and platform information
@@ -116,84 +119,105 @@
       (.set (.-searchParams url) (name k) (to-query-param v)))
     url))
 
-(defn read-transit [s]
+(defn- content-type [response]
   (try
-    {:success true
-     :data (t/read transit-reader s)}
+    (util/MIMEType. (-> response .-headers (.get "content-type")))
     (catch js/Error _e
-      {:success false})))
+      nil)))
 
-(defn- handle-response [out-chan response req]
-  (->
-   (.text response)
-   (.then
-    (fn [body-str]
-      (let [parsed (read-transit body-str)]
-        (put! out-chan
-              (if (.-ok response)
-                (:data parsed)
-                (let [parsed (read-transit body-str)]
-                  (handle-error req
-                                (cond-> {:status (.-status response)
-                                         :status-text (.-statusText response)}
-                                  (:success parsed) (assoc :response (:data parsed))
-                                  (not (:success parsed)) (assoc :original-text body-str)))))))))))
+(defn- parse-text [response]
+  (go
+    (try
+      {:success true
+       :type "text/plain"
+       :content (<? (->chan (.text response)))}
+      (catch js/Error _e
+        {:success false}))))
 
-(defn do-get [client path query]
-  (let [c (chan)]
-    (-> (js/fetch
-         (construct-url (str (config/value :api-base-url) path) query)
-         (clj->js
-          {:method "GET"
-           :headers {"Authorization" (str "Apikey " (::api-key client))
-                     "User-Agent" user-agent
-                     "Accept" "application/transit+json"}}))
-        (.then (fn [response]
-                 (handle-response c response {:client client
-                                              :path path
-                                              :query query})))
-        ;; Unknown failure
-        (.catch (fn [error] (put! c (exception/exception :client/api-request-failed error)))))
-    c))
+(defn- parse-transit [response]
+  (go
+    (try
+      {:success true
+       :type "application/transit+json"
+       :content (t/read transit-reader (<? (.text response)))}
+      (catch js/Error _e
+        {:success false}))))
+
+(defn- parse-zip [response]
+  (go
+    {:success true
+     :content (.fromWeb Readable (.-body response))}))
+
+(defn- parse-body
+  "Takes response and parses the body based on response content type header.
+
+  Returns a channel with map of:
+  - success (boolean)
+  - content (parsed content, only if success)
+  "
+  [response]
+  (let [essence (when-let [ct ^js (content-type response)]
+                  (.-essence ct))]
+    (case essence
+      ("text/plain" nil) (parse-text response) 
+      "application/transit+json" (parse-transit response)
+      "application/zip" (parse-zip response))))
+
+(defn- handle-response [accept response req]
+  (go-try
+    (let [{:keys [success content type]} (<? (parse-body response))
+          ;; Check if parsed content type matches with what we expected
+          accepted? (= accept type)]
+      (if (.-ok response)
+        ;; If response was ok, we assume that parsing was
+        ;; successful and returned content type was what we
+        ;; expected.
+        content
+        (handle-error
+         req
+         (cond-> {:status (.-status response)
+                  :status-text (.-statusText response)}
+
+           ;; Assoc :response only if parsing was
+           ;; successful and response content type
+           ;; was what we expected. If we for
+           ;; example use Accept:
+           ;; application/transit+json, but get
+           ;; back 500 with text/plain, we don't
+           ;; assoc it to response
+           (and accepted? success) (assoc :response content)
+
+           (= "text/plain" type)
+           (assoc :original-text content)))))))
+
+(defn- do-request [client path method query body opts]
+  (go-try
+     (let [accept (or (::accept opts) "application/transit+json")
+           res (<? (->chan (js/fetch
+                            (construct-url (str (config/value :api-base-url) path) query)
+                            (clj->js
+                             (cond->
+                                 {:method method
+                                  :headers (cond-> {"Authorization" (str "Apikey " (::api-key client))
+                                                    "User-Agent" user-agent
+                                                    "Accept" accept}
+                                             (::content-type opts) (assoc "Content-Type" (::content-type opts)))}
+                               body (assoc :body body))))))]
+
+       (<? (handle-response accept res {:client client
+                                        :path path
+                                        :query query})))))
+
+(defn do-get
+  ([client path query] (do-get client path query nil))
+  ([client path query opts]
+   (do-request client path "GET" query nil opts)))
 
 (defn do-post [client path query body]
-  (let [c (chan)]
-    (-> (js/fetch
-         (construct-url (str (config/value :api-base-url) path) query)
-         (clj->js
-          {:method "POST"
-           :body (t/write transit-writer body)
-           :headers {"Authorization" (str "Apikey " (::api-key client))
-                     "Content-Type" "application/transit+json"
-                     "User-Agent" user-agent
-                     "Accept" "application/transit+json"}}))
-        (.then (fn [response]
-                 (handle-response c response {:client client
-                                              :path path
-                                              :query query})))
-
-        ;; Unknown failure
-        (.catch (fn [error] (put! c (exception/exception :client/api-request-failed error)))))
-    c))
+  (do-request client path "POST" query (t/write transit-writer body) {::content-type "application/transit+json"}))
 
 (defn do-multipart-post [client path query form-data]
-  (let [c (chan)]
-    (-> (js/fetch
-         (construct-url (str (config/value :api-base-url) path) query)
-         (clj->js
-          {:method "POST"
-           :body form-data
-           :headers {"Authorization" (str "Apikey " (::api-key client))
-                     "User-Agent" user-agent
-                     "Accept" "application/transit+json"}}))
-        (.then (fn [response]
-                 (handle-response c response {:client client
-                                              :path path
-                                              :query query})))
-
-        ;; Unknown failure
-        (.catch (fn [error] (put! c (exception/exception :client/api-request-failed error)))))
-    c))
+  (do-request client path "POST" query form-data nil))
 
 (defn new-client [api-key]
   {::api-key api-key})
