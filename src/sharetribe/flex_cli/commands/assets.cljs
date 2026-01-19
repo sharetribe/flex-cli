@@ -115,6 +115,14 @@
 (defn remove-assets-dir [filename]
   (subs filename (count assets-dir)))
 
+(defn try-unlink
+  "Try unlink filename. Ignore errors."
+  [filename]
+  (try
+    (io-util/unlink filename)
+    (catch js/Error _e
+      nil)))
+
 (defn pull-assets [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
@@ -157,7 +165,9 @@
                     (next)
                     (recur meta*))
 
-                  asset-meta)))) 
+                  asset-meta))))
+
+         _ (try-unlink temp-path)
 
          new-version (or
                       (:version new-asset-meta)
