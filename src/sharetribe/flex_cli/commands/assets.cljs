@@ -123,6 +123,32 @@
     (catch js/Error _e
       nil)))
 
+(def carriage-return
+  "Moves the cursor back to the beginning of the line. This way we can 'update in place' the text"
+  "\r")
+
+(def clear-line
+  "Clear line ANSI control. Empties the rest of the line. This way we can update
+  in place even if the previously written text was shorter than current."
+  "\033[K"
+  )
+
+(defn print-progress! [^js stream]
+  (let [downloaded (atom 0)
+        carriage-return "\r"
+        print-progress (fn []
+                         (let [mb (/ @downloaded 1024 1024)]
+                           (js/process.stderr.write (str carriage-return clear-line "Downloaded " (.toFixed mb 2) "MB"))))
+        print-interval (js/setInterval print-progress 100)]
+
+    (.on stream "data" (fn [^js chunk]
+                         (swap! downloaded + (.-length chunk))))
+    (.on stream "end" (fn []
+                        (js/clearInterval print-interval)
+                        ;; One final print
+                        (print-progress)
+                        (js/process.stderr.write "\nFinished downloading assets\n")))))
+
 (defn pull-assets [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
@@ -147,8 +173,9 @@
 
          new-asset-meta
          (let [result-stream (<? (do-get api-client "/assets/pull" query-params {::api.client/accept "application/zip"}))
-                 _ (<? (io-util/pipe-stream-to-file result-stream temp-path))
-                 unzipped-entries-c (io-util/unzip-entries temp-path)] 
+               _ (print-progress! result-stream)
+               _ (<? (io-util/pipe-stream-to-file result-stream temp-path))
+               unzipped-entries-c (io-util/unzip-entries temp-path)]
              (<? 
               (go-loop [asset-meta nil]
                 (if-let [{:keys [read-stream filename next]} (<? unzipped-entries-c)]
