@@ -231,6 +231,7 @@
            (comp
             (remove #(= asset-meta-dirname %))
             (remove #(= ".git" %))
+            (remove #(= ".DS_Store" %))
             (mapcat (fn [dir-or-file]
                       (let [full-path (join path dir-or-file)]
                         (if (dir? full-path)
