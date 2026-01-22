@@ -45,11 +45,15 @@
                               :long-opt "--prune"
                               :desc "Delete assets in Flex that are no longer present locally"}]}]})
 
-(defn- ensure-asset-dir! [path]
+(defn- ensure-asset-dir-and-throw! [path]
   (when-not (io-util/dir? path)
     (exception/throw! :command/invalid-args
                       {:command :upsert
                        :errors ["--path should be an asset directory"]})))
+
+(defn- ensure-asset-dir-and-make! [path]
+  (when-not (io-util/dir? path)
+    (io-util/mkdirp path)))
 
 (defn- to-multipart-form-data
   [{:keys [current-version assets]}]
@@ -78,7 +82,7 @@
    (let [{:keys [api-client marketplace]} ctx
          {:keys [path prune version]} params
 
-         _ (ensure-asset-dir! path)
+         _ (ensure-asset-dir-and-make! path)
 
          {old-version :version :as asset-meta} (io-util/read-asset-meta path)
 
@@ -155,7 +159,7 @@
    (let [{:keys [api-client marketplace]} ctx
          {:keys [path prune]} params
 
-         _ (ensure-asset-dir! path)
+         _ (ensure-asset-dir-and-throw! path)
 
          {:keys [version assets] :as asset-meta} (io-util/read-asset-meta path)
          local-assets (io-util/read-assets path)
