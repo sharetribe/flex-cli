@@ -1,5 +1,6 @@
 (ns sharetribe.flex-cli.command-defs
   (:require [sharetribe.flex-cli.commands.assets :as assets]
+            [sharetribe.flex-cli.commands.debug :as debug]
             [sharetribe.flex-cli.commands.login :as login]
             [sharetribe.flex-cli.commands.logout :as logout]
             [sharetribe.flex-cli.commands.help :as help]
@@ -58,7 +59,8 @@
     notifications/cmd
     listing-approval/cmd
     events/cmd
-    assets/cmd]})
+    assets/cmd
+    debug/cmd]})
 
 (defn- with-marketplace-opt [cmd]
   (if (:no-marketplace? cmd)
