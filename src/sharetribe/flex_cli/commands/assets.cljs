@@ -4,7 +4,6 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [chalk]
-            [form-data :as FormData]
             [sharetribe.flex-cli.api.client :as api.client :refer [do-multipart-post do-get]]
             [sharetribe.flex-cli.async-util :refer [<? go-try]]
             [sharetribe.flex-cli.exception :as exception]
@@ -65,7 +64,7 @@
        (exception/throw! :assets/stage-api-call-failed
                          {:asset-path path}))
 
-     (let [form-data (doto (FormData.)
+     (let [form-data (doto (js/FormData.)
                        (.append "file" data-raw file-name))]
        (try
          (let [res (<? (do-multipart-post api-client "/assets/stage"
@@ -99,10 +98,10 @@
                         (.append form-data (str "staging-id-" i) (str staging-id)))
                       (when (and (not staging-id) data-raw)
                         (let [fname (or filename path)]
-                          (.append form-data (str "data-raw-" i) data-raw fname)))
+                          (.append form-data (str "data-raw-" i) (js/Blob. (array data-raw)) fname)))
                       form-data))
        :i (inc i)})
-    {:form-data (doto (FormData.)
+    {:form-data (doto (js/FormData.)
                   (.append "current-version" current-version))
      :i 0}
     assets)))

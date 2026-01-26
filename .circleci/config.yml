@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: circleci/clojure:tools-deps-node
+      - image: cimg/clojure:1.11-node
     steps:
       - checkout
       - restore_cache:

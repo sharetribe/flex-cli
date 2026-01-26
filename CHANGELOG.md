@@ -10,6 +10,7 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The CLI now requires Node.js version 18 or newer. [#113](https://github.com/sharetribe/flex-cli/pull/113)
 - Update shadow-cljs to 2.15.12.
   [#111](https://github.com/sharetribe/flex-cli/pull/111)
 

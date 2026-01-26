@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/sharetribe/flex-cli"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "bin": {
     "flex-cli": "target/min.js"
   },
@@ -28,11 +31,9 @@
   },
   "dependencies": {
     "chalk": "^2.4.2",
-    "form-data": "^2.5.1",
     "inquirer": "^6.2.2",
     "mkdirp": "^0.5.1",
     "open": "6.4.0",
-    "rimraf": "^3.0.0",
-    "xmlhttprequest": "^1.8.0"
+    "rimraf": "^3.0.0"
   }
 }

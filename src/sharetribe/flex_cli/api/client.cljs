@@ -1,5 +1,5 @@
 (ns sharetribe.flex-cli.api.client
-  (:require [ajax.core :as ajax]
+  (:require [cognitect.transit :as t]
             [clojure.core.async :as async :refer [put! chan <! go]]
             [chalk]
             [goog.object]
@@ -99,67 +99,95 @@
   [ex-data]
   (-> ex-data :res :response :errors first))
 
+(def transit-reader (t/reader :json))
+(def transit-writer (t/writer :json))
+
+(defn- to-query-param [v]
+  (clj->js v))
+
+(defn- construct-url [url query-params]
+  (let [url (js/URL. url)]
+    (doseq [[k v] query-params]
+      (.set (.-searchParams url) (name k) (to-query-param v)))
+    url))
+
+(defn read-transit [s]
+  (try
+    {:success true
+     :data (t/read transit-reader s)}
+    (catch js/Error _e
+      {:success false})))
+
+(defn- handle-response [out-chan response req]
+  (->
+   (.text response)
+   (.then
+    (fn [body-str]
+      (let [parsed (read-transit body-str)]
+        (put! out-chan
+              (if (.-ok response)
+                (:data parsed)
+                (let [parsed (read-transit body-str)]
+                  (handle-error req
+                                (cond-> {:status (.-status response)
+                                         :status-text (.-statusText response)}
+                                  (:success parsed) (assoc :response (:data parsed))
+                                  (not (:success parsed)) (assoc :original-text body-str)))))))))))
+
 (defn do-get [client path query]
   (let [c (chan)]
-    (ajax/ajax-request
-     {:uri (str (config/value :api-base-url) path)
-      :method :get
-      :params query
-      :headers {"Authorization" (str "Apikey " (::api-key client))
-                "User-Agent" user-agent}
-      :handler (fn [[ok? response]]
-                 (put! c
-                       (if ok?
-                         response
-                         (handle-error {:client client
-                                        :path path
-                                        :query query}
-                                       response))))
-      :format (ajax/transit-request-format)
-      :response-format (ajax/transit-response-format)})
+    (-> (js/fetch
+         (construct-url (str (config/value :api-base-url) path) query)
+         (clj->js
+          {:method "GET"
+           :headers {"Authorization" (str "Apikey " (::api-key client))
+                     "User-Agent" user-agent
+                     "Accept" "application/transit+json"}}))
+        (.then (fn [response]
+                 (handle-response c response {:client client
+                                              :path path
+                                              :query query})))
+        ;; Unknown failure
+        (.catch (fn [error] (put! c (exception/exception :client/api-request-failed error)))))
     c))
 
 (defn do-post [client path query body]
   (let [c (chan)]
-    (ajax/ajax-request
-     {:uri (str (config/value :api-base-url) path)
-      :method :post
-      :url-params query
-      :params body
-      :headers {"Authorization" (str "Apikey " (::api-key client))
-                "User-Agent" user-agent}
-      :handler (fn [[ok? response]]
-                 (put! c
-                       (if ok?
-                         response
-                         (handle-error {:client client
-                                        :path path
-                                        :query query}
-                                       response))))
-      :format (ajax/transit-request-format)
-      :response-format (ajax/transit-response-format)})
+    (-> (js/fetch
+         (construct-url (str (config/value :api-base-url) path) query)
+         (clj->js
+          {:method "POST"
+           :body (t/write transit-writer body)
+           :headers {"Authorization" (str "Apikey " (::api-key client))
+                     "Content-Type" "application/transit+json"
+                     "User-Agent" user-agent
+                     "Accept" "application/transit+json"}}))
+        (.then (fn [response]
+                 (handle-response c response {:client client
+                                              :path path
+                                              :query query})))
+
+        ;; Unknown failure
+        (.catch (fn [error] (put! c (exception/exception :client/api-request-failed error)))))
     c))
 
-(defn do-multipart-post [client path query ^js form-data]
+(defn do-multipart-post [client path query form-data]
   (let [c (chan)]
-    (ajax/ajax-request
-     {:uri (str (config/value :api-base-url) path)
-      :method :post
-      :url-params query
-      :params form-data
-      :headers {"Authorization" (str "Apikey " (::api-key client))
-                "User-Agent" user-agent}
-      :handler (fn [[ok? response]]
-                 (put! c
-                       (if ok?
-                         response
-                         (handle-error {:client client
-                                        :path path
-                                        :query query}
-                                       response))))
-      :format {:write (fn [^js form-data] (.getBuffer form-data))
-               :content-type (goog.object/get (.getHeaders form-data) "content-type")}
-      :response-format (ajax/transit-response-format)})
+    (-> (js/fetch
+         (construct-url (str (config/value :api-base-url) path) query)
+         (clj->js
+          {:method "POST"
+           :body form-data
+           :headers {"Authorization" (str "Apikey " (::api-key client))
+                     "User-Agent" user-agent
+                     "Accept" "application/transit+json"}}))
+        (.then (fn [response]
+                 (handle-response c response {:client client
+                                              :path path
+                                              :query query})))
+
+        ;; Unknown failure
+        (.catch (fn [error] (put! c (exception/exception :client/api-request-failed error)))))
     c))
 
 (defn new-client [api-key]
