@@ -25,3 +25,12 @@
   (if (read-port? x)
     x
     (go x)))
+
+(defn ->chan [p]
+  (let [c (async/promise-chan)]
+    (-> p
+        (.then (fn [v] (if (some? v)
+                         (async/put! c v)
+                         (async/close! c))))
+        (.catch (fn [err] (async/put! c err))))
+    c))

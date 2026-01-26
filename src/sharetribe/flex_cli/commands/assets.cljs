@@ -1,6 +1,6 @@
 (ns sharetribe.flex-cli.commands.assets
   "Commands for managing assets."
-  (:require [clojure.core.async :as async :refer [go <!]]
+  (:require [clojure.core.async :as async :refer [go <! go-loop]]
             [clojure.set :as set]
             [clojure.string :as str]
             [chalk]
@@ -106,6 +106,49 @@
      :i 0}
     assets)))
 
+(defn create-temp-zipfile-path []
+  (io-util/tmp-file-path (str "assets-" (js/Date.now) ".zip")))
+
+(def metadata-filename "meta/asset-meta.edn")
+(def assets-dir "assets/")
+
+(defn remove-assets-dir [filename]
+  (subs filename (count assets-dir)))
+
+(defn try-unlink
+  "Try unlink filename. Ignore errors."
+  [filename]
+  (try
+    (io-util/unlink filename)
+    (catch js/Error _e
+      nil)))
+
+(def carriage-return
+  "Moves the cursor back to the beginning of the line. This way we can 'update in place' the text"
+  "\r")
+
+(def clear-line
+  "Clear line ANSI control. Empties the rest of the line. This way we can update
+  in place even if the previously written text was shorter than current."
+  "\033[K"
+  )
+
+(defn print-progress! [^js stream]
+  (let [downloaded (atom 0)
+        carriage-return "\r"
+        print-progress (fn []
+                         (let [mb (/ @downloaded 1024 1024)]
+                           (js/process.stderr.write (str carriage-return clear-line "Downloaded " (.toFixed mb 2) "MB"))))
+        print-interval (js/setInterval print-progress 100)]
+
+    (.on stream "data" (fn [^js chunk]
+                         (swap! downloaded + (.-length chunk))))
+    (.on stream "end" (fn []
+                        (js/clearInterval print-interval)
+                        ;; One final print
+                        (print-progress)
+                        (js/process.stderr.write "\nFinished downloading assets\n")))))
+
 (defn pull-assets [params ctx]
   (go-try
    (let [{:keys [api-client marketplace]} ctx
@@ -124,31 +167,50 @@
                        version-params
                        {:marketplace marketplace})
 
-         res (try
-               (<? (do-get api-client "/assets/pull" query-params))
-               (catch js/Error e
-                 (throw e)))
+         local-assets (when prune (io-util/list-assets path))
+
+         temp-path (create-temp-zipfile-path)
+
+         new-asset-meta
+         (let [result-stream (<? (do-get api-client "/assets/pull" query-params {::api.client/accept "application/zip"}))
+               _ (print-progress! result-stream)
+               _ (<? (io-util/pipe-stream-to-file result-stream temp-path))
+               unzipped-entries-c (io-util/unzip-entries temp-path)]
+             (<? 
+              (go-loop [asset-meta nil]
+                (if-let [{:keys [read-stream filename next]} (<? unzipped-entries-c)]
+                  (let [metadata-file? (= metadata-filename filename)
+                        meta* (if metadata-file?
+                                ;; Read new metadata
+                                (<? (io-util/parse-edn-stream read-stream))
+                                asset-meta)]
+
+                    (when-not metadata-file?
+                      ;; Write to disk only if not a metadata file
+                      (<? (io-util/pipe-stream-to-file read-stream (io-util/join path (remove-assets-dir filename)))))
+
+                    (next)
+                    (recur meta*))
+
+                  asset-meta))))
+
+         _ (try-unlink temp-path)
 
          new-version (or
-                      (-> res :meta :version)
-                      (-> res :meta :aliased-version))
-         local-assets (when prune (io-util/list-assets path))
+                      (:version new-asset-meta)
+                      (:aliased-version new-asset-meta))
          deleted-paths (when prune
                          (set/difference (into #{} (map :path local-assets))
-                                         (into #{} (map :path (:data res)))))
+                                         (into #{} (map :path (:assets new-asset-meta)))))
          updated? (not= old-version new-version)]
 
      (if (or updated? (seq deleted-paths))
        (do
-         (when updated?
-           (io-util/write-assets path (:data res)))
          (when (seq deleted-paths)
            (io-util/remove-assets path deleted-paths))
          (io-util/write-asset-meta path (assoc asset-meta
                                                :version new-version
-                                               :assets (into []
-                                                             (map #(dissoc % :data-raw))
-                                                             (:data res))))
+                                               :assets (:assets new-asset-meta)))
          (io-util/ppd [:span
                        "Version " new-version
                        " successfully pulled."]))
@@ -241,13 +303,12 @@
                               changed-assets)
              body-params (to-multipart-form-data
                           {:current-version (if version version "nil") ;; stringify nil as initial version
-                           :assets (concat upsert-ops (or delete-assets []))})
-
+                           :assets (concat changed-assets delete-assets)})
              res (try
                    (<? (do-multipart-post api-client "/assets/push" query-params body-params))
                    (catch js/Error e
                      (throw e)))
-
+             
              new-version (-> res :data :version)]
 
          (if new-version

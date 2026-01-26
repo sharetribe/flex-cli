@@ -8,7 +8,7 @@
             [fipp.engine :as fipp]
             [clojure.edn :as edn]
             [clojure.string :as str]
-            [clojure.core.async :as async :refer [go <! chan put! take!]]
+            [clojure.core.async :as async :refer [go <! chan put! take! close! >! go-loop]]
             #_[cljs-time.format :refer [formatter unparse]]
             #_[cljs-time.coerce :refer [to-date-time]]
             [chalk]
@@ -16,6 +16,10 @@
             [os]
             #_[sharetribe.util.money :as util.money]
             [sharetribe.flex-cli.exception :as exception]
+            [sharetribe.flex-cli.async-util :refer [<? go-try ->chan]]
+            [yauzl :as yauzl]
+            ["fs" :as node-fs]
+            ["stream/promises" :refer [pipeline]]
             ["crypto" :as crypto]
             ["mkdirp" :rename {sync mkdirp-sync}]
             ["rimraf" :rename {sync rmrf-sync}]))
@@ -68,16 +72,6 @@
      (catch js/Error e
        (exception/throw! :io/write-failed {:path path})))))
 
-(defn save-file-binary
-  "Save the content to the given file path. If content is a Buffer, i.e. binary
-  data, does not do eny encoding."
-  ([path content] (save-file-binary path content nil))
-  ([path content opts]
-   (try
-     (fs/writeFile path content opts)
-     (catch js/Error e
-       (exception/throw! :io/write-failed {:path path})))))
-
 (defn dir?
   "Check if the given path is a directory."
   [path]
@@ -113,6 +107,74 @@
   "Join the given paths"
   [& parts]
   (apply fs/path.join (remove nil? parts)))
+
+(defn tmp-file-path [file]
+  (join (os/tmpdir) file))
+
+(defn pipe-stream-to-file
+  "Takes `stream` and `path` and pipes the content of the stream to disk to the
+  given `path`. Uses `mkdirp` to create the parent directories of `path`.
+  Returns channel."
+  [stream path]
+  (mkdirp (dirname path))
+  (->chan
+   (pipeline
+    stream
+    (node-fs/createWriteStream path))))
+
+(defn unzip-entries
+  "Takes a `zipfile-path` and returns a channel. Each zip file entry is put to the
+  channel separately. The value put the the channel is a map of
+  `{:read-stream, :filename, :next}`.
+
+  - `:read-stream` the stream of the entry content
+  - `:filename` the filename
+  - `:next` callback function which the consumer has to call after processing the entry.
+
+  Errors are put to channel.
+  "
+  [zipfile-path]
+  (let [c (chan)]
+    (yauzl/open
+     zipfile-path
+     (clj->js {:lazyEntries true})
+     (fn [err, ^js zipfile]
+       (when err (put! c err)) 
+       ;; Skip directory check
+       (.readEntry zipfile)
+       (.on zipfile "entry"
+            (fn [entry]
+              (.openReadStream
+               zipfile
+               entry
+               (fn [err ^js read-stream]
+                 (when err (put! c err)) 
+                 (put! c {:read-stream read-stream
+                          :filename (.-fileName entry)
+                          :next #(.readEntry zipfile)})))))
+       (.on zipfile "end" (fn [] (close! c)))))
+    c))
+
+(defn stream->string
+  "Takes a stream and reads it to memory as string which is put to a channel. In
+  case of error, the error object is put to channel."
+  [^js readable]
+  (let [c (chan)
+        chunks (array)]
+    (.on readable "data" (fn [chunk] (.push chunks chunk)))
+    (.on readable "end"
+         (fn []
+           (put! c (.toString (js/Buffer.concat chunks) "utf8"))))
+    (.on readable "error" (fn [err] (put! c err)))
+
+    c))
+
+(defn parse-edn-stream
+  "Takes a ReadableStream of EDN and parses the EDN. Returns channel. In case of
+  error, the error is put in the channel."
+  [read-stream]
+  (go-try
+   (edn/read-string (<? (stream->string read-stream)))))
 
 (defn process-file-path [path]
   (join path process-filename))
@@ -276,26 +338,6 @@
                  :data-raw data
                  :content-hash (derive-content-hash data)
                  :file-stream (streams/FileInputStream full-path)})))))
-
-(defn write-assets
-  [asset-dir-path assets]
-  (if-not (fs/dir? asset-dir-path)
-    nil
-    (doseq [{:keys [data-raw path type]} assets]
-      (let [file-path (join asset-dir-path path)
-            dir-path (dirname file-path)]
-        (mkdirp dir-path)
-        ;; TODO no EOL conversion in the CLI atm. Perhaps CLI should behave like
-        ;; git with core.autocrlf=true: convert unix2dos on pull, convert
-        ;; dos2unix on push
-        (case type
-          ;; For JSON assets, data-raw is a string.
-          :json (save-file file-path data-raw)
-          ;; Image asset data is served as a byte array in Transit, which gets
-          ;; turned into a JS Buffer automatically by the JS transit
-          ;; implementation. So, we are passing a Buffer to save-file-binary and
-          ;; it saves the file without attempting any string encoding.
-          :image (save-file-binary file-path data-raw))))))
 
 (defn kw->title
   "Create a title from a (unqualified) keyword by replacing dashes
