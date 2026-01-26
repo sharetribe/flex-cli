@@ -201,7 +201,7 @@ your network, do this:
     git tag -a v1.2.3 -m v1.2.3
     ```
 
-1.  Update `latest` tag
+1.  Update `latest` tag (skip this for beta release)
 
     ```bash
     git push origin :refs/tags/latest
