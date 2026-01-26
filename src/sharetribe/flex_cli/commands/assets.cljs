@@ -64,7 +64,7 @@
        (exception/throw! :assets/stage-api-call-failed
                          {:asset-path path}))
 
-     (let [form-data (doto (FormData.)
+     (let [form-data (doto (js/FormData.)
                        (.append "file" data-raw file-name))]
        (try
          (let [res (<? (do-multipart-post api-client "/assets/stage"
