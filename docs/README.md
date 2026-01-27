@@ -193,7 +193,7 @@ your network, do this:
 
    - check credentials from password manager
 
-1. Publish with `npm publish`
+1. Publish with `npm publish`. For beta release, do `npm publish --tag beta`
 
 1. Add a new tag
 
