@@ -139,7 +139,7 @@
     (try
       {:success true
        :type "application/transit+json"
-       :content (t/read transit-reader (<? (.text response)))}
+       :content (t/read transit-reader (<? (->chan (.text response))))}
       (catch js/Error _e
         {:success false}))))
 
