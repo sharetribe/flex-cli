@@ -65,7 +65,7 @@
                          {:asset-path path}))
 
      (let [form-data (doto (js/FormData.)
-                       (.append "file" data-raw file-name))]
+                       (.append "file" (js/Blob. (array data-raw)) file-name))]
        (try
          (let [res (<? (do-multipart-post api-client "/assets/stage"
                                           {:marketplace marketplace}
