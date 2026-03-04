@@ -10,7 +10,7 @@
 
 (defn done [status]
   (when-let [status (:exit-status status)]
-    (.exit js/process status)))
+    (set! (.-exitCode js/process) status)))
 
 (defn done-dev [status]
   (println "")
