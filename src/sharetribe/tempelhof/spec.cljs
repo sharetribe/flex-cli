@@ -130,6 +130,7 @@
                                   :action/publish-reviews
                                   :action/reveal-customer-protected-data
                                   :action/reveal-provider-protected-data
+                                  :action/reveal-listing-protected-files 
                                   :action/stripe-create-charge
                                   :action/stripe-create-charge-pi
                                   :action/stripe-create-payment-intent

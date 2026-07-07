@@ -8,6 +8,10 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] - xxxx-xx-xx
 
+### Added
+
+- Add support for `:action/reveal-listing-protected-files` action. [#120](https://github.com/sharetribe/flex-cli/pull/120)
+
 ### Fixed
 
 - Exit gracefully using by setting `process.exitCode` instead of calling `process.exit()`. [Calling `process.exit(...)` will force the process to exit as quickly as possible even if there are still asynchronous operations pending that have not yet completed fully, including I/O operations to process.stdout and process.stderr.](https://nodejs.org/api/process.html#processexitcode) This may result in an error when e.g. piping the output to `jq`.[#119](https://github.com/sharetribe/flex-cli/pull/119)
