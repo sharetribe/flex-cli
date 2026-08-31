@@ -143,6 +143,7 @@
                                   :action/stripe-refund-payment
                                   :action/stripe-create-payout
                                   :action/update-protected-data
+                                  :action/update-protected-files
                                   :action/fail})
 
 (def action-names (set/union privileged-action-names
