@@ -38,10 +38,24 @@
    :line ;; add one line break at the end to get some extra space
    ])
 
+(defn- asset-validation-errors
+  "Lists JSON Schema validation errors per asset. 
+  Duplicate errors are printed only once.
+  Returns an empty seq for errors that carry no asset details. "
+  [error]
+  (mapcat (fn [{:keys [path errors]}]
+            (concat [:line " " error-arrow " In " (bold path) ":"]
+                    (mapcat (fn [{:keys [message]}]
+                              [:line " " error-arrow "   " message])
+                            (distinct errors))))
+          (-> error :details :assets)))
+
 (defn default-error-format [data]
   (let [{:keys [req res]} data
         {:keys [path]} req
         {:keys [status response original-text]} res
+        error (-> response :errors first)
+        av-errors (seq (asset-validation-errors error))
         marketplace (-> req :query :marketplace)
         api-key-suffix (->> req
                             :client
@@ -69,12 +83,15 @@
        [:span "Use " (bold (str cli-info/bin " login")) " to relogin if needed." :line])
 
       :else
-      (error-page (cond->
-                      [:span "API call failed. Status: " (str status)
-                       ", reason: " (or (-> response :errors first :title) original-text "Unspecified")]
-                    ;; Enable for debugging
-                    #_#_(-> response :errors first :details) (conj (str ", details: " (-> response :errors first :details)))
-                    true (conj :line))))))
+      (error-page
+       (cond-> [:span "API call failed. Status: " (str status)
+                ", reason: " (or (:title error) original-text "Unspecified")]
+
+         av-errors (into av-errors)
+
+         ;; Enable for debugging
+         #_#_(:details error) (conj (str ", details: " (:details error))) 
+         true (conj :line))))))
 
 (defmethod exception/format-exception :api/error [_ _ data]
   (default-error-format data))
