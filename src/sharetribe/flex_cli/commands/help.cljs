@@ -98,7 +98,7 @@
 (defn main-help [cmd]
   (page
 
-   [:span "CLI to interact with Sharetribe Flex" :line]
+   [:span "CLI to interact with a Sharetribe marketplace" :line]
 
    (section
     "VERSION"

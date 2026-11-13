@@ -1,17 +1,17 @@
 {
-  "name": "flex-cli",
-  "description": "Sharetribe Flex CLI",
+  "name": "sharetribe-cli",
+  "description": "Sharetribe CLI",
   "version": "1.17.1",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sharetribe/flex-cli"
+    "url": "https://github.com/sharetribe/sharetribe-cli"
   },
   "engines": {
     "node": ">=18"
   },
   "bin": {
-    "flex-cli": "target/min.js"
+    "sharetribe-cli": "target/min.js"
   },
   "files": [
     "target/min.js"
