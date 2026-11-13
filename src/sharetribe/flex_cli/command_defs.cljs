@@ -33,7 +33,7 @@
            :short-opt "-V"}]
    :sub-cmds
    [{:name "help"
-     :desc "display help for Flex CLI"
+     :desc "display help for Sharetribe CLI"
      :no-api-key? true
      :no-marketplace? true
      :catch-all? true

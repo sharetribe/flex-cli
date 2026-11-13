@@ -1,6 +1,6 @@
-# Sharetribe (Flex) CLI
+# Sharetribe CLI
 
-A command-line interface for [Sharetribe](https://www.sharetribe.com/) (formerly Sharetribe Flex). Sharetribe CLI enables you to
+A command-line interface for [Sharetribe](https://www.sharetribe.com/). Sharetribe CLI enables you to
 manage the transaction processes and transactional email templates of
 your marketplaces.
 
@@ -14,26 +14,26 @@ credentials to Console where you can generate new API keys in [your account's "M
 Install with NPM:
 
 ``` bash
-npm install --global flex-cli
+npm install --global sharetribe-cli
 ```
 
 or with Yarn:
 
 ``` bash
-yarn global add flex-cli
+yarn global add sharetribe-cli
 ```
 
 To verify the installation and to see available commands, run:
 
 ``` bash
-flex-cli
+sharetribe-cli
 ```
 
 ### Troubleshooting
 
-#### flex-cli: command not found (on Windows)
+#### sharetribe-cli: command not found (on Windows)
 
-If you're seeing `flex-cli: command not found` error on Windows and you installed Sharetribe CLI with Yarn, you need to add Yarn global bin path to the PATH environment varible.
+If you're seeing `sharetribe-cli: command not found` error on Windows and you installed Sharetribe CLI with Yarn, you need to add Yarn global bin path to the PATH environment varible.
 
 1. Run `yarn global bin` to see the global bin path
 2. Add it to PATH environment variable
